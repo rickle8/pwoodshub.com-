@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block title %}All-Time Power Rankings{% endblock %}
+
+{% block extra_css %}
+.crown-icon { color: gold; font-size: 1.1em; margin-left: 4px; }
+th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sortable:hover { text-decoration: underline; }
+th.sortable .sort-icon { font-size: .75em; margin-left: 4px; opacity: 0.5; }
+th.sortable.asc .sort-icon::after  { content: ' ▲'; opacity: 1; }
+th.sortable.desc .sort-icon::after { content: ' ▼'; opacity: 1; }
+th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
+{% endblock %}
+
+{% block content %}
+<h1 class="mt-2">All-Time Power Rankings</h1>
+
+<ul class="nav nav-tabs mb-3 mt-3" id="rankTabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-active">Active Owners</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-playoffs">Playoffs</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-points">All-Time Points Scored</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-retired">Retired Owners</button></li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- ACTIVE OWNERS -->
+    <div class="tab-pane fade show active" id="tab-active">
+        <p class="text-muted small">
+            All-time win % across all regular seasons. 👑 = championship. &nbsp;
+            <strong>Net Luck</strong>: lucky wins (bottom-half scorer who won) minus unlucky losses (top-half scorer who lost).
+        </p>
+        <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr id="active-headers">
+                    <th class="sortable" data-col="0">Rank<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="1">Owner<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="2" data-type="wins">Overall Record<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="3">Win %<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="4">Avg Finish<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="5" title="Lucky Wins - Unlucky Losses">Net Luck<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="6">Lucky W<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="7">Unlucky L<span class="sort-icon"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for owner in active_rankings %}
+                {% set lk = luck_index.get(owner.owner, {'lucky_wins': 0, 'unlucky_losses': 0, 'net_luck': 0}) %}
+                <tr>
+                    <td>{{ owner.rank }}</td>
+                    <td>
+                        <a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a>
+                        {% if owner.championships > 0 %}
+                            <span class="crown-icon" title="{{ owner.championships }} Championships">{{ "👑" * owner.championships }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ overall_records[owner.owner].wins }}-{{ overall_records[owner.owner].losses }}-{{ overall_records[owner.owner].ties }}</td>
+                    <td>{{ owner.win_percentage|round(2) }}%</td>
+                    <td>{{ average_finish[owner.owner]|round(2) if owner.owner in average_finish else 'N/A' }}</td>
+                    <td class="{% if lk.net_luck > 0 %}lucky{% elif lk.net_luck < 0 %}unlucky{% endif %}">
+                        {{ '+' if lk.net_luck > 0 else '' }}{{ lk.net_luck }}
+                    </td>
+                    <td class="lucky">{{ lk.lucky_wins }}</td>
+                    <td class="unlucky">{{ lk.unlucky_losses }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- PLAYOFFS -->
+    <div class="tab-pane fade" id="tab-playoffs">
+        <p class="text-muted small">
+            Active owners only. 👑 = championship.
+            2017 and earlier: 4-team bracket, no byes.
+            2018+: 6-team bracket, seeds 1–2 receive a first-round bye.
+            <strong>Byes</strong> = seasons earned a first-round bye. 5th/6th place consolation games excluded.
+        </p>
+        {% if playoff_stats %}
+        <div class="table-responsive">
+        <table class="table table-striped" id="playoff-table">
+            <thead>
+                <tr id="playoff-headers">
+                    <th class="sortable" data-col="0">Owner<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="1">Appearances<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="2" data-type="wins">Record<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="3">Win %<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="4">Championships<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="5" title="1st or 2nd seed in 6-team era">Byes<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="6">Playoff Pts<span class="sort-icon"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in playoff_stats %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('owner_profile', owner_name=p.owner) }}">{{ p.owner }}</a>
+                        {% if p.championships > 0 %}
+                            <span class="crown-icon" title="{{ p.championships }} Championships">{{ "👑" * p.championships }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.appearances }}</td>
+                    <td>{{ p.wins }}-{{ p.losses }}</td>
+                    <td class="{% if p.win_pct >= 50 %}lucky{% else %}unlucky{% endif %}">{{ p.win_pct }}%</td>
+                    <td>{{ p.championships }}</td>
+                    <td>{{ p.byes }}</td>
+                    <td>{{ p.points_for }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No playoff data available yet.</p>
+        {% endif %}
+    </div>
+
+    <!-- POINTS SCORED -->
+    <div class="tab-pane fade" id="tab-points">
+        <p class="text-muted small">Sorted by total points. Click any column to re-sort. <em>Pts/Season</em> levels the field for owners who joined later.</p>
+        <div class="table-responsive">
+        <table class="table table-striped" id="points-table">
+            <thead>
+                <tr id="points-headers">
+                    <th class="sortable asc" data-col="0">Rank<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="1">Owner<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="2">Seasons<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="3">Total Points<span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="4">Pts / Season<span class="sort-icon"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for owner in points_scored %}
+                <tr>
+                    <td>{{ owner.rank }}</td>
+                    <td><a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a></td>
+                    <td>{{ owner.seasons }}</td>
+                    <td>{{ owner.points_for }}</td>
+                    <td><strong>{{ owner.pts_per_season }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    <!-- RETIRED OWNERS -->
+    <div class="tab-pane fade" id="tab-retired">
+        <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr><th>Rank</th><th>Owner</th><th>Overall Record</th><th>Win %</th><th>Avg Finish</th></tr>
+            </thead>
+            <tbody>
+                {% for owner in retired_rankings %}
+                <tr>
+                    <td>{{ owner.rank }}</td>
+                    <td>
+                        <a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a>
+                        {% if owner.championships > 0 %}
+                            <span class="crown-icon" title="{{ owner.championships }} Championships">{{ "👑" * owner.championships }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ overall_records[owner.owner].wins }}-{{ overall_records[owner.owner].losses }}-{{ overall_records[owner.owner].ties }}</td>
+                    <td>{{ owner.win_percentage|round(2) }}%</td>
+                    <td>{{ average_finish[owner.owner]|round(2) if owner.owner in average_finish else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+                <tr class="table-danger">
+                    <td>--</td>
+                    <td>
+                        <a href="{{ url_for('owner_profile', owner_name='James Mitchell Hynes') }}">James Mitchell Hynes</a>
+                        <span class="ms-1" title="Expelled for illegal transactions">🚫</span>
+                    </td>
+                    <td>--</td><td>--</td><td>--</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+</div><!-- end tab-content -->
+
+<a href="/" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Persist active tab
+const rankTabs = document.querySelectorAll('#rankTabs button[data-bs-toggle="tab"]');
+const savedRankTab = sessionStorage.getItem('rankTab');
+if (savedRankTab) {
+    const btn = document.querySelector(`#rankTabs button[data-bs-target="${savedRankTab}"]`);
+    if (btn) bootstrap.Tab.getOrCreateInstance(btn).show();
+}
+rankTabs.forEach(btn => {
+    btn.addEventListener('shown.bs.tab', e => sessionStorage.setItem('rankTab', e.target.dataset.bsTarget));
+});
+
+// Generic sortable table helper
+function makeSortable(headerId, tableId) {
+    const headers = document.querySelectorAll(`#${headerId} th.sortable`);
+    const tbody   = document.querySelector(`#${tableId || headerId} tbody`) ||
+                    document.querySelector(`#${headerId}`).closest('table').querySelector('tbody');
+    let lastCol = null, lastAsc = true;
+
+    function cellValue(row, col, type) {
+        const text = row.cells[col].textContent.trim()
+            .replace(/👑/g, '').replace(/[+%]/g, '').trim();
+        if (type === 'wins') { const m = text.match(/^(\d+)/); return m ? parseInt(m[1]) : 0; }
+        const n = parseFloat(text);
+        return isNaN(n) ? text.toLowerCase() : n;
+    }
+
+    headers.forEach(th => {
+        th.addEventListener('click', () => {
+            const col  = parseInt(th.dataset.col);
+            const type = th.dataset.type || 'auto';
+            const asc  = (lastCol === col) ? !lastAsc : true;
+            lastCol = col; lastAsc = asc;
+            headers.forEach(h => h.classList.remove('asc', 'desc'));
+            th.classList.add(asc ? 'asc' : 'desc');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                const av = cellValue(a, col, type), bv = cellValue(b, col, type);
+                if (typeof av === 'number' && typeof bv === 'number') return asc ? av - bv : bv - av;
+                return asc ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+            });
+            rows.forEach(r => tbody.appendChild(r));
+        });
+    });
+}
+
+makeSortable('active-headers');
+makeSortable('playoff-headers', 'playoff-table');
+makeSortable('points-headers',  'points-table');
+</script>
+{% endblock %}

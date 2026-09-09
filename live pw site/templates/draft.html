@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Draft Results{% endblock %}
+
+{% block extra_css %}
+.pick-card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 6px;
+    padding: 8px 10px;
+    min-width: 150px;
+    max-width: 190px;
+    background: var(--stat-card);
+    font-size: .85em;
+}
+.pick-num   { font-size: .75em; color: var(--bs-secondary-color); margin-bottom: 2px; }
+.pick-name  { font-weight: bold; line-height: 1.2; margin-bottom: 3px; }
+.pick-owner { font-size: .75em; color: var(--bs-secondary-color); margin-top: 2px; }
+{% endblock %}
+
+{% block content %}
+<h1 class="mt-2">Draft Results</h1>
+
+{% if not draft_seasons %}
+<p class="text-muted">No draft data available yet. Run <code>scraper.py</code> to populate draft data.</p>
+{% else %}
+
+<ul class="nav nav-tabs mb-3" id="draftTabs">
+    {% for year in draft_seasons.keys() %}
+    <li class="nav-item">
+        <button class="nav-link {% if loop.first %}active{% endif %}"
+                data-bs-toggle="tab" data-bs-target="#draft-{{ year }}">{{ year }}</button>
+    </li>
+    {% endfor %}
+</ul>
+
+<div class="tab-content">
+{% for year, season in draft_seasons.items() %}
+<div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="draft-{{ year }}">
+
+    <div class="d-flex gap-2 align-items-center flex-wrap mb-3">
+        <span class="text-muted small">{{ season.picks | length }} picks</span>
+        <input type="text" class="form-control form-control-sm w-auto draft-search"
+               data-year="{{ year }}" placeholder="Filter by player or owner…">
+    </div>
+
+    <div id="draft-rounds-{{ year }}">
+    {% for round_num, round_picks in season.picks | groupby('round') %}
+    <div class="mb-3 draft-round">
+        <h6 class="text-muted text-uppercase small fw-bold mb-2 ps-1">Round {{ round_num }}</h6>
+        <div class="d-flex flex-wrap gap-2">
+            {% for p in round_picks %}
+            <div class="pick-card draft-pick{% if p.keeper %} keeper-card{% endif %}"
+                 data-search="{{ p.player | lower }} {{ p.owner | lower }}">
+                <div class="pick-num">#{{ p.pick }}{% if p.keeper %} · kept{% endif %}</div>
+                {% set pid = player_id_for(p) %}
+                <div class="pick-name">
+                    {% if pid %}<a href="/player/{{ pid }}">{{ p.player }}</a>{% else %}{{ p.player }}{% endif %}
+                </div>
+                {% if season.has_positions %}
+                <span class="badge pos-{{ p.position }}">{{ p.position }}</span>
+                {% endif %}
+                {% if p.keeper %}<span class="badge keeper-badge">Keeper</span>{% endif %}
+                <div class="pick-owner">
+                    <a href="{{ url_for('owner_profile', owner_name=p.owner) }}">{{ p.owner }}</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+
+</div>
+{% endfor %}
+</div>
+
+{% endif %}
+
+<a href="/" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.draft-search').forEach(input => {
+    input.addEventListener('input', function () {
+        const year  = this.dataset.year;
+        const q     = this.value.toLowerCase();
+        const container = document.getElementById('draft-rounds-' + year);
+        container.querySelectorAll('.draft-round').forEach(roundEl => {
+            let anyVisible = false;
+            roundEl.querySelectorAll('.draft-pick').forEach(card => {
+                const match = !q || card.dataset.search.includes(q);
+                card.style.display = match ? '' : 'none';
+                if (match) anyVisible = true;
+            });
+            roundEl.style.display = anyVisible ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

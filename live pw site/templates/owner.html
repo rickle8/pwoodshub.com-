@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.owner }} – Owner Profile{% endblock %}
+
+{% block content %}
+<h1 class="mt-2">{{ profile.owner }}</h1>
+{% if profile.championships %}
+<p class="fs-5 mb-1">
+    {% for yr in profile.championships %}
+        👑 {{ yr }} Champion{% if not loop.last %} &middot; {% endif %}
+    {% endfor %}
+</p>
+{% endif %}
+<p class="text-muted mb-3">Teams: {{ profile.team_names | join(', ') }}</p>
+
+<!-- Career Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="fs-3 fw-bold">{{ profile.total_wins }}-{{ profile.total_losses }}-{{ profile.total_ties }}</div>
+            <div class="text-muted small">Career Record</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="fs-3 fw-bold">{{ profile.win_pct }}%</div>
+            <div class="text-muted small">Win %</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="fs-3 fw-bold">{{ profile.seasons | length }}</div>
+            <div class="text-muted small">Seasons</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="fs-3 fw-bold">{{ profile.championships | length }}</div>
+            <div class="text-muted small">Championships</div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Roster -->
+{% if current %}
+<h2 class="mt-4">
+    {{ 'Current' if current.in_progress else current.year }} Roster
+    <small class="text-muted fs-6 fw-normal">— {{ current.team.name }}
+        ({{ current.team.wins }}-{{ current.team.losses }}-{{ current.team.ties }}, {{ current.year }})</small>
+</h2>
+{% if current.keepers %}
+<p class="text-muted small mb-2">
+    <span class="badge keeper-badge">Keeper</span> = kept from last season's roster in this year's draft.
+</p>
+{% endif %}
+<div class="stat-card mb-4">
+    <div class="row">
+        {% for p in current.roster %}
+        {% set pid = player_id_for(p) %}
+        <div class="col-sm-6 col-lg-4">
+            <div class="player-row">
+                <span class="badge pos-{{ p.position }}">{{ p.position }}</span>
+                {% if pid %}<a href="/player/{{ pid }}">{{ p.name }}</a>{% else %}<span>{{ p.name }}</span>{% endif %}
+                {% if p.name in current.keepers %}<span class="badge keeper-badge">Keeper</span>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Best / Worst Season -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5 class="text-success">Best Season</h5>
+            <p class="mb-0">
+                <a href="{{ url_for('owner_season', owner_name=profile.owner, year=profile.best_season.year|int) }}"><strong>{{ profile.best_season.year }}</strong></a> &mdash; {{ profile.best_season.team_name }}<br>
+                {{ profile.best_season.wins }}-{{ profile.best_season.losses }}-{{ profile.best_season.ties }}
+                &middot; Finished {{ profile.best_season.rank }}/{{ profile.best_season.total_teams }}{% if profile.best_season.rank == 1 %} 👑{% endif %}
+            </p>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5 class="text-danger">Worst Season</h5>
+            <p class="mb-0">
+                <a href="{{ url_for('owner_season', owner_name=profile.owner, year=profile.worst_season.year|int) }}"><strong>{{ profile.worst_season.year }}</strong></a> &mdash; {{ profile.worst_season.team_name }}<br>
+                {{ profile.worst_season.wins }}-{{ profile.worst_season.losses }}-{{ profile.worst_season.ties }}
+                &middot; Finished {{ profile.worst_season.rank }}/{{ profile.worst_season.total_teams }}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Luck Index -->
+<h2 class="mt-4">Luck Index</h2>
+<p class="text-muted">
+    A <strong>lucky win</strong> is when you scored in the bottom half of the league that week but still won.
+    An <strong>unlucky loss</strong> is when you scored in the top half but still lost.
+</p>
+<div class="row g-3 mb-4">
+    <div class="col-4">
+        <div class="stat-card text-center">
+            <div class="fs-2 lucky">{{ luck.lucky_wins }}</div>
+            <div class="text-muted small">Lucky Wins</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="stat-card text-center">
+            <div class="fs-2 unlucky">{{ luck.unlucky_losses }}</div>
+            <div class="text-muted small">Unlucky Losses</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="stat-card text-center">
+            {% if luck.net_luck > 0 %}<div class="fs-2 lucky">+{{ luck.net_luck }}</div>
+            {% elif luck.net_luck < 0 %}<div class="fs-2 unlucky">{{ luck.net_luck }}</div>
+            {% else %}<div class="fs-2 neutral">0</div>{% endif %}
+            <div class="text-muted small">Net Luck</div>
+        </div>
+    </div>
+</div>
+
+<!-- Season Chart -->
+<h2 class="mt-4">Season by Season</h2>
+<div class="mb-4 stat-card">
+    <canvas id="seasonChart" style="max-height: 320px;"></canvas>
+</div>
+
+<!-- Season Table -->
+<div class="table-responsive mb-4">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr><th>Year</th><th>Team</th><th>Record</th><th>Pts For</th><th>Pts Against</th><th>Finish</th></tr>
+        </thead>
+        <tbody>
+            {% for s in profile.seasons %}
+            <tr {% if s.rank == 1 and not s.in_progress %}class="table-warning"{% endif %}>
+                <td><a href="{{ url_for('owner_season', owner_name=profile.owner, year=s.year|int) }}">{{ s.year }}</a></td>
+                <td>{{ s.team_name }}</td>
+                <td>{{ s.wins }}-{{ s.losses }}-{{ s.ties }}</td>
+                <td>{{ s.points_for | round(1) }}</td>
+                <td>{{ s.points_against | round(1) }}</td>
+                <td>
+                    {% if s.in_progress %}<span class="text-muted">in progress</span>
+                    {% else %}{{ s.rank }}/{{ s.total_teams }}{% if s.rank == 1 %} 👑{% endif %}{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- H2H vs All Opponents -->
+<h2 class="mt-4">Head-to-Head vs All Opponents</h2>
+<div class="table-responsive">
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr><th>Opponent</th><th>Record</th><th>Win %</th></tr>
+        </thead>
+        <tbody>
+            {% for opp, rec in profile.h2h %}
+            {% set total = rec.wins + rec.losses + rec.ties %}
+            {% set wpct = (rec.wins / total * 100) | round(1) if total > 0 else 0 %}
+            <tr>
+                <td><a href="{{ url_for('owner_profile', owner_name=opp) }}">{{ opp }}</a></td>
+                <td>{{ rec.wins }}-{{ rec.losses }}-{{ rec.ties }}</td>
+                <td>{{ wpct }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Transaction Stats (Sleeper seasons only) -->
+{% if txn_stats %}
+<h2 class="mt-4">Transaction Activity</h2>
+<p class="text-muted small">Based on {{ txn_stats.seasons_with_data }} Sleeper season(s) with transaction data.</p>
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="fs-3 fw-bold">{{ txn_stats.total_trades }}</div>
+            <div class="text-muted small">Total Trades</div>
+            <div class="text-muted small">(~{{ txn_stats.avg_trades_per_year }}/yr)</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="fs-3 fw-bold">{{ txn_stats.total_waiver_adds }}</div>
+            <div class="text-muted small">Waiver Adds</div>
+            <div class="text-muted small">(~{{ txn_stats.avg_waiver_per_year }}/yr)</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card text-center">
+            <div class="fs-3 fw-bold">{{ txn_stats.total_fa_adds }}</div>
+            <div class="text-muted small">FA Adds</div>
+            <div class="text-muted small">(~{{ txn_stats.avg_fa_per_year }}/yr)</div>
+        </div>
+    </div>
+</div>
+{% if txn_stats.by_year %}
+<div class="table-responsive">
+<table class="table table-sm table-striped">
+    <thead>
+        <tr><th>Year</th><th>Trades</th><th>Waiver Adds</th><th>FA Adds</th></tr>
+    </thead>
+    <tbody>
+        {% for year, ys in txn_stats.by_year | dictsort(reverse=true) %}
+        <tr>
+            <td><a href="/year/{{ year }}">{{ year }}</a></td>
+            <td>{{ ys.trades }}</td>
+            <td>{{ ys.waiver_adds }}</td>
+            <td>{{ ys.fa_adds }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+{% endif %}
+
+<a href="/" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // In-progress seasons are excluded — their rank is just current standings
+    const seasonData = {{ profile.seasons | tojson }}.filter(s => !s.in_progress);
+    const labels   = seasonData.map(s => s.year);
+    const ptsFor   = seasonData.map(s => parseFloat(s.points_for));
+    const ptsAgt   = seasonData.map(s => parseFloat(s.points_against));
+    const finishPct = seasonData.map(s => ((s.total_teams - s.rank + 1) / s.total_teams * 100).toFixed(1));
+
+    new Chart(document.getElementById('seasonChart'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Points For',
+                    data: ptsFor,
+                    backgroundColor: 'rgba(76,175,80,0.75)',
+                    borderColor: 'rgba(76,175,80,1)',
+                    borderWidth: 1, order: 2, yAxisID: 'y'
+                },
+                {
+                    label: 'Points Against',
+                    data: ptsAgt,
+                    backgroundColor: 'rgba(244,67,54,0.5)',
+                    borderColor: 'rgba(244,67,54,1)',
+                    borderWidth: 1, order: 2, yAxisID: 'y'
+                },
+                {
+                    label: 'Finish %ile (100%=1st)',
+                    data: finishPct,
+                    type: 'line',
+                    borderColor: 'rgba(255,193,7,1)',
+                    backgroundColor: 'rgba(255,193,7,0.15)',
+                    borderWidth: 3, pointRadius: 6,
+                    pointBackgroundColor: 'rgba(255,193,7,1)',
+                    pointBorderColor: '#fff', pointBorderWidth: 2,
+                    yAxisID: 'y1', order: 1, tension: 0.3, fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        afterBody: ctx => {
+                            const s = seasonData[ctx[0].dataIndex];
+                            return [`Finish: ${s.rank}/${s.total_teams}`, `Record: ${s.wins}-${s.losses}-${s.ties}`];
+                        }
+                    }
+                }
+            },
+            scales: {
+                y:  { title: { display: true, text: 'Points' }, beginAtZero: false },
+                y1: {
+                    position: 'right',
+                    title: { display: true, text: 'Finish %ile' },
+                    min: 0, max: 100,
+                    grid: { drawOnChartArea: false },
+                    ticks: { callback: v => v + '%' }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

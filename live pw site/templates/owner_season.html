@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+{% block title %}{{ owner_name }} – {{ detail.year }} Season{% endblock %}
+
+{% block extra_css %}
+.stat-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 1.5rem; }
+.stat-box { flex: 1; min-width: 130px; text-align: center; }
+.week-bar-wrap { display: flex; align-items: flex-end; gap: 4px; height: 90px; margin-bottom: 4px; }
+.week-bar {
+    flex: 1; min-width: 14px; border-radius: 4px 4px 0 0;
+    transition: opacity .15s; cursor: default; position: relative;
+}
+.week-bar:hover { opacity: .8; }
+.week-bar.win  { background: #43a047; }
+.week-bar.loss { background: #e53935; }
+.week-bar.tie  { background: #fb8c00; }
+.week-bar .tip {
+    display: none; position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+    background: var(--bs-body-bg); border: 1px solid var(--bs-border-color);
+    border-radius: 6px; padding: 4px 8px; font-size: .75em; white-space: nowrap;
+    z-index: 10; pointer-events: none;
+}
+.week-bar:hover .tip { display: block; }
+.avg-line {
+    position: absolute; left: 0; right: 0; border-top: 2px dashed rgba(255,193,7,.7);
+    pointer-events: none;
+}
+.chart-wrap { position: relative; }
+.week-labels { display: flex; gap: 4px; }
+.week-labels span { flex: 1; min-width: 14px; text-align: center; font-size: .65em; color: var(--bs-secondary-color); }
+{% endblock %}
+
+{% set t = detail.team %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mt-2">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('owner_profile', owner_name=owner_name) }}">{{ owner_name }}</a></li>
+        <li class="breadcrumb-item active">{{ detail.year }} Season</li>
+    </ol>
+</nav>
+
+<div class="d-flex align-items-center gap-3 mb-1 flex-wrap">
+    <h1 class="mb-0">{{ detail.year }} — {{ t.name }}</h1>
+    {% if t.rank == 1 and detail.season_complete %}<span class="badge bg-warning text-dark fs-6">Champion 👑</span>
+    {% elif not detail.season_complete %}<span class="badge bg-info text-dark fs-6">Season in progress</span>{% endif %}
+</div>
+<p class="text-muted mb-3">
+    {{ t.wins }}-{{ t.losses }}-{{ t.ties }}
+    &nbsp;·&nbsp; {{ t.points_for | round(2) }} pts for
+    &nbsp;·&nbsp; {{ t.points_against | round(2) }} pts against
+    &nbsp;·&nbsp; Finished <strong>{{ t.rank }}/{{ detail.standings | length }}</strong>
+</p>
+
+<!-- Key stat cards -->
+<div class="stat-row">
+    <div class="stat-box stat-card">
+        <div class="fs-3 fw-bold">{{ detail.avg_score }}</div>
+        <div class="text-muted small">Avg Score/Wk</div>
+        <div class="text-muted" style="font-size:.7em">League avg: {{ detail.league_overall_avg }}</div>
+    </div>
+    {% if detail.best_week %}
+    <div class="stat-box stat-card">
+        <div class="fs-3 fw-bold lucky">{{ detail.best_week.score }}</div>
+        <div class="text-muted small">Best Week (Wk {{ detail.best_week.week }})</div>
+        <div class="text-muted" style="font-size:.7em">vs {{ detail.best_week.opponent }}</div>
+    </div>
+    {% endif %}
+    {% if detail.worst_week %}
+    <div class="stat-box stat-card">
+        <div class="fs-3 fw-bold unlucky">{{ detail.worst_week.score }}</div>
+        <div class="text-muted small">Worst Week (Wk {{ detail.worst_week.week }})</div>
+        <div class="text-muted" style="font-size:.7em">vs {{ detail.worst_week.opponent }}</div>
+    </div>
+    {% endif %}
+    <div class="stat-box stat-card">
+        <div class="fs-3 fw-bold">{{ detail.weeks_beat_avg }}/{{ detail.total_weeks }}</div>
+        <div class="text-muted small">Weeks Beat Avg</div>
+    </div>
+    {% if detail.biggest_win %}
+    <div class="stat-box stat-card">
+        <div class="fs-3 fw-bold lucky">+{{ detail.biggest_win.margin }}</div>
+        <div class="text-muted small">Biggest Win (Wk {{ detail.biggest_win.week }})</div>
+        <div class="text-muted" style="font-size:.7em">vs {{ detail.biggest_win.opponent }}</div>
+    </div>
+    {% endif %}
+    {% if detail.closest_loss %}
+    <div class="stat-box stat-card">
+        <div class="fs-3 fw-bold unlucky">{{ detail.closest_loss.margin }}</div>
+        <div class="text-muted small">Closest Loss (Wk {{ detail.closest_loss.week }})</div>
+        <div class="text-muted" style="font-size:.7em">vs {{ detail.closest_loss.opponent }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Roster -->
+{% if detail.roster %}
+<h2 class="mt-2 mb-2">
+    {% if detail.season_complete %}End-of-Season Roster{% else %}Current Roster{% endif %}
+    <small class="text-muted fs-6">{{ detail.roster | length }} players</small>
+</h2>
+<div class="table-responsive mb-3">
+<table class="table table-sm table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Pos</th><th>Player</th>
+            {% if detail.roster_has_scoring %}
+            <th class="text-end">Pts for {{ owner_name.split()[0] }}</th>
+            <th class="text-end">Starts</th>
+            <th class="text-end">Best Wk</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in detail.roster %}
+        <tr>
+            <td><span class="pos-{{ p.position }}">{{ p.position }}</span></td>
+            <td>
+                {% set pid = p.player_id or player_id_for(p) %}
+                {% if pid %}<a href="{{ url_for('player_view', player_id=pid) }}">{{ p.name }}</a>
+                {% else %}{{ p.name }}{% endif %}
+                {% if p.keeper %}<span class="keeper-badge">KEEPER</span>{% endif %}
+            </td>
+            {% if detail.roster_has_scoring %}
+            <td class="text-end">{{ p.points if p.points is not none else '—' }}</td>
+            <td class="text-end">{{ p.starts if p.starts is not none else '—' }}</td>
+            <td class="text-end">{{ p.best if p.best else '—' }}</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+    {% if detail.roster_has_scoring %}
+    <tfoot>
+        <tr class="fw-bold border-top">
+            <td colspan="2">Total from this roster</td>
+            <td class="text-end">{{ detail.roster_points }}</td>
+            <td colspan="2"></td>
+        </tr>
+    </tfoot>
+    {% endif %}
+</table>
+</div>
+<p class="text-muted small">
+    {% if detail.roster_has_scoring %}
+    Points are what each player scored <em>while on this team</em> in {{ detail.year }} —
+    bench weeks included, so the total runs above the {{ detail.team.points_for | round(1) }}
+    this team actually put up from its starters. Players picked up mid-season only count
+    from the week they arrived, and anyone dropped before the end isn't on this list at all.
+    {% else %}
+    Per-player scoring isn't available for {{ detail.year }} — the league was on ESPN
+    that season, which doesn't expose it. The roster itself is the end-of-year one.
+    {% endif %}
+</p>
+{% endif %}
+
+<!-- Weekly score chart -->
+{% if detail.games %}
+<h2 class="mt-2 mb-2">Weekly Scores</h2>
+<div class="stat-card mb-3 p-3">
+    <canvas id="weekChart" style="max-height:200px;"></canvas>
+</div>
+
+<!-- Weekly game log -->
+<div class="table-responsive mb-4">
+<table class="table table-sm table-striped">
+    <thead>
+        <tr><th>Wk</th><th>Score</th><th>Opponent</th><th>Opp Score</th><th>Margin</th><th>Result</th><th>vs Avg</th></tr>
+    </thead>
+    <tbody>
+        {% for g in detail.games %}
+        <tr class="{% if g.outcome == 'W' %}table-success{% elif g.outcome == 'L' %}table-danger{% endif %}">
+            <td>{{ g.week }}</td>
+            <td><strong>{{ g.score }}</strong></td>
+            <td>{{ g.opponent }}</td>
+            <td>{{ g.opponent_score }}</td>
+            <td>{{ '+' if g.margin > 0 else '' }}{{ g.margin }}</td>
+            <td>{{ g.outcome }}</td>
+            <td>
+                {% if g.league_avg is not none %}
+                    {% if g.beat_avg %}
+                        <span class="lucky">▲ +{{ (g.score - g.league_avg) | round(1) }}</span>
+                    {% else %}
+                        <span class="unlucky">▼ {{ (g.score - g.league_avg) | round(1) }}</span>
+                    {% endif %}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+
+<!-- Luck + H2H side by side -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <h2>Luck This Season</h2>
+        <div class="row g-2">
+            <div class="col-4">
+                <div class="stat-card text-center">
+                    <div class="fs-2 lucky">{{ detail.lucky_wins }}</div>
+                    <div class="text-muted small">Lucky Wins</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-card text-center">
+                    <div class="fs-2 unlucky">{{ detail.unlucky_losses }}</div>
+                    <div class="text-muted small">Unlucky Losses</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-card text-center">
+                    {% if detail.net_luck > 0 %}<div class="fs-2 lucky">+{{ detail.net_luck }}</div>
+                    {% elif detail.net_luck < 0 %}<div class="fs-2 unlucky">{{ detail.net_luck }}</div>
+                    {% else %}<div class="fs-2">0</div>{% endif %}
+                    <div class="text-muted small">Net Luck</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <h2>Head-to-Head This Season</h2>
+        <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>Opponent</th><th>Record</th><th>Win %</th></tr></thead>
+            <tbody>
+                {% for opp, rec in detail.h2h %}
+                {% set total = rec.wins + rec.losses + rec.ties %}
+                <tr>
+                    <td><a href="{{ url_for('owner_profile', owner_name=opp) }}">{{ opp }}</a></td>
+                    <td>{{ rec.wins }}-{{ rec.losses }}-{{ rec.ties }}</td>
+                    <td>{{ (rec.wins / total * 100) | round(0) | int }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+<!-- League standings that year -->
+<h2 class="mt-2">{{ detail.year }} Standings</h2>
+<div class="table-responsive mb-4">
+<table class="table table-sm table-striped">
+    <thead><tr><th>Rank</th><th>Owner</th><th>Team</th><th>Record</th><th>Pts For</th></tr></thead>
+    <tbody>
+        {% for s in detail.standings %}
+        <tr {% if s.owner == owner_name %}class="table-primary"{% elif s.rank == 1 and detail.season_complete %}class="table-warning"{% endif %}>
+            <td>{{ s.rank }}{% if s.rank == 1 and detail.season_complete %} 👑{% endif %}</td>
+            <td><a href="{{ url_for('owner_profile', owner_name=s.owner) }}">{{ s.owner }}</a></td>
+            <td>{{ s.name }}</td>
+            <td>{{ s.wins }}-{{ s.losses }}-{{ s.ties }}</td>
+            <td>{{ s.points_for | round(1) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- Transactions -->
+{% if detail.transactions %}
+<h2 class="mt-2">Transactions This Season</h2>
+<p class="text-muted small mb-2">
+    {{ detail.txn_counts.trades }} trade{{ 's' if detail.txn_counts.trades != 1 }} &nbsp;·&nbsp;
+    {{ detail.txn_counts.waiver_adds }} waiver add{{ 's' if detail.txn_counts.waiver_adds != 1 }} &nbsp;·&nbsp;
+    {{ detail.txn_counts.fa_adds }} FA add{{ 's' if detail.txn_counts.fa_adds != 1 }}
+</p>
+<div class="table-responsive mb-4">
+<table class="table table-sm table-striped">
+    <thead><tr><th>When</th><th>Type</th><th>Added</th><th>Dropped</th></tr></thead>
+    <tbody>
+        {% for t in detail.transactions %}
+        <tr>
+            <td>{{ t.date if t.date else 'Wk ' ~ t.week }}</td>
+            <td>
+                {% if t.type == 'waiver' %}<span class="badge bg-primary">Waiver</span>
+                {% elif t.type == 'free_agent' %}<span class="badge bg-secondary">FA</span>
+                {% elif t.type == 'trade' %}<span class="badge bg-warning text-dark">Trade</span>
+                {% else %}<span class="badge bg-light text-dark">{{ t.type }}</span>{% endif %}
+            </td>
+            <td class="lucky">{{ t.adds.get(owner_name, []) | join(', ') or '—' }}</td>
+            <td class="unlucky">{{ t.drops.get(owner_name, []) | join(', ') or '—' }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+
+<div class="d-flex gap-2 mt-2 mb-4 flex-wrap">
+    <a href="{{ url_for('owner_profile', owner_name=owner_name) }}" class="btn btn-secondary">← {{ owner_name }}</a>
+    <a href="{{ url_for('year_view', year=detail.year|int) }}" class="btn btn-outline-secondary">View Full {{ detail.year }} Season</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const games = {{ detail.games | tojson }};
+const leagueAvg = {{ detail.league_overall_avg }};
+
+new Chart(document.getElementById('weekChart'), {
+    type: 'bar',
+    data: {
+        labels: games.map(g => 'Wk ' + g.week),
+        datasets: [
+            {
+                label: 'Score',
+                data: games.map(g => g.score),
+                backgroundColor: games.map(g =>
+                    g.outcome === 'W' ? 'rgba(67,160,71,.75)' :
+                    g.outcome === 'L' ? 'rgba(229,57,53,.65)' : 'rgba(251,140,0,.7)'
+                ),
+                borderColor: games.map(g =>
+                    g.outcome === 'W' ? '#43a047' :
+                    g.outcome === 'L' ? '#e53935' : '#fb8c00'
+                ),
+                borderWidth: 1,
+                order: 2,
+            },
+            {
+                label: 'Opponent',
+                data: games.map(g => g.opponent_score),
+                type: 'line',
+                borderColor: 'rgba(150,150,150,.5)',
+                backgroundColor: 'transparent',
+                borderWidth: 1.5,
+                borderDash: [4, 3],
+                pointRadius: 3,
+                order: 1,
+            },
+            {
+                label: 'League Avg',
+                data: games.map(() => leagueAvg),
+                type: 'line',
+                borderColor: 'rgba(255,193,7,.7)',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                order: 0,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+                callbacks: {
+                    afterBody: ctx => {
+                        const g = games[ctx[0].dataIndex];
+                        return [`Result: ${g.outcome}  (margin: ${g.margin > 0 ? '+' : ''}${g.margin})`];
+                    }
+                }
+            }
+        },
+        scales: {
+            y: { beginAtZero: false, title: { display: true, text: 'Points' } }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% block title %}League Records{% endblock %}
+
+{% block extra_css %}
+/* Jump bar sticks under the navbar so a very long page stays navigable */
+.rec-jump { position: sticky; top: 0; z-index: 5; background: var(--site-bg);
+            padding: 8px 0; border-bottom: 1px solid var(--bs-border-color-translucent); }
+.rec-jump a { font-size: .85em; }
+.rec-num { font-variant-numeric: tabular-nums; }
+.rec-sub { font-size: .8em; color: var(--bs-secondary-color); }
+h2[id] { scroll-margin-top: 60px; }
+{% endblock %}
+
+{% block content %}
+<h1 class="mt-2 mb-1">League Records</h1>
+<p class="text-muted">
+    Every regular-season game played from {{ min_year }} through {{ max_year }}.
+    Playoff results are folded into the season finishes below but excluded from the
+    weekly leaderboards, so a championship-week blowout can't crowd out the regular season.
+</p>
+
+<div class="rec-jump d-flex flex-wrap gap-2 mb-4">
+    <a href="#roll"      class="btn btn-sm btn-outline-primary">🏆 Roll of Honor</a>
+    <a href="#ledger"    class="btn btn-sm btn-outline-primary">📒 All-Time Ledger</a>
+    <a href="#highs"     class="btn btn-sm btn-outline-secondary">High Scores</a>
+    <a href="#lows"      class="btn btn-sm btn-outline-secondary">Low Scores</a>
+    <a href="#seasons"   class="btn btn-sm btn-outline-secondary">Seasons</a>
+    <a href="#blowouts"  class="btn btn-sm btn-outline-secondary">Blowouts</a>
+    <a href="#shootouts" class="btn btn-sm btn-outline-secondary">Shootouts</a>
+    <a href="#heartbreak" class="btn btn-sm btn-outline-secondary">Heartbreakers</a>
+    <a href="#close"     class="btn btn-sm btn-outline-secondary">Nail-Biters</a>
+    <a href="#streaks"   class="btn btn-sm btn-outline-secondary">Streaks</a>
+</div>
+
+<!-- ── Roll of honor ──────────────────────────────────────────────────────── -->
+<h2 id="roll" class="mt-4">Roll of Honor</h2>
+<p class="text-muted small">
+    Every completed season. <strong>Best Record</strong> is the regular-season leader,
+    which is frequently not the owner who took the trophy home.
+</p>
+<div class="table-responsive">
+<table class="table table-striped table-sm align-middle">
+    <thead>
+        <tr><th>Year</th><th>👑 Champion</th><th>🥈 Runner-Up</th><th>🥉 Third</th>
+            <th>Best Record</th><th>Points Leader</th><th>🥄 Last Place</th></tr>
+    </thead>
+    <tbody>
+        {% for r in roll %}
+        <tr>
+            <td><a href="{{ url_for('year_view', year=r.year|int) }}"><strong>{{ r.year }}</strong></a>
+                <span class="rec-sub d-block">{{ r.teams }} teams</span></td>
+            {% for key in ['champion', 'runner_up', 'third'] %}
+            {% set t = r[key] %}
+            <td>
+                {% if t %}
+                    <a href="{{ url_for('owner_profile', owner_name=t.owner) }}">{{ t.owner }}</a>
+                    <span class="rec-sub d-block">{{ t.name }}</span>
+                {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            {% endfor %}
+            <td>
+                <a href="{{ url_for('owner_profile', owner_name=r.best_record.owner) }}">{{ r.best_record.owner }}</a>
+                <span class="rec-sub d-block">{{ r.best_record.wins }}-{{ r.best_record.losses }}{% if r.best_record.ties %}-{{ r.best_record.ties }}{% endif %}</span>
+            </td>
+            <td>
+                <a href="{{ url_for('owner_profile', owner_name=r.points_leader.owner) }}">{{ r.points_leader.owner }}</a>
+                <span class="rec-sub d-block">{{ r.points_leader.points_for | round(1) }} pts</span>
+            </td>
+            <td>
+                <a href="{{ url_for('owner_profile', owner_name=r.last.owner) }}">{{ r.last.owner }}</a>
+                <span class="rec-sub d-block">{{ r.last.wins }}-{{ r.last.losses }}</span>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- ── All-time owner ledger ──────────────────────────────────────────────── -->
+<h2 id="ledger" class="mt-5">All-Time Owner Ledger</h2>
+<p class="text-muted small">
+    Career totals for everyone who has ever managed a team here, retired owners included.
+    Sorted by titles, then win percentage — click any column header to re-sort.
+    Ties count as half a win in the percentage.
+</p>
+<div class="table-responsive">
+<table class="table table-striped table-sm align-middle" id="ledgerTable">
+    <thead>
+        <tr>
+            <th class="sortable" data-col="0" style="cursor:pointer;">Owner <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="1" style="cursor:pointer;">Years <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="2" style="cursor:pointer;">Record <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="3" style="cursor:pointer;">Win % <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="4" style="cursor:pointer;">Points For <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="5" style="cursor:pointer;">PPG <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="6" style="cursor:pointer;">👑 <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="7" style="cursor:pointer;">Playoffs <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="8" style="cursor:pointer;">🥄 <span class="sort-icon text-muted">⇅</span></th>
+            <th>Best Week</th>
+            <th>Worst Week</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for o in ledger %}
+        <tr>
+            <td>
+                <a href="{{ url_for('owner_profile', owner_name=o.owner) }}">{{ o.owner }}</a>
+                {% if not o.active %}<span class="rec-sub">(retired)</span>{% endif %}
+                {% if o.titles %}<span class="d-block rec-sub">{{ o.titles | join(', ') }}</span>{% endif %}
+            </td>
+            <td class="rec-num">{{ o.seasons }}
+                <span class="rec-sub d-block">{{ o.first_year }}–{{ o.last_year }}</span></td>
+            <td class="rec-num">{{ o.wins }}-{{ o.losses }}{% if o.ties %}-{{ o.ties }}{% endif %}</td>
+            <td class="rec-num">{{ o.win_pct }}%</td>
+            <td class="rec-num">{{ o.points_for }}</td>
+            <td class="rec-num">{{ o.ppg }}</td>
+            <td class="rec-num">{{ o.titles | length }}</td>
+            <td class="rec-num">{{ o.playoffs }}</td>
+            <td class="rec-num">{{ o.last_place }}</td>
+            <td class="rec-num">
+                {% if o.best_week %}<span class="lucky">{{ o.best_week.score | round(2) }}</span>
+                <span class="rec-sub d-block">{{ o.best_week.year }} wk {{ o.best_week.week }}</span>{% endif %}
+            </td>
+            <td class="rec-num">
+                {% if o.worst_week %}<span class="unlucky">{{ o.worst_week.score | round(2) }}</span>
+                <span class="rec-sub d-block">{{ o.worst_week.year }} wk {{ o.worst_week.week }}</span>{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- ── Single-week extremes ───────────────────────────────────────────────── -->
+<div class="row g-4 mt-1">
+    <div class="col-lg-6">
+        <h2 id="highs" class="h3">Top 25 Single-Week Scores</h2>
+        <div class="table-responsive">
+        <table class="table table-striped table-sm">
+            <thead><tr><th>#</th><th>Owner</th><th>Team</th><th>Score</th><th>Week</th><th>Year</th></tr></thead>
+            <tbody>
+                {% for entry in weekly_high_scores %}
+                <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+                    <td>{{ loop.index }}</td>
+                    <td><a href="{{ url_for('owner_profile', owner_name=entry.owner) }}">{{ entry.owner }}</a></td>
+                    <td class="rec-sub">{{ entry.team }}</td>
+                    <td class="rec-num lucky"><strong>{{ entry.score | round(2) }}</strong></td>
+                    <td>{{ entry.week }}</td>
+                    <td>{{ entry.year }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <h2 id="lows" class="h3">Bottom 25 Single-Week Scores</h2>
+        <div class="table-responsive">
+        <table class="table table-striped table-sm">
+            <thead><tr><th>#</th><th>Owner</th><th>Team</th><th>Score</th><th>Week</th><th>Year</th></tr></thead>
+            <tbody>
+                {% for entry in weekly_low_scores %}
+                <tr {% if loop.index == 1 %}class="table-danger"{% endif %}>
+                    <td>{{ loop.index }}</td>
+                    <td><a href="{{ url_for('owner_profile', owner_name=entry.owner) }}">{{ entry.owner }}</a></td>
+                    <td class="rec-sub">{{ entry.team }}</td>
+                    <td class="rec-num unlucky"><strong>{{ entry.score | round(2) }}</strong></td>
+                    <td>{{ entry.week }}</td>
+                    <td>{{ entry.year }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+<!-- ── Season totals ──────────────────────────────────────────────────────── -->
+<h2 id="seasons" class="mt-5 h3">Season Scoring Extremes</h2>
+<div class="row g-4">
+    <div class="col-md-6">
+        <h3 class="h5">Top 10 Highest Scoring Seasons</h3>
+        <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>#</th><th>Owner</th><th>Team</th><th>Pts For</th><th>Record</th><th>Year</th></tr></thead>
+            <tbody>
+                {% for s in season_scoring.top %}
+                <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+                    <td>{{ loop.index }}</td>
+                    <td><a href="{{ url_for('owner_profile', owner_name=s.owner) }}">{{ s.owner }}</a></td>
+                    <td class="rec-sub">{{ s.team }}</td>
+                    <td class="lucky rec-num"><strong>{{ s.points_for }}</strong></td>
+                    <td class="rec-num">{{ s.wins }}-{{ s.losses }}-{{ s.ties }}</td>
+                    <td><a href="{{ url_for('year_view', year=s.year|int) }}">{{ s.year }}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <h3 class="h5">Bottom 10 Lowest Scoring Seasons</h3>
+        <div class="table-responsive">
+        <table class="table table-sm table-striped">
+            <thead><tr><th>#</th><th>Owner</th><th>Team</th><th>Pts For</th><th>Record</th><th>Year</th></tr></thead>
+            <tbody>
+                {% for s in season_scoring.bottom %}
+                <tr {% if loop.index == 1 %}class="table-danger"{% endif %}>
+                    <td>{{ loop.index }}</td>
+                    <td><a href="{{ url_for('owner_profile', owner_name=s.owner) }}">{{ s.owner }}</a></td>
+                    <td class="rec-sub">{{ s.team }}</td>
+                    <td class="unlucky rec-num"><strong>{{ s.points_for }}</strong></td>
+                    <td class="rec-num">{{ s.wins }}-{{ s.losses }}-{{ s.ties }}</td>
+                    <td><a href="{{ url_for('year_view', year=s.year|int) }}">{{ s.year }}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+<!-- ── Blowouts ───────────────────────────────────────────────────────────── -->
+<h2 id="blowouts" class="mt-5 h3">Top 25 Biggest Blowouts</h2>
+<div class="table-responsive">
+<table class="table table-striped table-sm">
+    <thead><tr><th>#</th><th>Winner</th><th>Score</th><th>Loser</th><th>Score</th><th>Margin</th><th>Week</th><th>Year</th></tr></thead>
+    <tbody>
+        {% for g in blowouts %}
+        <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+            <td>{{ loop.index }}</td>
+            <td><a href="{{ url_for('owner_profile', owner_name=g.winner) }}">{{ g.winner }}</a></td>
+            <td class="rec-num lucky">{{ g.winner_score | round(2) }}</td>
+            <td><a href="{{ url_for('owner_profile', owner_name=g.loser) }}">{{ g.loser }}</a></td>
+            <td class="rec-num unlucky">{{ g.loser_score | round(2) }}</td>
+            <td class="rec-num"><strong>{{ g.margin }}</strong></td>
+            <td>{{ g.week }}</td>
+            <td>{{ g.year }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- ── Shootouts ──────────────────────────────────────────────────────────── -->
+<h2 id="shootouts" class="mt-5 h3">Top 25 Shootouts <span class="text-muted fs-6">(most combined points)</span></h2>
+<div class="table-responsive">
+<table class="table table-striped table-sm">
+    <thead><tr><th>#</th><th>Combined</th><th>Owner</th><th>Score</th><th>Owner</th><th>Score</th><th>Week</th><th>Year</th></tr></thead>
+    <tbody>
+        {% for g in shootouts %}
+        <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+            <td>{{ loop.index }}</td>
+            <td class="rec-num"><strong>{{ g.combined }}</strong></td>
+            <td><a href="{{ url_for('owner_profile', owner_name=g.home_owner) }}">{{ g.home_owner }}</a></td>
+            <td class="rec-num">{{ g.home_score | round(2) }}</td>
+            <td><a href="{{ url_for('owner_profile', owner_name=g.away_owner) }}">{{ g.away_owner }}</a></td>
+            <td class="rec-num">{{ g.away_score | round(2) }}</td>
+            <td>{{ g.week }}</td>
+            <td>{{ g.year }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- ── Most Points in a Loss ──────────────────────────────────────────────── -->
+<h2 id="heartbreak" class="mt-5 h3">Top 25 Most Points Scored in a Loss <span class="text-muted fs-6">(the heartbreakers)</span></h2>
+<div class="table-responsive">
+<table class="table table-striped table-sm">
+    <thead>
+        <tr><th>#</th><th>Team</th><th>Owner</th><th>Score</th><th>Opponent</th><th>Opp Score</th><th>Week</th><th>Year</th></tr>
+    </thead>
+    <tbody>
+        {% for entry in most_points_in_loss %}
+        <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+            <td>{{ loop.index }}</td>
+            <td class="rec-sub">{{ entry.team }}</td>
+            <td><a href="{{ url_for('owner_profile', owner_name=entry.owner) }}">{{ entry.owner }}</a></td>
+            <td class="unlucky rec-num"><strong>{{ entry.score | round(2) }}</strong></td>
+            <td class="rec-sub">{{ entry.opponent }}</td>
+            <td class="rec-num">{{ entry.opponent_score | round(2) }}</td>
+            <td>{{ entry.week }}</td>
+            <td>{{ entry.year }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- ── Closest Games ──────────────────────────────────────────────────────── -->
+<h2 id="close" class="mt-5 h3">Top 25 Closest Games <span class="text-muted fs-6">(smallest margin of victory)</span></h2>
+<div class="table-responsive">
+<table class="table table-striped table-sm">
+    <thead>
+        <tr><th>#</th><th>Winner</th><th>Score</th><th>Loser</th><th>Score</th><th>Margin</th><th>Week</th><th>Year</th></tr>
+    </thead>
+    <tbody>
+        {% for g in closest_games %}
+        {% if g.home_score > g.away_score %}
+            {% set winner = g.home_team %}{% set winner_score = g.home_score %}
+            {% set loser  = g.away_team %}{% set loser_score  = g.away_score %}
+        {% else %}
+            {% set winner = g.away_team %}{% set winner_score = g.away_score %}
+            {% set loser  = g.home_team %}{% set loser_score  = g.home_score %}
+        {% endif %}
+        <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+            <td>{{ loop.index }}</td>
+            <td>{{ winner }}</td>
+            <td class="lucky rec-num">{{ winner_score | round(2) }}</td>
+            <td>{{ loser }}</td>
+            <td class="unlucky rec-num">{{ loser_score | round(2) }}</td>
+            <td class="rec-num"><strong>{{ g.margin }}</strong></td>
+            <td>{{ g.week }}</td>
+            <td>{{ g.year }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- ── Streaks ────────────────────────────────────────────────────────────── -->
+<h2 id="streaks" class="mt-5 h3">All-Time Streaks</h2>
+<p class="text-muted small">Longest win, loss, and tie streaks across all regular seasons combined. Click a column header to sort.</p>
+<div class="table-responsive">
+<table class="table table-striped" id="streaksTable">
+    <thead>
+        <tr>
+            <th class="sortable" data-col="0" data-dir="asc" style="cursor:pointer;">Owner <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="1" data-dir="asc" style="cursor:pointer;">Win Streak 🔥 <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="2" data-dir="asc" style="cursor:pointer;">Loss Streak 💀 <span class="sort-icon text-muted">⇅</span></th>
+            <th class="sortable" data-col="3" data-dir="asc" style="cursor:pointer;">Tie Streak 🤝 <span class="sort-icon text-muted">⇅</span></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for owner, s in streaks | dictsort %}
+        <tr>
+            <td><a href="{{ url_for('owner_profile', owner_name=owner) }}">{{ owner }}</a></td>
+            <td class="lucky">{{ s.win_streak }}</td>
+            <td class="unlucky">{{ s.loss_streak }}</td>
+            <td>{{ s.tie_streak }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<a href="/" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Shared click-to-sort for both tables on this page. Reads the rendered cell
+// text, so "12-4-1" sorts as 12 — good enough, since that column's leading
+// number is the wins.
+function makeSortable(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    table.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const tbody = table.tBodies[0];
+            const col   = parseInt(th.dataset.col);
+            const asc   = th.dataset.dir !== 'desc';
+            th.dataset.dir = asc ? 'desc' : 'asc';
+
+            table.querySelectorAll('th.sortable .sort-icon')
+                 .forEach(i => { i.textContent = '⇅'; });
+            th.querySelector('.sort-icon').textContent = asc ? '▲' : '▼';
+
+            const rows = Array.from(tbody.rows);
+            rows.sort((a, b) => {
+                const va = a.cells[col].textContent.trim();
+                const vb = b.cells[col].textContent.trim();
+                const na = parseFloat(va), nb = parseFloat(vb);
+                const cmp = (isNaN(na) || isNaN(nb)) ? va.localeCompare(vb) : na - nb;
+                return asc ? cmp : -cmp;
+            });
+            rows.forEach(r => tbody.appendChild(r));
+        });
+    });
+}
+makeSortable('streaksTable');
+makeSortable('ledgerTable');
+</script>
+{% endblock %}

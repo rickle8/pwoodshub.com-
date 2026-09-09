@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PW League{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Site background — Bootstrap dark mode handles components, we handle the bg */
+        :root, [data-bs-theme="light"] { --site-bg: #add8e6; --stat-card: rgba(255,255,255,0.75); }
+        [data-bs-theme="dark"]          { --site-bg: #0d1b2a; --stat-card: rgba(20,35,55,0.95); }
+
+        body { background-color: var(--site-bg) !important; transition: background-color .2s; }
+
+        /* PW circle brand in navbar */
+        .pw-brand {
+            font-size: 18px; font-weight: bold;
+            background-color: #ff69b4; color: white !important;
+            border: 3px dashed yellow; border-radius: 50%;
+            padding: 7px 11px; text-decoration: none !important;
+            transform: rotate(-10deg); display: inline-block;
+            line-height: 1; flex-shrink: 0;
+        }
+
+        /* Navbar */
+        .site-nav { background-color: #1565c0; }
+        [data-bs-theme="dark"] .site-nav { background-color: #0a0f1e; }
+        .site-nav .nav-link { color: rgba(255,255,255,0.85) !important; }
+        .site-nav .nav-link:hover,
+        .site-nav .nav-link.active { color: #fff !important; text-decoration: underline; }
+        .site-nav .navbar-brand { color: rgba(255,255,255,0.9) !important; }
+        .navbar-toggler { border-color: rgba(255,255,255,0.4); }
+        .navbar-toggler-icon { filter: invert(1); }
+
+        /* Shared utility classes */
+        .stat-card { background: var(--stat-card); border-radius: 8px; padding: 16px; height: 100%; }
+        .lucky   { color: #198754; font-weight: bold; }
+        .unlucky { color: #dc3545; font-weight: bold; }
+        .neutral { color: #6c757d; font-weight: bold; }
+
+        /* Position badge colors (draft, rosters, year pages) */
+        .pos-QB  { background-color: #e53935; color:#fff; }
+        .pos-RB  { background-color: #43a047; color:#fff; }
+        .pos-WR  { background-color: #1e88e5; color:#fff; }
+        .pos-TE  { background-color: #fb8c00; color:#fff; }
+        .pos-K   { background-color: #8e24aa; color:#fff; }
+        .pos-DEF,.pos-D\/ST { background-color: #546e7a; color:#fff; }
+
+        /* Keeper picks on draft pages */
+        .keeper-card  { border: 2px solid #f0ad4e !important; }
+        .keeper-badge { background-color: #f0ad4e; color: #212529; }
+
+        /* Roster player rows (rosters + owner pages) */
+        .player-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 3px 0; font-size: .88em;
+            border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.06));
+        }
+        .player-row:last-child { border-bottom: none; }
+        .player-row .badge { min-width: 42px; font-size: .72em; }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg site-nav mb-3">
+        <div class="container-fluid">
+            <a href="/" class="pw-brand me-2">PW</a>
+            <span class="navbar-brand fw-bold ms-1 d-none d-sm-inline">Peyton Woods League</span>
+            <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#siteNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="siteNav">
+                <ul class="navbar-nav me-auto mt-2 mt-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="seasonMenu" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ current_season }} Season
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="seasonMenu">
+                            <li><a class="dropdown-item" href="/scoreboard">📊 This Week</a></li>
+                            <li><a class="dropdown-item" href="/recaps">📰 Weekly Recaps</a></li>
+                            <li><a class="dropdown-item" href="/rosters">👥 Current Rosters</a></li>
+                            <li><a class="dropdown-item" href="/odds">🎲 Playoff Odds</a></li>
+                            <li><a class="dropdown-item" href="/trends">🔥 Trending Players</a></li>
+                            <li><a class="dropdown-item" href="/analyzer">⚖️ Trade Analyzer</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}">Full {{ current_season }} Season</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/head_to_head">Head-to-Head</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/power_rankings">Owners</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/records">Records</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/draft">Draft</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/notes">Notes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/chat">Chat</a></li>
+                </ul>
+                <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+                    <button class="btn btn-sm btn-outline-light" id="darkToggle" title="Toggle dark/light mode">🌙</button>
+                    <input type="color" id="bgColorPicker" title="Background color"
+                           style="width:32px;height:32px;padding:2px;border-radius:4px;border:1px solid rgba(255,255,255,0.4);cursor:pointer;background:none;">
+                    <button class="btn btn-sm btn-outline-light" id="resetPrefs" title="Reset to default">↺</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const html        = document.documentElement;
+        const btn         = document.getElementById('darkToggle');
+        const colorPicker = document.getElementById('bgColorPicker');
+
+        function applyPrefs(p) {
+            const theme = p.theme || 'light';
+            html.setAttribute('data-bs-theme', theme);
+            btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            const bg = p.bg_color || (theme === 'dark' ? '#0d1b2a' : '#add8e6');
+            document.body.style.setProperty('--site-bg', bg);
+            colorPicker.value = bg;
+            // Cache locally so the next page load applies instantly (no flash)
+            localStorage.setItem('pw-theme', theme);
+            localStorage.setItem('pw-bg', bg);
+        }
+
+        async function savePrefs(update) {
+            try {
+                await fetch('/api/prefs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(update)
+                });
+            } catch (e) { /* silently ignore network errors */ }
+        }
+
+        // Apply cached prefs immediately, then sync with the server copy
+        applyPrefs({
+            theme:    localStorage.getItem('pw-theme'),
+            bg_color: localStorage.getItem('pw-bg')
+        });
+        fetch('/api/prefs')
+            .then(r => r.json())
+            .then(applyPrefs)
+            .catch(() => {});
+
+        btn.addEventListener('click', () => {
+            const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            const bg   = colorPicker.value;
+            applyPrefs({ theme: next, bg_color: bg });
+            savePrefs({ theme: next, bg_color: bg });
+        });
+
+        colorPicker.addEventListener('input', () => {
+            document.body.style.setProperty('--site-bg', colorPicker.value);
+        });
+
+        colorPicker.addEventListener('change', () => {
+            const theme = html.getAttribute('data-bs-theme');
+            savePrefs({ theme, bg_color: colorPicker.value });
+        });
+
+        document.getElementById('resetPrefs').addEventListener('click', () => {
+            const defaults = { theme: 'light', bg_color: '#add8e6' };
+            applyPrefs(defaults);
+            savePrefs(defaults);
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

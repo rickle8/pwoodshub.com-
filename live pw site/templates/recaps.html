@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}{% if week %}Week {{ week }} Recap{% else %}Weekly Recaps{% endif %}{% endblock %}
+
+{% block extra_css %}
+.award-card {
+    background: var(--stat-card);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10px;
+    padding: 14px 16px;
+    height: 100%;
+}
+.award-label { font-size: .75em; text-transform: uppercase; letter-spacing: .05em; color: var(--bs-secondary-color); }
+.award-value { font-size: 1.6em; font-weight: 700; line-height: 1.15; }
+.award-who   { font-weight: 600; }
+.award-sub   { font-size: .8em; color: var(--bs-secondary-color); }
+.week-pills .nav-link { padding: 2px 10px; }
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mt-2 mb-1 flex-wrap">
+    <h1 class="mb-0">Weekly Recaps</h1>
+    {% if week %}<span class="badge bg-primary fs-6">{{ year }} · Week {{ week }}</span>{% endif %}
+</div>
+
+{% if not weeks %}
+<p class="text-muted mt-3">No games have been played yet this season. Recaps appear here as soon as week 1 wraps.</p>
+{% else %}
+
+<!-- Week selector -->
+<ul class="nav nav-pills week-pills flex-wrap gap-1 mb-4 mt-2">
+    {% for w in weeks %}
+    <li class="nav-item">
+        <a class="nav-link {% if w == week %}active{% endif %}" href="/recaps/{{ w }}">Wk {{ w }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+{% if awards %}
+<!-- Awards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="award-card">
+            <div class="award-label">🏆 High Score</div>
+            <div class="award-value lucky">{{ "%.2f"|format(awards.high.score) }}</div>
+            <div class="award-who"><a href="{{ url_for('owner_profile', owner_name=awards.high.owner) }}">{{ awards.high.owner }}</a></div>
+            <div class="award-sub">{{ awards.high.team }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="award-card">
+            <div class="award-label">🗑️ Low Score</div>
+            <div class="award-value unlucky">{{ "%.2f"|format(awards.low.score) }}</div>
+            <div class="award-who"><a href="{{ url_for('owner_profile', owner_name=awards.low.owner) }}">{{ awards.low.owner }}</a></div>
+            <div class="award-sub">{{ awards.low.team }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="award-card">
+            <div class="award-label">🔨 Biggest Beatdown</div>
+            <div class="award-value">{{ "%.2f"|format(awards.blowout.margin) }}</div>
+            <div class="award-sub">
+                {{ awards.blowout.home_team }} {{ "%.2f"|format(awards.blowout.home_score) }}<br>
+                {{ awards.blowout.away_team }} {{ "%.2f"|format(awards.blowout.away_score) }}
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="award-card">
+            <div class="award-label">😰 Nail-Biter</div>
+            <div class="award-value">{{ "%.2f"|format(awards.closest.margin) }}</div>
+            <div class="award-sub">
+                {{ awards.closest.home_team }} {{ "%.2f"|format(awards.closest.home_score) }}<br>
+                {{ awards.closest.away_team }} {{ "%.2f"|format(awards.closest.away_score) }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Luck -->
+{% if awards.lucky or awards.unlucky %}
+<div class="row g-3 mb-4">
+    {% if awards.lucky %}
+    <div class="col-md-6">
+        <div class="award-card">
+            <div class="award-label mb-2">🍀 Lucky Wins <span class="text-muted">(bottom-half score, still won)</span></div>
+            {% for e in awards.lucky %}
+            <div class="mb-1">
+                <a href="{{ url_for('owner_profile', owner_name=e.owner) }}">{{ e.owner }}</a>
+                <span class="lucky">{{ "%.2f"|format(e.score) }}</span>
+                <span class="award-sub">beat {{ e.opp_owner }} ({{ "%.2f"|format(e.opp_score) }})</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% if awards.unlucky %}
+    <div class="col-md-6">
+        <div class="award-card">
+            <div class="award-label mb-2">💔 Robbed <span class="text-muted">(top-half score, still lost)</span></div>
+            {% for e in awards.unlucky %}
+            <div class="mb-1">
+                <a href="{{ url_for('owner_profile', owner_name=e.owner) }}">{{ e.owner }}</a>
+                <span class="unlucky">{{ "%.2f"|format(e.score) }}</span>
+                <span class="award-sub">lost to {{ e.opp_owner }} ({{ "%.2f"|format(e.opp_score) }})</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Full results -->
+<h2 class="h4 mt-4">Week {{ week }} Results</h2>
+<div class="table-responsive">
+<table class="table table-striped table-sm align-middle">
+    <thead>
+        <tr><th>Winner</th><th>Score</th><th>Loser</th><th>Score</th><th>Margin</th></tr>
+    </thead>
+    <tbody>
+        {% for r in awards.results %}
+        {% if r.home_score >= r.away_score %}
+            {% set w_owner, w_team, w_score = r.home_owner, r.home_team, r.home_score %}
+            {% set l_owner, l_team, l_score = r.away_owner, r.away_team, r.away_score %}
+        {% else %}
+            {% set w_owner, w_team, w_score = r.away_owner, r.away_team, r.away_score %}
+            {% set l_owner, l_team, l_score = r.home_owner, r.home_team, r.home_score %}
+        {% endif %}
+        <tr>
+            <td><a href="{{ url_for('owner_profile', owner_name=w_owner) }}">{{ w_owner }}</a>
+                <span class="award-sub d-block">{{ w_team }}</span></td>
+            <td class="lucky">{{ "%.2f"|format(w_score) }}</td>
+            <td><a href="{{ url_for('owner_profile', owner_name=l_owner) }}">{{ l_owner }}</a>
+                <span class="award-sub d-block">{{ l_team }}</span></td>
+            <td class="unlucky">{{ "%.2f"|format(l_score) }}</td>
+            <td>{{ "%.2f"|format(r.margin) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+{% if week_eff %}
+<!-- Lineup efficiency for this week -->
+<h2 class="h4 mt-4">Week {{ week }} Lineup Efficiency</h2>
+<p class="text-muted small mb-2">
+    What each owner started against the most their roster could have scored that week.
+    <strong>Left on bench</strong> is the difference — points that were sitting there
+    the whole time.
+    {% if week_eff.league_efficiency %}
+    The league started {{ week_eff.league_efficiency }}% of what it could have,
+    leaving {{ "%.1f"|format(week_eff.left) }} points unplayed.
+    {% endif %}
+    {% if week_eff.perfect %}
+    Perfect lineups: {{ week_eff.perfect | join(', ') }}.
+    {% endif %}
+    Season-long numbers live on the
+    <a href="{{ url_for('year_view', year=year|int) }}#tab-efficiency">{{ year }} season page</a>.
+</p>
+<div class="table-responsive">
+<table class="table table-striped table-sm align-middle">
+    <thead>
+        <tr><th>Owner</th><th class="text-end">Started</th><th class="text-end">Optimal</th>
+            <th class="text-end">Left on Bench</th><th class="text-end">Efficiency</th>
+            <th>Costliest Bench</th></tr>
+    </thead>
+    <tbody>
+        {% for r in week_eff.rows %}
+        <tr>
+            <td><a href="{{ url_for('owner_profile', owner_name=r.owner) }}">{{ r.owner }}</a></td>
+            <td class="text-end">{{ "%.2f"|format(r.actual) }}</td>
+            <td class="text-end text-muted">{{ "%.2f"|format(r.optimal) }}</td>
+            <td class="text-end {{ 'unlucky' if r.left > 0 }}">{{ "%.2f"|format(r.left) }}</td>
+            <td class="text-end">{{ r.efficiency if r.efficiency is not none else '—' }}{% if r.efficiency is not none %}%{% endif %}</td>
+            <td class="award-sub">
+                {% if r.worst_sit %}
+                <a href="{{ url_for('player_view', player_id=r.worst_sit_id) }}">{{ r.worst_sit }}</a>
+                ({{ "%.1f"|format(r.worst_sit_pts) }})
+                {% else %}—{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+
+<p class="text-muted small">
+    A written recap is also posted to the <a href="/notes">Notes page</a> automatically after each week wraps.
+</p>
+{% endif %}
+{% endif %}
+
+<div class="d-flex gap-2 mt-3 flex-wrap">
+    <a href="/scoreboard" class="btn btn-outline-primary btn-sm">This Week →</a>
+    <a href="/odds" class="btn btn-outline-secondary btn-sm">Playoff Odds →</a>
+</div>
+{% endblock %}

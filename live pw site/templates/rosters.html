@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ year }} Rosters{% endblock %}
+
+{% block extra_css %}
+.roster-card {
+    background: var(--stat-card);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10px;
+    padding: 14px 16px;
+    height: 100%;
+}
+.roster-card .team-header { margin-bottom: 8px; }
+.roster-card .team-name   { font-weight: bold; font-size: 1.05em; line-height: 1.2; }
+.roster-card .team-meta   { font-size: .8em; color: var(--bs-secondary-color); }
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-3 mt-2 mb-1 flex-wrap">
+    <h1 class="mb-0">Rosters</h1>
+    {% if year %}
+        {% if is_latest %}
+        <span class="badge bg-success fs-6">{{ year }} — Active</span>
+        {% else %}
+        <span class="badge bg-secondary fs-6">{{ year }} — End of Season</span>
+        {% endif %}
+    {% endif %}
+</div>
+{% if year and not is_latest %}
+<p class="text-muted small mb-3">Rosters as they stood at the end of the {{ year }} season.</p>
+{% endif %}
+
+{% if not roster_years %}
+<p class="text-muted">No roster data available yet. Run <code>scraper.py</code> to populate it.</p>
+{% else %}
+
+<!-- Season selector -->
+<ul class="nav nav-pills mb-3 flex-wrap gap-1">
+    {% for y in roster_years %}
+    <li class="nav-item">
+        <a class="nav-link py-1 px-2 {% if y == year %}active{% endif %}" href="/rosters/{{ y }}">{{ y }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+<div class="row g-3">
+    {% for team in teams %}
+    <div class="col-md-6 col-xl-4">
+        <div class="roster-card">
+            <div class="team-header">
+                <div class="team-name">
+                    {{ team.name }}
+                    {% if team.rank == 1 and season_complete %}<span title="Champion">👑</span>{% endif %}
+                </div>
+                <div class="team-meta">
+                    <a href="{{ url_for('owner_profile', owner_name=team.owner) }}">{{ team.owner }}</a>
+                    &nbsp;·&nbsp; {{ team.wins }}-{{ team.losses }}-{{ team.ties }}
+                    &nbsp;·&nbsp; #{{ team.rank }}
+                </div>
+            </div>
+            {% if team.roster %}
+                {% for p in team.roster %}
+                {% set pid = player_id_for(p) %}
+                <div class="player-row">
+                    <span class="badge pos-{{ p.position }}">{{ p.position }}</span>
+                    {% if pid %}<a href="/player/{{ pid }}">{{ p.name }}</a>{% else %}<span>{{ p.name }}</span>{% endif %}
+                    {% if is_latest and p.name in keepers.get(team.owner, ()) %}
+                    <span class="badge keeper-badge">Keeper</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted small mb-0">No roster data for this team.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endif %}
+
+<a href="/" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}

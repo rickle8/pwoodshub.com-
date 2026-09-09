@@ -1,0 +1,205 @@
+{# Trade analyzer widget. Used standalone at /analyzer and embedded in the
+   current season's Trade Analyzer tab, so it carries its own styles and script
+   and assumes only that Bootstrap is present.
+
+   Current season only: it runs on forward-looking consensus projections and
+   live KeepTradeCut values, which say nothing about a finished season. #}
+<style>
+.az-side-panel { border: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.12));
+                 border-radius: 10px; padding: 12px; height: 100%; }
+.az-roster-list { max-height: 340px; overflow-y: auto; margin-top: 8px; }
+.az-pick-row { display: flex; align-items: center; gap: 8px; padding: 4px 2px;
+               border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.06));
+               cursor: pointer; }
+.az-pick-row:last-child { border-bottom: none; }
+.az-pick-row:hover { background: var(--bs-secondary-bg); }
+.az-pick-row.picked { background: #0d6efd1f; }
+.az-pick-name { flex: 1 1 auto; min-width: 0; overflow: hidden;
+                text-overflow: ellipsis; white-space: nowrap; font-size: .9em; }
+.az-pick-val { font-variant-numeric: tabular-nums; font-size: .8em;
+               color: var(--bs-secondary-color); flex-shrink: 0; }
+.az-delta { font-variant-numeric: tabular-nums; font-weight: 700; }
+.az-delta.up { color: #198754; }
+.az-delta.down { color: #dc3545; }
+.az-big { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.az-verdict { font-size: 1.05rem; font-weight: 600; }
+.az-bar { height: 8px; border-radius: 4px; background: var(--bs-secondary-bg);
+          overflow: hidden; }
+.az-bar > div { height: 100%; }
+</style>
+
+<p class="text-muted small mb-3">
+    Pick a team on each side, click the players changing hands, and see what the
+    trade actually does. <strong>Lineup</strong> is the change in projected points
+    from the best lineup each roster could start — that's the number that matters,
+    because a fourth running back you never start is worth nothing to you.
+    <strong>Value</strong> is what the deal looks like on KeepTradeCut, which is the
+    check on whether the other owner would ever agree.
+</p>
+
+<div class="row g-3">
+    {% for side in ['A', 'B'] %}
+    <div class="col-md-6">
+        <div class="az-side-panel">
+            <select class="form-select form-select-sm" id="azTeam{{ side }}">
+                {% for o in analyzer.owners %}
+                <option value="{{ o }}" {{ 'selected' if loop.index0 == (0 if side == 'A' else 1) }}>{{ o }}</option>
+                {% endfor %}
+            </select>
+            <input class="form-control form-control-sm mt-2" id="azFilter{{ side }}"
+                   placeholder="filter by name or position…">
+            <div class="az-roster-list" id="azList{{ side }}"></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="stat-card mt-3">
+    <div class="row text-center g-3">
+        {% for side in ['A', 'B'] %}
+        <div class="col-md-6">
+            <div class="fw-semibold mb-1" id="azName{{ side }}">—</div>
+            <div class="row">
+                <div class="col-6">
+                    <div class="az-big az-delta" id="azLineup{{ side }}">0</div>
+                    <div class="text-muted small">lineup points</div>
+                </div>
+                <div class="col-6">
+                    <div class="az-big az-delta" id="azValue{{ side }}">0</div>
+                    <div class="text-muted small">trade value</div>
+                </div>
+            </div>
+            <div class="text-muted small mt-1" id="azDetail{{ side }}"></div>
+        </div>
+        {% endfor %}
+    </div>
+    <hr>
+    <div class="text-center">
+        <div class="az-verdict" id="azVerdict">Pick players on both sides</div>
+        <div class="text-muted small mt-1" id="azFairness"></div>
+        <div class="az-bar mt-2 mx-auto" style="max-width:340px"><div id="azFairbar"></div></div>
+    </div>
+</div>
+
+<script>
+(function () {
+const ROSTERS = {{ analyzer.rosters | tojson }};
+const LINEUP  = ["QB","RB","RB","WR","WR","TE","FLEX","FLEX","K","DEF"];
+const FLEX    = ["RB","WR","TE"];
+const picked  = { A: new Set(), B: new Set() };
+const $ = id => document.getElementById(id);
+
+// Mirrors lineups.best_lineup on the server: fixed slots first, then FLEX from
+// whatever RB/WR/TE are left, otherwise a FLEX can steal the only startable RB.
+function bestLineup(players) {
+    const pool = [...players].sort((x, y) => y.points - x.points);
+    const used = new Set();
+    let total = 0;
+    for (const slot of LINEUP.filter(s => s !== 'FLEX')) {
+        for (let i = 0; i < pool.length; i++) {
+            if (!used.has(i) && pool[i].position === slot) { used.add(i); total += pool[i].points; break; }
+        }
+    }
+    for (const _ of LINEUP.filter(s => s === 'FLEX')) {
+        for (let i = 0; i < pool.length; i++) {
+            if (!used.has(i) && FLEX.includes(pool[i].position)) { used.add(i); total += pool[i].points; break; }
+        }
+    }
+    return total;
+}
+
+function teamOf(side) { return $('azTeam' + side).value; }
+
+function render(side) {
+    const owner = teamOf(side);
+    const q = $('azFilter' + side).value.trim().toLowerCase();
+    const list = $('azList' + side);
+    list.innerHTML = '';
+    (ROSTERS[owner] || [])
+        .filter(p => !q || p.name.toLowerCase().includes(q) || p.position.toLowerCase() === q)
+        .forEach(p => {
+            const row = document.createElement('div');
+            row.className = 'az-pick-row' + (picked[side].has(p.id) ? ' picked' : '');
+            row.innerHTML = `<span class="badge pos-${p.position}">${p.position}</span>` +
+                            `<span class="az-pick-name">${p.name}</span>` +
+                            `<span class="az-pick-val">${p.points ? p.points.toFixed(0) : '—'} pts` +
+                            `${p.value ? ' · ' + p.value.toLocaleString() : ''}</span>`;
+            row.onclick = () => {
+                picked[side].has(p.id) ? picked[side].delete(p.id) : picked[side].add(p.id);
+                render(side); update();
+            };
+            list.appendChild(row);
+        });
+}
+
+function setDelta(el, v, digits) {
+    if (!el) return;
+    el.textContent = (v > 0 ? '+' : '') + v.toFixed(digits);
+    el.className = 'az-big az-delta ' + (v > 0.05 ? 'up' : v < -0.05 ? 'down' : '');
+}
+
+function update() {
+    const oA = teamOf('A'), oB = teamOf('B');
+    $('azNameA').textContent = oA;
+    $('azNameB').textContent = oB;
+
+    const res = {};
+    for (const [side, me, them] of [['A', oA, oB], ['B', oB, oA]]) {
+        const other = side === 'A' ? 'B' : 'A';
+        const mine = ROSTERS[me] || [], theirs = ROSTERS[them] || [];
+        const out = picked[side], inc = picked[other];
+
+        const after = mine.filter(p => !out.has(p.id))
+                          .concat(theirs.filter(p => inc.has(p.id)));
+        const lineupDelta = bestLineup(after) - bestLineup(mine);
+        const valOut = mine.filter(p => out.has(p.id)).reduce((s, p) => s + p.value, 0);
+        const valIn  = theirs.filter(p => inc.has(p.id)).reduce((s, p) => s + p.value, 0);
+        res[side] = { lineupDelta, valOut, valIn, nOut: out.size, nIn: inc.size };
+
+        setDelta($('azLineup' + side), lineupDelta, 1);
+        setDelta($('azValue' + side), valIn - valOut, 0);
+        $('azDetail' + side).textContent =
+            out.size || inc.size ? `sends ${out.size}, gets ${inc.size}` : 'nothing selected';
+    }
+
+    const v = $('azVerdict'), f = $('azFairness'), bar = $('azFairbar');
+    if (!picked.A.size || !picked.B.size) {
+        v.textContent = 'Pick players on both sides';
+        v.className = 'az-verdict text-muted';
+        if (f) { f.textContent = ''; bar.style.width = '0%'; }
+        return;
+    }
+
+    const a = res.A.lineupDelta, b = res.B.lineupDelta;
+    if (a > 0 && b > 0) {
+        v.textContent = '✅ Both teams get better';
+        v.className = 'az-verdict text-success';
+    } else if (a > 0 || b > 0) {
+        const [win, lose] = a > 0 ? [oA, oB] : [oB, oA];
+        v.textContent = `${win} gets better, ${lose} doesn't`;
+        v.className = 'az-verdict';
+    } else {
+        v.textContent = '❌ Neither lineup improves';
+        v.className = 'az-verdict text-danger';
+    }
+
+    if (!f) return;
+    const hi = Math.max(res.A.valIn, res.B.valIn);
+    const pct = hi ? Math.round(Math.min(res.A.valIn, res.B.valIn) / hi * 100) : 0;
+    f.textContent = `Value exchanged: ${res.B.valIn.toLocaleString()} for ` +
+                    `${res.A.valIn.toLocaleString()} — ${pct}% even` +
+                    (pct < 70 ? ' (lopsided; a hard sell)' : '');
+    bar.style.width = pct + '%';
+    bar.style.background = pct >= 85 ? '#198754' : pct >= 70 ? '#fd7e14' : '#dc3545';
+}
+
+['A', 'B'].forEach(side => {
+    $('azTeam' + side).addEventListener('change', () => {
+        picked[side].clear(); render(side); update();
+    });
+    $('azFilter' + side).addEventListener('input', () => render(side));
+    render(side);
+});
+update();
+})();
+</script>

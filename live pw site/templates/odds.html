@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Playoff Odds{% endblock %}
+
+{% block extra_css %}
+.odds-bar-wrap {
+    background: var(--bs-secondary-bg); border-radius: 4px;
+    height: 16px; min-width: 120px; overflow: hidden;
+}
+.odds-bar      { height: 100%; background: #198754; }
+.odds-bar.last { background: #dc3545; }
+.odds-pct { font-variant-numeric: tabular-nums; }
+.rating { font-variant-numeric: tabular-nums; font-weight: 600; }
+.rating.hot  { color: #198754; }
+.rating.cold { color: #dc3545; }
+.lineup-pop { cursor: help; border-bottom: 1px dotted currentColor; }
+.status-tag { font-size: .62em; font-weight: 700; letter-spacing: .05em;
+              padding: 1px 5px; border-radius: 3px; vertical-align: middle;
+              cursor: help; }
+.status-tag.in  { background: #19875426; color: #198754; }
+.status-tag.out { background: #dc354520; color: #dc3545; }
+{% endblock %}
+
+{% block content %}
+{% set playoffs = odds and odds.phase == 'playoffs' %}
+<h1 class="mt-2 mb-1">
+    {% if playoffs %}Placement Odds{% else %}Playoff Odds{% endif %}{% if odds %} — {{ odds.year }}{% endif %}
+</h1>
+{% if odds %}
+<p class="text-muted small mb-3">
+    {{ "{:,}".format(odds.n_sims) }} simulations of
+    {% if playoffs %}
+        the playoff bracket.
+        <strong>The regular season is over</strong> — all {{ odds.reg_weeks }} weeks are in
+        and the {{ odds.playoff_teams }}-team field is set, so what's left is where
+        everyone finishes.
+        {% if odds.playoffs_started %}
+        Games already decided are locked in; only the ones still to be played get simulated.
+        {% endif %}
+    {% elif odds.weeks_played == 0 %}
+        the full {{ odds.reg_weeks }}-week regular season, before a single game has been played.
+    {% else %}
+        the {{ odds.games_left }} remaining regular-season game{{ 's' if odds.games_left != 1 }}
+        ({{ odds.weeks_played }} of {{ odds.reg_weeks }} weeks played,
+        {{ odds.weeks_left }} to go) plus the playoff bracket.
+    {% endif %}
+
+    {% if odds.has_ratings %}
+        {% if odds.weeks_played == 0 %}
+        With no games played yet, team strength is entirely each team's
+        <strong>roster rating</strong>
+        {%- else -%}
+        Team strength blends each team's own scores with its
+        <strong>roster rating</strong>
+        {%- endif %} — a consensus of
+        {{ odds.sources | join(', ') if odds.sources else 'public projections' }},
+        applied to the best lineup that roster can legally start and scaled so the
+        league averages 100.
+        {% if odds.weeks_played == 0 %}
+        Real results start replacing it the moment week 1 is scored.
+        {% elif playoffs %}
+        After a full season the rating is down to about {{ odds.prior_weight }}% of each
+        estimate — the rest is what these teams actually scored.
+        {% elif odds.prior_weight >= 20 %}
+        With {{ odds.weeks_played }} week{{ 's' if odds.weeks_played != 1 }} played it's
+        still about {{ odds.prior_weight }}% of the estimate; real results take over as
+        the weeks pile up.
+        {% else %}
+        After {{ odds.weeks_played }} weeks it's down to roughly {{ odds.prior_weight }}% of
+        the estimate — these are mostly real results now.
+        {% endif %}
+    {% else %}
+        Team strength comes from each team's actual scores so far, blended with the
+        league average.
+    {% endif %}
+
+    {% if not playoffs %}
+    Top {{ odds.playoff_teams }} make the playoffs.
+    {% endif %}
+    Recomputed every 30 minutes.
+</p>
+{% endif %}
+
+{% if error %}<div class="alert alert-warning">{{ error }}</div>{% endif %}
+
+{% if odds %}
+<div class="table-responsive">
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Owner</th><th>Record</th>
+            {% if odds.has_ratings %}<th>Roster</th>{% endif %}
+            {% if playoffs %}
+            <th>Title</th><th style="min-width:140px"></th>
+            <th>Top 3</th><th style="min-width:140px"></th>
+            {% else %}
+            <th>Playoffs</th><th style="min-width:140px"></th>
+            <th>Last Place</th><th style="min-width:140px"></th>
+            {% endif %}
+            <th>Avg Finish</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in odds.rows %}
+        <tr>
+            <td>
+                <a href="{{ url_for('owner_profile', owner_name=r.owner) }}">{{ r.owner }}</a>
+                {% if r.clinched %}
+                <span class="status-tag in" title="Made the playoffs in all {{ '{:,}'.format(odds.n_sims) }} simulations">IN</span>
+                {% elif r.eliminated %}
+                <span class="status-tag out" title="Missed the playoffs in all {{ '{:,}'.format(odds.n_sims) }} simulations">OUT</span>
+                {% endif %}
+            </td>
+            <td>{{ r.wins }}-{{ r.losses }}</td>
+            {% if odds.has_ratings %}
+            <td>
+                {% if r.rating %}
+                <span class="rating {% if r.rating >= 102 %}hot{% elif r.rating <= 98 %}cold{% endif %} lineup-pop"
+                      title="Projected best lineup ({{ r.proj_week }} pts/wk):&#10;{% for slot, p, wk in r.starters %}{{ slot }}  {{ p.name }} — {{ wk }}&#10;{% endfor %}">{{ r.rating }}</span>
+                {% else %}<span class="text-muted">—</span>{% endif %}
+            </td>
+            {% endif %}
+            {% if playoffs %}
+            <td class="odds-pct {% if r.title_pct >= 25 %}lucky{% endif %}">{{ r.title_pct }}%</td>
+            <td><div class="odds-bar-wrap"><div class="odds-bar" style="width: {{ r.title_pct }}%"></div></div></td>
+            <td class="odds-pct">{{ r.top3_pct }}%</td>
+            <td><div class="odds-bar-wrap"><div class="odds-bar" style="width: {{ r.top3_pct }}%"></div></div></td>
+            {% else %}
+            <td class="odds-pct {% if r.playoff_pct >= 50 %}lucky{% endif %}">{{ r.playoff_pct }}%</td>
+            <td><div class="odds-bar-wrap"><div class="odds-bar" style="width: {{ r.playoff_pct }}%"></div></div></td>
+            <td class="odds-pct {% if r.last_pct >= 25 %}unlucky{% endif %}">{{ r.last_pct }}%</td>
+            <td><div class="odds-bar-wrap"><div class="odds-bar last" style="width: {{ r.last_pct }}%"></div></div></td>
+            {% endif %}
+            <td>{{ r.avg_finish }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+<p class="text-muted small">
+    {% if playoffs %}
+    Avg Finish counts the whole league 1–12, consolation bracket included —
+    there's still a last place to avoid.
+    {% else %}
+    Last place matters: loser bracket, first pick, and eternal shame are all on the line.
+    {% endif %}
+</p>
+{% endif %}
+
+<a href="/scoreboard" class="btn btn-outline-primary mt-3">← This Week</a>
+{% endblock %}

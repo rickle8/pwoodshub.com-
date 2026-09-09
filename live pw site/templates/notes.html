@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}League Notes{% endblock %}
+
+{% block extra_css %}
+.note-card {
+    background: var(--stat-card);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+}
+.note-text { white-space: pre-wrap; word-break: break-word; margin-bottom: 6px; }
+.note-meta { font-size: .78em; color: var(--bs-secondary-color); display: flex; align-items: center; gap: 8px; }
+.note-author { font-weight: 600; }
+.year-heading {
+    border-bottom: 2px solid var(--bs-border-color);
+    padding-bottom: 4px; margin-top: 1.5rem;
+}
+.login-panel { background: var(--stat-card); border: 1px solid var(--bs-border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.compose { background: var(--stat-card); border: 1px solid var(--bs-border-color); border-radius: 12px; padding: 16px; margin-bottom: 1.5rem; }
+{% endblock %}
+
+{% block content %}
+<h1 class="mt-2 mb-1">League Notes</h1>
+<p class="text-muted small mb-3">Rule decisions, trade history, punishments, memories — written down so nobody can argue about them later. Same username + PIN as chat.</p>
+
+<!-- Login panel (same identity as chat) -->
+<div id="loginPanel" class="login-panel">
+    <p class="text-muted small mb-2">Sign in to post notes. Same combo = same identity every time.</p>
+    <div class="row g-2">
+        <div class="col-sm-5">
+            <input type="text" id="usernameInput" class="form-control" placeholder="Username" maxlength="30">
+        </div>
+        <div class="col-sm-4">
+            <input type="password" id="pinInput" class="form-control" placeholder="PIN" maxlength="20">
+        </div>
+        <div class="col-sm-3">
+            <button class="btn btn-primary w-100" id="joinBtn">Sign in</button>
+        </div>
+    </div>
+</div>
+
+<!-- Compose -->
+<div id="composePanel" class="compose d-none">
+    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+        <span class="badge fs-6 px-3 py-2" id="userBadge"></span>
+        <button class="btn btn-sm btn-link text-muted p-0" id="logoutBtn">switch user</button>
+        <div class="ms-auto d-flex align-items-center gap-2">
+            <label for="noteYear" class="text-muted small mb-0">Season:</label>
+            <select id="noteYear" class="form-select form-select-sm w-auto">
+                {% for y in year_options %}
+                <option value="{{ y }}">{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <textarea id="noteText" class="form-control mb-2" rows="3" maxlength="5000"
+              placeholder="Write a league note… (rule rulings, trades, punishments, anything worth remembering)"></textarea>
+    <button class="btn btn-primary" id="postBtn">Post Note</button>
+</div>
+
+<!-- Notes by year -->
+{% if not note_years %}
+<p class="text-muted" id="emptyMsg">No notes yet. Be the first to write down some league history.</p>
+{% endif %}
+
+{% for y in note_years %}
+<h2 class="year-heading">{{ y }} Season</h2>
+{% for n in notes[y] %}
+<div class="note-card">
+    <div class="note-text">{{ n.text }}</div>
+    <div class="note-meta">
+        <span class="note-author">{{ n.username }}</span>
+        <span>{{ n.timestamp[:10] }}</span>
+        <button class="btn btn-sm btn-link text-danger p-0 ms-auto d-none delete-btn"
+                data-id="{{ n.id }}" data-author="{{ n.username }}">delete</button>
+    </div>
+</div>
+{% endfor %}
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+'use strict';
+
+// Shared identity with chat (same localStorage keys)
+let me  = localStorage.getItem('pw-chat-user') || '';
+let pin = localStorage.getItem('pw-chat-pin')  || '';
+
+const PALETTE = ['#e53935','#8e24aa','#1e88e5','#00897b','#f4511e',
+                 '#3949ab','#d81b60','#039be5','#7cb342','#fb8c00'];
+function nameColor(n) {
+    let h = 0;
+    for (let i = 0; i < n.length; i++) h = (Math.imul(h, 31) + n.charCodeAt(i)) | 0;
+    return PALETTE[Math.abs(h) % PALETTE.length];
+}
+
+function applyLoggedIn() {
+    document.getElementById('loginPanel').classList.add('d-none');
+    document.getElementById('composePanel').classList.remove('d-none');
+    const badge = document.getElementById('userBadge');
+    badge.textContent           = '✓ ' + me;
+    badge.style.backgroundColor = nameColor(me);
+    badge.style.color           = '#fff';
+    // Reveal delete buttons on my own notes
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.classList.toggle('d-none', btn.dataset.author !== me);
+    });
+}
+function applyLoggedOut() {
+    me = pin = '';
+    localStorage.removeItem('pw-chat-user');
+    localStorage.removeItem('pw-chat-pin');
+    document.getElementById('loginPanel').classList.remove('d-none');
+    document.getElementById('composePanel').classList.add('d-none');
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.classList.add('d-none'));
+}
+if (me) applyLoggedIn();
+
+document.getElementById('logoutBtn').addEventListener('click', applyLoggedOut);
+document.getElementById('joinBtn').addEventListener('click', () => {
+    const u = document.getElementById('usernameInput').value.trim();
+    const p = document.getElementById('pinInput').value.trim();
+    if (!u || !p) { alert('Enter a username and PIN.'); return; }
+    me = u; pin = p;
+    localStorage.setItem('pw-chat-user', me);
+    localStorage.setItem('pw-chat-pin',  pin);
+    applyLoggedIn();
+});
+document.getElementById('pinInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('joinBtn').click();
+});
+
+document.getElementById('postBtn').addEventListener('click', async () => {
+    const text = document.getElementById('noteText').value.trim();
+    const year = document.getElementById('noteYear').value;
+    if (!text) return;
+    const resp = await fetch('/api/notes', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: me, pin, year, text })
+    });
+    if (resp.ok) {
+        location.reload();
+    } else {
+        const err = await resp.json().catch(() => ({}));
+        alert(err.error || 'Failed to post note.');
+    }
+});
+
+document.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        if (!confirm('Delete this note?')) return;
+        const resp = await fetch('/api/notes/delete', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: me, pin, id: btn.dataset.id })
+        });
+        if (resp.ok) {
+            location.reload();
+        } else {
+            const err = await resp.json().catch(() => ({}));
+            alert(err.error || 'Failed to delete note.');
+        }
+    });
+});
+</script>
+{% endblock %}

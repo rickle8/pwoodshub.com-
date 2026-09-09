@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Trade Analyzer{% endblock %}
+
+{% block content %}
+<h1 class="mt-2 mb-1">Trade Analyzer <span class="text-muted">{{ analyzer.year }}</span></h1>
+
+{% include "_analyzer.html" %}
+{% endblock %}

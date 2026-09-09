@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Peyton Woods League History{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">Peyton Woods League History</h1>
+
+<h2>Seasons</h2>
+<div class="list-group mb-4">
+    {% for year in years %}
+        <a href="/year/{{ year }}" class="list-group-item list-group-item-action">
+            {% set champ = champions.get(year, {}) %}
+            {{ year }} &mdash; {{ champ.get('team', '—') }} (Owner: {{ champ.get('owner', '—') }})
+        </a>
+    {% endfor %}
+</div>
+
+<!-- Quick stat cards -->
+<h2>All-Time Records <a href="/records" class="btn btn-sm btn-primary ms-2">View Full Records</a></h2>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-4">
+        <div class="stat-card">
+            <div class="text-muted small">Highest Single-Week Score</div>
+            <div class="fs-5 fw-bold">{{ scoring_records.highest_score.score }}</div>
+            <div>{{ scoring_records.highest_score.team }}</div>
+            <div class="text-muted small">Wk {{ scoring_records.highest_score.week }}, {{ scoring_records.highest_score.year }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="stat-card">
+            <div class="text-muted small">Lowest Single-Week Score</div>
+            <div class="fs-5 fw-bold">{{ scoring_records.lowest_score.score }}</div>
+            <div>{{ scoring_records.lowest_score.team }}</div>
+            <div class="text-muted small">Wk {{ scoring_records.lowest_score.week }}, {{ scoring_records.lowest_score.year }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="stat-card">
+            <div class="text-muted small">Biggest Blowout</div>
+            <div class="fs-5 fw-bold">{{ scoring_records.biggest_blowout.margin | round(2) }} pts</div>
+            <div>{{ scoring_records.biggest_blowout.teams }}</div>
+            <div class="text-muted small">Wk {{ scoring_records.biggest_blowout.week }}, {{ scoring_records.biggest_blowout.year }}</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="stat-card">
+            <div class="text-muted small">Highest Season Score</div>
+            <div class="fs-5 fw-bold">{{ highest_scoring_team_all_time.score | round(2) }}</div>
+            <div>{{ highest_scoring_team_all_time.team }}</div>
+            <div class="text-muted small">{{ highest_scoring_team_all_time.year }} season</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="stat-card">
+            <div class="text-muted small">Lowest Season Score</div>
+            <div class="fs-5 fw-bold">{{ lowest_scoring_team_all_time.score | round(2) }}</div>
+            <div>{{ lowest_scoring_team_all_time.team }}</div>
+            <div class="text-muted small">{{ lowest_scoring_team_all_time.year }} season</div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

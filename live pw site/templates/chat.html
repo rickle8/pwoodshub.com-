@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% block title %}Chat{% endblock %}
+
+{% block extra_css %}
+.chat-wrap {
+    display: flex; flex-direction: column;
+    height: calc(100vh - 170px); min-height: 420px;
+}
+.chat-messages {
+    flex: 1; overflow-y: auto; padding: 16px 12px;
+    background: var(--stat-card);
+    border: 1px solid var(--bs-border-color); border-radius: 12px;
+    scroll-behavior: smooth;
+}
+.msg-row          { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 10px; }
+.msg-row.own      { flex-direction: row-reverse; }
+.msg-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 13px; color: #fff; flex-shrink: 0; cursor: default;
+}
+.msg-body         { max-width: min(70%, 420px); display: flex; flex-direction: column; gap: 2px; }
+.msg-row.own .msg-body { align-items: flex-end; }
+.msg-meta         { font-size: .7em; color: var(--bs-secondary-color); padding: 0 4px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.msg-row.own .msg-meta { justify-content: flex-end; }
+.msg-bubble {
+    padding: 8px 13px; border-radius: 18px;
+    display: inline-block; word-break: break-word; line-height: 1.45;
+}
+.msg-row:not(.own) .msg-bubble { background: var(--bs-secondary-bg); border-bottom-left-radius: 4px; }
+.msg-row.own       .msg-bubble { background: #1565c0; color: #fff; border-bottom-right-radius: 4px; }
+.msg-bubble img    { max-width: 220px; max-height: 180px; border-radius: 10px; display: block; }
+.chat-bar { display: flex; gap: 6px; align-items: flex-end; padding: 10px 0 0; }
+.chat-bar textarea { flex: 1; resize: none; border-radius: 20px; padding: 9px 14px; line-height: 1.4; max-height: 90px; overflow-y: auto; }
+.chat-bar .btn     { flex-shrink: 0; }
+
+.gif-picker {
+    display: none; background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color); border-radius: 12px;
+    padding: 10px; margin-top: 8px;
+}
+.gif-picker.open { display: block; }
+.gif-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; margin-top: 8px; max-height: 210px; overflow-y: auto; }
+.gif-grid img { width: 100%; height: 85px; object-fit: cover; border-radius: 6px; cursor: pointer; transition: opacity .15s; }
+.gif-grid img:hover { opacity: .75; }
+.gif-loading { text-align: center; color: var(--bs-secondary-color); padding: 16px; font-size: .9em; }
+
+.login-panel { background: var(--stat-card); border: 1px solid var(--bs-border-color); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+
+{% endblock %}
+
+{% block content %}
+<h1 class="mt-2 mb-3">Chat</h1>
+
+<!-- Login panel -->
+<div id="loginPanel" class="login-panel">
+    <p class="text-muted small mb-2">Pick a username + PIN. Same combo = same identity every time.</p>
+    <div class="row g-2">
+        <div class="col-sm-5">
+            <input type="text" id="usernameInput" class="form-control" placeholder="Username" maxlength="30">
+        </div>
+        <div class="col-sm-4">
+            <input type="password" id="pinInput" class="form-control" placeholder="PIN" maxlength="20">
+        </div>
+        <div class="col-sm-3">
+            <button class="btn btn-primary w-100" id="joinBtn">Join</button>
+        </div>
+    </div>
+</div>
+
+<!-- Logged-in bar -->
+<div id="loggedInBar" class="d-none mb-2 d-flex align-items-center gap-2 flex-wrap">
+    <span class="badge fs-6 px-3 py-2" id="userBadge"></span>
+    <button class="btn btn-sm btn-link text-muted p-0 ms-1" id="logoutBtn">switch user</button>
+</div>
+
+<div class="chat-wrap">
+    <div class="chat-messages" id="chatBox"></div>
+
+    {% if gif_enabled %}
+    <div class="gif-picker" id="gifPicker">
+        <div class="input-group input-group-sm">
+            <input type="text" id="gifQuery" class="form-control rounded-start" placeholder="Search GIFs…">
+            <button class="btn btn-outline-secondary" id="gifSearchBtn">Search</button>
+        </div>
+        <div id="gifGrid" class="gif-grid"></div>
+    </div>
+    {% endif %}
+
+    <div class="chat-bar">
+        {% if gif_enabled %}
+        <button class="btn btn-outline-secondary btn-sm px-2" id="gifToggle" title="GIF">GIF</button>
+        {% endif %}
+        <textarea id="msgInput" class="form-control" rows="1"
+                  placeholder="Message… (Enter to send, Shift+Enter for new line)"></textarea>
+        <button class="btn btn-primary px-3" id="sendBtn">Send</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+'use strict';
+
+// ── Colours ───────────────────────────────────────────────────────────────────
+const PALETTE = ['#e53935','#8e24aa','#1e88e5','#00897b','#f4511e',
+                 '#3949ab','#d81b60','#039be5','#7cb342','#fb8c00'];
+function nameColor(n) {
+    let h = 0;
+    for (let i = 0; i < n.length; i++) h = (Math.imul(h, 31) + n.charCodeAt(i)) | 0;
+    return PALETTE[Math.abs(h) % PALETTE.length];
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+let me  = localStorage.getItem('pw-chat-user') || '';
+let pin = localStorage.getItem('pw-chat-pin')  || '';
+
+function applyLoggedIn() {
+    document.getElementById('loginPanel').classList.add('d-none');
+    const bar   = document.getElementById('loggedInBar');
+    const badge = document.getElementById('userBadge');
+    bar.classList.remove('d-none');
+    badge.textContent            = '✓ ' + me;
+    badge.style.backgroundColor  = nameColor(me);
+    badge.style.color            = '#fff';
+}
+function applyLoggedOut() {
+    me = pin = '';
+    localStorage.removeItem('pw-chat-user');
+    localStorage.removeItem('pw-chat-pin');
+    document.getElementById('loginPanel').classList.remove('d-none');
+    document.getElementById('loggedInBar').classList.add('d-none');
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('pinInput').value = '';
+}
+if (me) applyLoggedIn();
+
+document.getElementById('logoutBtn').addEventListener('click', applyLoggedOut);
+document.getElementById('joinBtn').addEventListener('click', () => {
+    const u = document.getElementById('usernameInput').value.trim();
+    const p = document.getElementById('pinInput').value.trim();
+    if (!u || !p) { alert('Enter a username and PIN.'); return; }
+    me = u; pin = p;
+    localStorage.setItem('pw-chat-user', me);
+    localStorage.setItem('pw-chat-pin',  pin);
+    applyLoggedIn();
+});
+document.getElementById('usernameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('pinInput').focus();
+});
+document.getElementById('pinInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('joinBtn').click();
+});
+
+// ── Message rendering ─────────────────────────────────────────────────────────
+const IMG_URL = /^https?:\/\/\S+\.(gif|jpg|jpeg|png|webp)(\?\S*)?$/i;
+
+function renderContent(text) {
+    if (IMG_URL.test(text)) {
+        const img = document.createElement('img');
+        img.src = text; img.loading = 'lazy';
+        img.onerror = () => img.replaceWith(document.createTextNode(text));
+        return img;
+    }
+    const s = document.createElement('span');
+    s.textContent = text;
+    return s;
+}
+
+function timeAgo(ts) {
+    const d    = new Date(ts.replace(' ', 'T'));
+    const diff = (Date.now() - d.getTime()) / 1000;
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return Math.floor(diff / 60)   + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600)  + 'h ago';
+    return d.toLocaleDateString();
+}
+
+// ── Chat rendering ────────────────────────────────────────────────────────────
+let lastCount = 0;
+
+function renderMessages(msgs) {
+    if (msgs.length === lastCount) return;
+    const box      = document.getElementById('chatBox');
+    const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+
+    msgs.slice(lastCount).forEach(msg => {
+        const isOwn = msg.username === me;
+
+        const row = document.createElement('div');
+        row.className = 'msg-row' + (isOwn ? ' own' : '');
+
+        // Avatar
+        const av = document.createElement('div');
+        av.className = 'msg-avatar';
+        av.style.backgroundColor = nameColor(msg.username);
+        av.title     = msg.username;
+        av.textContent = msg.username[0].toUpperCase();
+
+        // Body
+        const body = document.createElement('div');
+        body.className = 'msg-body';
+
+        // Meta line
+        const meta = document.createElement('div');
+        meta.className = 'msg-meta';
+
+        if (!isOwn) {
+            meta.appendChild(document.createTextNode(msg.username));
+            meta.appendChild(document.createTextNode(' · '));
+        }
+        meta.appendChild(document.createTextNode(timeAgo(msg.timestamp)));
+
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble';
+        bubble.appendChild(renderContent(msg.message));
+
+        body.appendChild(meta);
+        body.appendChild(bubble);
+        row.appendChild(isOwn ? body : av);
+        row.appendChild(isOwn ? av   : body);
+        box.appendChild(row);
+    });
+
+    lastCount = msgs.length;
+    if (atBottom || lastCount <= 20) box.scrollTop = box.scrollHeight;
+}
+
+// ── Polling ───────────────────────────────────────────────────────────────────
+async function fetchMessages() {
+    try {
+        const msgs = await (await fetch('/get_messages')).json();
+        renderMessages(msgs);
+    } catch (e) { console.error(e); }
+}
+fetchMessages();
+setInterval(fetchMessages, 2000);
+
+// ── Send ──────────────────────────────────────────────────────────────────────
+async function send(text) {
+    text = text.trim();
+    if (!text) return;
+    if (!me || !pin) { alert('Join the chat first.'); return; }
+    const resp = await fetch('/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, username: me, pin })
+    });
+    if (resp.ok) {
+        document.getElementById('msgInput').value = '';
+        fetchMessages();
+    } else {
+        const err = await resp.json().catch(() => ({}));
+        alert(err.error || 'Failed to send.');
+    }
+}
+document.getElementById('sendBtn').addEventListener('click', () =>
+    send(document.getElementById('msgInput').value));
+document.getElementById('msgInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(e.target.value); }
+});
+
+{% if gif_enabled %}
+// ── GIF picker (Klipy, proxied through /api/gifs so the key stays server-side) ─
+async function gifFetch(q) {
+    const qs = q ? '?q=' + encodeURIComponent(q) : '';
+    try {
+        const data = await (await fetch('/api/gifs' + qs)).json();
+        return data.gifs || [];
+    } catch (e) {
+        return [];
+    }
+}
+function fillGrid(results) {
+    const grid = document.getElementById('gifGrid');
+    grid.innerHTML = '';
+    if (!results.length) { grid.innerHTML = '<div class="gif-loading">No results.</div>'; return; }
+    results.forEach(r => {
+        const img = document.createElement('img');
+        img.src = r.preview; img.loading = 'lazy'; img.alt = r.title || 'GIF';
+        img.addEventListener('click', () => {
+            send(r.url);
+            document.getElementById('gifPicker').classList.remove('open');
+            grid.innerHTML = '';
+        });
+        grid.appendChild(img);
+    });
+}
+document.getElementById('gifToggle').addEventListener('click', async () => {
+    const picker = document.getElementById('gifPicker');
+    const open   = picker.classList.toggle('open');
+    if (open && !document.getElementById('gifGrid').querySelector('img')) {
+        document.getElementById('gifGrid').innerHTML = '<div class="gif-loading">Loading…</div>';
+        fillGrid(await gifFetch(''));
+    }
+});
+document.getElementById('gifSearchBtn').addEventListener('click', async () => {
+    const q = document.getElementById('gifQuery').value.trim();
+    if (!q) return;
+    document.getElementById('gifGrid').innerHTML = '<div class="gif-loading">Searching…</div>';
+    fillGrid(await gifFetch(q));
+});
+document.getElementById('gifQuery').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('gifSearchBtn').click();
+});
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+{% block title %}{{ info.name }}{% endblock %}
+
+{% block extra_css %}
+.player-hero {
+    background: var(--stat-card);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 1.25rem;
+}
+.player-name { font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
+.player-meta { font-size: .85em; color: var(--bs-secondary-color); }
+.meta-dot::before { content: " · "; }
+.stat-tile {
+    background: var(--stat-card);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 10px;
+    padding: 12px 14px; text-align: center; height: 100%;
+}
+.stat-tile .v { font-size: 1.7rem; font-weight: 700; line-height: 1.1; }
+.stat-tile .l { font-size: .72em; text-transform: uppercase; letter-spacing: .04em; color: var(--bs-secondary-color); }
+.injury-badge { background-color: #dc3545; color: #fff; }
+.beat-proj { color: #198754; font-weight: 600; }
+.miss-proj { color: #dc3545; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.chart-box { position: relative; height: 240px; }
+.chart-box canvas { position: absolute; inset: 0; }
+.season-total .st-v { font-size: 1.15rem; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.season-total .st-l { font-size: .68em; text-transform: uppercase; letter-spacing: .03em; color: var(--bs-secondary-color); }
+tfoot.totals-row td { border-top: 2px solid var(--bs-border-color); font-weight: 700; background: var(--bs-secondary-bg); }
+
+/* League panel */
+.league-panel {
+    border: 2px solid #1565c0; border-radius: 12px;
+    background: var(--stat-card); padding: 16px 18px; margin-bottom: 1.5rem;
+}
+.league-panel h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: .75rem; }
+.pw-tile { text-align: center; padding: 6px 4px; }
+.pw-tile .v { font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+.pw-tile .l { font-size: .66em; text-transform: uppercase; letter-spacing: .04em; color: var(--bs-secondary-color); }
+.week-off td { opacity: .62; }
+.wk-tag { font-size: .62em; font-weight: 700; letter-spacing: .04em;
+          padding: 1px 4px; border-radius: 3px; vertical-align: middle; }
+.wk-tag.dnp { background: #dc354522; color: #dc3545; }
+.ktc-bar { display: flex; height: 14px; border-radius: 4px; overflow: hidden;
+           background: var(--bs-secondary-bg); }
+.ktc-bar .seg.keep  { background: #198754; }
+.ktc-bar .seg.trade { background: #0d6efd; }
+/* The three rounded percentages can sum to 99 or 101, so let the last segment
+   absorb whatever's left rather than leaving a gap or overflowing. */
+.ktc-bar .seg.cut   { background: #dc3545; flex: 1 0 auto; }
+.ktc-vote .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.ktc-vote .dot.keep  { background: #198754; }
+.ktc-vote .dot.trade { background: #0d6efd; }
+.ktc-vote .dot.cut   { background: #dc3545; }
+
+/* Past seasons */
+.past-season-head {
+    width: 100%; text-align: left; border: 1px solid var(--bs-border-color);
+    background: var(--stat-card); border-radius: 8px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    cursor: pointer; margin-bottom: 6px;
+}
+.past-season-head:hover { border-color: #1565c0; }
+.past-season-head .yr { font-weight: 700; font-size: 1.05em; min-width: 48px; }
+.past-season-head .bit { font-size: .82em; color: var(--bs-secondary-color); }
+.past-season-head .bit b { color: var(--bs-body-color); font-variant-numeric: tabular-nums; }
+.past-season-head .chev { margin-left: auto; transition: transform .15s; }
+.past-season-head[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.past-body { padding: 0 2px 12px; }
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+<div class="player-hero">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge pos-{{ info.position }} fs-6">{{ info.position }}</span>
+        <span class="player-name">{{ info.name }}</span>
+        {% if info.injury_status %}
+        <span class="badge injury-badge">{{ info.injury_status }}{% if info.injury_body_part %} · {{ info.injury_body_part }}{% endif %}</span>
+        {% endif %}
+    </div>
+    <div class="player-meta mt-1">
+        {% if info.team %}{{ info.team }}{% else %}Free Agent{% endif %}
+        {% if info.number %}<span class="meta-dot"></span>#{{ info.number }}{% endif %}
+        {% if info.age %}<span class="meta-dot"></span>Age {{ info.age }}{% endif %}
+        {% if height %}<span class="meta-dot"></span>{{ height }}{% endif %}
+        {% if info.weight %}<span class="meta-dot"></span>{{ info.weight }} lbs{% endif %}
+        {% if info.years_exp is defined %}<span class="meta-dot"></span>{{ info.years_exp }} yr exp{% endif %}
+        {% if info.college %}<span class="meta-dot"></span>{{ info.college }}{% endif %}
+    </div>
+    <div class="mt-2">
+        {% if owner %}
+            <span class="badge bg-primary">Rostered by
+                <a href="{{ url_for('owner_profile', owner_name=owner) }}" class="text-white">{{ owner }}</a></span>
+            {% if keeper %}<span class="badge keeper-badge">Keeper</span>{% endif %}
+        {% else %}
+            <span class="badge bg-success">Free Agent in this league</span>
+        {% endif %}
+        {% if drafted %}
+        <span class="badge bg-secondary">Drafted Rd {{ drafted.round }}, pick {{ drafted.pick }} by {{ drafted.owner }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ── Outside consensus ────────────────────────────────────────────────── -->
+{% if market %}
+<div class="league-panel consensus-panel">
+    <h2>📈 Consensus Value</h2>
+    <div class="row g-2 mb-2">
+        <div class="col-4 col-md-2"><div class="pw-tile">
+            <div class="v">{{ market.position }}{{ market.rank | round | int }}</div>
+            <div class="l">Consensus Rank</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile">
+            <div class="v">{{ market.points | stat }}</div>
+            <div class="l">Proj Pts ({{ scoring }})</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile">
+            <div class="v">{{ market.adp if market.adp else '—' }}</div>
+            <div class="l">ADP</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile">
+            <div class="v">{{ market.tier if market.tier else '—' }}</div>
+            <div class="l">Market Tier</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile">
+            <div class="v">
+                {% if market.trend30 %}
+                <span class="{{ 'lucky' if market.trend30 > 0 else 'unlucky' }}">
+                    {{ '+' if market.trend30 > 0 }}{{ market.trend30 }}</span>
+                {% else %}—{% endif %}
+            </div>
+            <div class="l">30-Day Trend</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile">
+            <div class="v">{{ (market.rostered * 100) | round | int if market.rostered else '—' }}{% if market.rostered %}%{% endif %}</div>
+            <div class="l">Rostered</div></div></div>
+    </div>
+
+    <div class="table-responsive">
+    <table class="table table-sm mb-1">
+        <thead><tr><th>Source</th><th>What it measures</th><th class="text-end">Has him at</th></tr></thead>
+        <tbody>
+            {% if market.proj_rank %}
+            <tr><td>Rotowire projection</td><td class="small text-muted">Expected half-PPR points</td>
+                <td class="text-end"><strong>{{ market.position }}{{ market.proj_rank }}</strong>
+                    <span class="text-muted small">({{ market.proj_pts | stat }} pts)</span></td></tr>
+            {% endif %}
+            {% if market.adp_rank %}
+            <tr><td>Sleeper ADP</td><td class="small text-muted">Where real drafters take him</td>
+                <td class="text-end"><strong>{{ market.position }}{{ market.adp_rank }}</strong>
+                    <span class="text-muted small">(pick {{ market.adp }})</span></td></tr>
+            {% endif %}
+            {% if market.mkt_rank %}
+            <tr><td>FantasyCalc trade value</td><td class="small text-muted">What he fetches in real trades</td>
+                <td class="text-end"><strong>{{ market.position }}{{ market.mkt_rank }}</strong>
+                    <span class="text-muted small">({{ market.mkt_value }})</span></td></tr>
+            {% endif %}
+            {% if market.ktc_rank %}
+            <tr><td>KeepTradeCut</td><td class="small text-muted">Crowd keep/trade/cut votes</td>
+                <td class="text-end"><strong>{{ market.position }}{{ market.ktc_rank }}</strong>
+                    <span class="text-muted small">({{ market.ktc_value }})</span></td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+    </div>
+
+    {% if market.ktc and market.ktc.votes %}
+    <div class="ktc-vote mb-2">
+        <div class="d-flex justify-content-between small mb-1">
+            <span class="fw-semibold">KeepTradeCut crowd vote</span>
+            <span class="text-muted">{{ "{:,}".format(market.ktc.votes) }} votes</span>
+        </div>
+        <div class="ktc-bar">
+            <div class="seg keep"  style="width: {{ market.ktc.keep_pct }}%"></div>
+            <div class="seg trade" style="width: {{ market.ktc.trade_pct }}%"></div>
+            <div class="seg cut"   style="width: {{ market.ktc.cut_pct }}%"></div>
+        </div>
+        <div class="d-flex gap-3 small mt-1">
+            <span><span class="dot keep"></span> Keep {{ market.ktc.keep_pct }}%</span>
+            <span><span class="dot trade"></span> Trade {{ market.ktc.trade_pct }}%</span>
+            <span><span class="dot cut"></span> Cut {{ market.ktc.cut_pct }}%</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <p class="text-muted small mb-0">
+        {% if market.sources | length < 2 %}
+        Only one source covers him, so this is a projection rather than a consensus.
+        {% elif market.spread >= 15 %}
+        <strong>The sources disagree sharply on him</strong> — {{ market.spread }} places
+        apart at {{ market.position }}. Usually a sign of an injury, a depth-chart fight,
+        or a stale draft price.
+        {% elif market.spread >= 6 %}
+        Mild disagreement — {{ market.spread }} places apart at {{ market.position }}.
+        {% else %}
+        The sources broadly agree on him ({{ market.spread }} place{{ 's' if market.spread != 1 }} apart).
+        {% endif %}
+        Blended from {{ market.source_names | join(', ') }}.
+    </p>
+</div>
+{% endif %}
+
+<!-- ── Peyton Woods league history ──────────────────────────────────────── -->
+{% if league.owners or league.drafts %}
+<div class="league-panel">
+    <h2>🏈 In the Peyton Woods League</h2>
+
+    <div class="row g-2 mb-3">
+        <div class="col-4 col-md-2"><div class="pw-tile"><div class="v">{{ league.total_points | stat('0') }}</div><div class="l">Pts in League</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile"><div class="v">{{ league.n_owners }}</div><div class="l">Owners</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile"><div class="v">{{ league.seasons | length }}</div><div class="l">Seasons Here</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile"><div class="v">{{ league.times_drafted }}</div><div class="l">Times Drafted</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile"><div class="v">{{ league.times_kept }}</div><div class="l">Times Kept</div></div></div>
+        <div class="col-4 col-md-2"><div class="pw-tile"><div class="v">{{ league.moves | length }}</div><div class="l">Adds / Drops</div></div></div>
+    </div>
+
+    {% if league.owners %}
+    <h3 class="h6 mb-2">Who's Owned Him</h3>
+    <div class="table-responsive mb-3">
+    <table class="table table-sm table-striped align-middle mb-0">
+        <thead>
+            <tr>
+                <th>Owner</th><th>Seasons</th>
+                <th class="num">Pts For Them</th><th class="num">Starts</th>
+                <th class="num">Pts/Start</th><th class="num">Best Game</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in league.owners %}
+            <tr>
+                <td><a href="{{ url_for('owner_profile', owner_name=r.owner) }}">{{ r.owner }}</a></td>
+                <td class="small">{{ r.season_list | join(', ') }}</td>
+                {% if r.weeks %}
+                <td class="num"><strong>{{ r.points | stat('0') }}</strong></td>
+                <td class="num">{{ r.starts }}</td>
+                <td class="num">{{ r.ppg if r.ppg is not none else '—' }}</td>
+                <td class="num">
+                    {% if r.best %}{{ r.best }}
+                        <span class="text-muted small">(wk {{ r.best_week }}, {{ r.best_season }})</span>
+                    {% else %}—{% endif %}
+                </td>
+                {% else %}
+                <td class="num text-muted" colspan="4" title="The league ran on ESPN in those seasons, which doesn't expose per-player scoring">
+                    <span class="small">not available — league was on ESPN those seasons</span>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <p class="text-muted small mb-3">
+        Points, starts and per-start averages cover {{ league.scoring_from }} onward —
+        the seasons Peyton Woods has been on Sleeper. Before that the league ran on
+        ESPN, which doesn't expose per-player scoring, so those years show roster and
+        draft history only.
+    </p>
+    {% endif %}
+
+    {% if league.drafts %}
+    <h3 class="h6 mb-2">Draft History</h3>
+    <div class="table-responsive mb-3">
+    <table class="table table-sm table-striped mb-0">
+        <thead><tr><th>Year</th><th>Round</th><th>Pick</th><th>Owner</th><th>Type</th></tr></thead>
+        <tbody>
+            {% for d in league.drafts %}
+            <tr>
+                <td><a href="{{ url_for('year_view', year=d.year|int) }}">{{ d.year }}</a></td>
+                <td>{{ d.round }}</td>
+                <td>#{{ d.pick }}</td>
+                <td><a href="{{ url_for('owner_profile', owner_name=d.owner) }}">{{ d.owner }}</a></td>
+                <td>{% if d.keeper %}<span class="badge keeper-badge">Keeper</span>{% else %}<span class="text-muted small">Drafted</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+
+    {% if league.moves %}
+    <h3 class="h6 mb-2">Transaction Log <span class="text-muted small fw-normal">({{ league.moves | length }})</span></h3>
+    <div class="table-responsive" style="max-height:260px; overflow-y:auto">
+    <table class="table table-sm table-striped mb-0">
+        <thead><tr><th>Year</th><th>When</th><th>Move</th><th>Owner</th><th>Via</th></tr></thead>
+        <tbody>
+            {% for m in league.moves %}
+            <tr>
+                <td>{{ m.year }}</td>
+                <td class="small">{{ m.date if m.date else 'Wk ' ~ m.week }}</td>
+                <td>{% if m.kind == 'add' %}<span class="lucky">Added</span>{% else %}<span class="unlucky">Dropped</span>{% endif %}</td>
+                <td><a href="{{ url_for('owner_profile', owner_name=m.owner) }}">{{ m.owner }}</a></td>
+                <td class="small text-muted">{{ m.type }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if error %}<div class="alert alert-warning">{{ error }}</div>{% endif %}
+
+<!-- ── Current season ───────────────────────────────────────────────────── -->
+<h2 class="h5 mb-2">{{ season }} Season <span class="text-muted fw-normal">({{ scoring }})</span></h2>
+
+{% if log.totals and log.totals.games %}
+<div class="row g-2 mb-3">
+    <div class="col-4 col-md-2"><div class="stat-tile"><div class="v">{{ log.totals.total }}</div><div class="l">Total Pts</div></div></div>
+    <div class="col-4 col-md-2"><div class="stat-tile"><div class="v">{{ log.totals.avg }}</div><div class="l">Per Game</div></div></div>
+    <div class="col-4 col-md-2"><div class="stat-tile"><div class="v">{{ log.totals.games }}</div><div class="l">Games</div></div></div>
+    <div class="col-4 col-md-2"><div class="stat-tile"><div class="v lucky">{{ log.totals.best if log.totals.best is not none else '—' }}</div><div class="l">Best Week</div></div></div>
+    <div class="col-4 col-md-2"><div class="stat-tile"><div class="v">{{ log.totals.avg_rank if log.totals.avg_rank is not none else '—' }}</div><div class="l">Avg Weekly Rank</div></div></div>
+    <div class="col-4 col-md-2">
+        <div class="stat-tile">
+            <div class="v">{% if summary and summary.pos_rank %}{{ info.position }}{{ summary.pos_rank | int }}{% else %}—{% endif %}</div>
+            <div class="l">Season Pos Rank</div>
+            {% if summary and summary.overall_rank %}<div class="text-muted" style="font-size:.68em">#{{ summary.overall_rank | int }} overall</div>{% endif %}
+        </div>
+    </div>
+</div>
+
+{% if summary and summary.box %}
+<div class="stat-card mb-3">
+    <div class="d-flex align-items-baseline gap-2 mb-2 flex-wrap">
+        <span class="fw-bold">{{ season }} Season Totals</span>
+        <span class="text-muted small">{{ summary.games | stat('0') }} games played</span>
+    </div>
+    <div class="row g-2 text-center">
+        {% for label, val in summary.box %}
+        <div class="col-4 col-md-2"><div class="season-total"><div class="st-v">{{ val | stat('0') }}</div><div class="st-l">{{ label }}</div></div></div>
+        {% endfor %}
+        {% if summary.snaps %}
+        <div class="col-4 col-md-2"><div class="season-total"><div class="st-v">{{ summary.snaps | stat('0') }}</div><div class="st-l">Snaps</div></div></div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div class="stat-card mb-4 p-3">
+    <div class="chart-box"><canvas id="ptsChart"></canvas></div>
+</div>
+{% endif %}
+
+{% if log.rows and not (log.totals and log.totals.games) %}
+<p class="text-muted small">No games played yet in {{ season }} — showing this season's weekly projections.
+   Past seasons are below.</p>
+{% endif %}
+
+{% if log.rows %}
+<div class="table-responsive mb-4">
+<table class="table table-sm table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Wk</th><th>Opp</th>
+            <th class="num">Pts</th><th class="num">Proj</th><th class="num">Pos Rk</th>
+            {% for c in log.columns %}<th class="num">{{ c }}</th>{% endfor %}
+            <th class="num">Snaps</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in log.rows %}
+        <tr class="{% if not r.played %}week-off{% endif %}">
+            <td>{{ r.week }}</td>
+            <td>
+                {% if r.status == 'nogame' %}<span class="text-muted">—</span>
+                {% else %}
+                    {{ '@' if r.is_away else 'vs' }} {{ r.opponent }}
+                    {% if r.status == 'dnp' %}<span class="wk-tag dnp">DNP</span>{% endif %}
+                {% endif %}
+            </td>
+            <td class="num">
+                {% if r.played %}
+                    <strong class="{% if r.projected and r.points >= r.projected %}beat-proj{% elif r.projected %}miss-proj{% endif %}">{{ r.points }}</strong>
+                {% else %}<span class="text-muted">0</span>{% endif %}
+            </td>
+            <td class="num text-muted">{{ r.projected if r.projected is not none else '—' }}</td>
+            <td class="num">{{ r.pos_rank | stat }}</td>
+            {% for label, val in r.box %}
+            <td class="num">{{ val | stat('0' if r.played else '—') }}</td>
+            {% endfor %}
+            <td class="num text-muted">{{ r.snaps | stat }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    {% if summary and summary.box and log.totals.games %}
+    <tfoot class="totals-row">
+        <tr>
+            <td colspan="2">Season Totals</td>
+            <td class="num">{{ summary.points | stat }}</td>
+            <td class="num">—</td>
+            <td class="num">{% if summary.pos_rank %}{{ info.position }}{{ summary.pos_rank | int }}{% else %}—{% endif %}</td>
+            {% for label, val in summary.box %}<td class="num">{{ val | stat('0') }}</td>{% endfor %}
+            <td class="num">{{ summary.snaps | stat }}</td>
+        </tr>
+    </tfoot>
+    {% endif %}
+</table>
+</div>
+{% endif %}
+
+<!-- ── Past seasons (collapsible) ───────────────────────────────────────── -->
+{% if past %}
+<h2 class="h5 mb-2">Previous Seasons</h2>
+<p class="text-muted small mb-2">Click a season to see it game by game.</p>
+{% for p in past %}
+<div class="past-season-head" data-season="{{ p.season }}" data-bs-toggle="collapse"
+     data-bs-target="#past-{{ p.season }}" role="button" aria-expanded="false">
+    <span class="yr">{{ p.season }}</span>
+    <span class="bit"><b>{{ p.summary.games | stat('0') }}</b> GP</span>
+    <span class="bit"><b>{{ p.summary.points | stat }}</b> pts</span>
+    <span class="bit"><b>{{ p.avg if p.avg is not none else '—' }}</b> /gm</span>
+    <span class="bit">
+        {% if p.summary.pos_rank %}<b>{{ info.position }}{{ p.summary.pos_rank | int }}</b>{% else %}<b>—</b>{% endif %} pos rank
+    </span>
+    {% for label, val in p.summary.box[:4] %}
+    <span class="bit d-none d-md-inline"><b>{{ val | stat('0') }}</b> {{ label }}</span>
+    {% endfor %}
+    <span class="chev">›</span>
+</div>
+<div class="collapse past-body" id="past-{{ p.season }}" data-loaded="0">
+    <div class="text-muted small py-2 ps-1">Loading {{ p.season }} game log…</div>
+</div>
+{% endfor %}
+{% endif %}
+
+<a href="/rosters" class="btn btn-secondary mt-3">Back to Rosters</a>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+'use strict';
+const PLAYER_ID = {{ player_id | tojson }};
+const POSITION  = {{ info.position | tojson }};
+
+// ── Current-season chart ──────────────────────────────────────────────────
+const rows = {{ log.rows | tojson }};
+const played = rows.filter(r => r.points !== null && r.points !== undefined);
+const canvas = document.getElementById('ptsChart');
+if (canvas && played.length) {
+    new Chart(canvas, {
+        data: {
+            labels: played.map(r => 'Wk ' + r.week),
+            datasets: [
+                {
+                    type: 'bar', label: 'Points',
+                    data: played.map(r => r.points),
+                    backgroundColor: played.map(r =>
+                        (r.projected != null && r.points >= r.projected)
+                            ? 'rgba(25,135,84,.75)' : 'rgba(13,110,253,.6)'),
+                    order: 2
+                },
+                {
+                    type: 'line', label: 'Projected',
+                    data: played.map(r => r.projected),
+                    borderColor: 'rgba(255,193,7,.9)', backgroundColor: 'transparent',
+                    borderWidth: 2, borderDash: [5, 4], pointRadius: 3, order: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true, title: { display: true, text: 'Fantasy Points' } } }
+        }
+    });
+}
+
+// ── Lazy-load past season game logs on expand ─────────────────────────────
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s === null || s === undefined ? '' : s;
+    return d.innerHTML;
+}
+function fmt(v, blank) {
+    if (v === null || v === undefined) return blank;
+    const n = Number(v);
+    if (Number.isNaN(n)) return esc(v);
+    return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+document.querySelectorAll('.past-body').forEach(box => {
+    box.addEventListener('show.bs.collapse', async () => {
+        if (box.dataset.loaded === '1') return;
+        box.dataset.loaded = '1';
+        const season = box.id.replace('past-', '');
+        try {
+            const data = await (await fetch(`/api/player/${PLAYER_ID}/log/${season}`)).json();
+            if (data.error || !data.rows) throw new Error(data.error || 'no data');
+            const head = ['Wk', 'Opp', 'Pts', 'Proj', 'Pos Rk']
+                .concat(data.columns).concat(['Snaps']);
+            const body = data.rows.map(r => {
+                const opp = r.status === 'nogame'
+                    ? '<span class="text-muted">—</span>'
+                    : (r.is_away ? '@ ' : 'vs ') + esc(r.opponent || '')
+                      + (r.status === 'dnp' ? ' <span class="wk-tag dnp">DNP</span>' : '');
+                const cells = [
+                    r.week,
+                    opp,
+                    r.played
+                        ? `<strong class="${r.projected != null && r.points >= r.projected ? 'beat-proj' : 'miss-proj'}">${r.points}</strong>`
+                        : '<span class="text-muted">0</span>',
+                    fmt(r.projected, '—'),
+                    fmt(r.pos_rank, '—')
+                ].concat(r.box.map(b => fmt(b[1], r.played ? '0' : '—')))
+                 .concat([fmt(r.snaps, '—')]);
+                return `<tr class="${r.played ? '' : 'week-off'}">`
+                     + cells.map(c => `<td class="num">${c}</td>`).join('') + '</tr>';
+            }).join('');
+            box.innerHTML = `
+                <div class="table-responsive">
+                  <table class="table table-sm table-striped align-middle mb-0">
+                    <thead><tr>${head.map(h => `<th class="num">${esc(h)}</th>`).join('')}</tr></thead>
+                    <tbody>${body}</tbody>
+                  </table>
+                </div>`;
+        } catch (e) {
+            box.dataset.loaded = '0';
+            box.innerHTML = '<div class="text-muted small py-2 ps-1">Couldn\'t load that season. Try again.</div>';
+        }
+    });
+});
+</script>
+{% endblock %}

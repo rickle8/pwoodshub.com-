@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block title %}Trending Players{% endblock %}
+
+{% block extra_css %}
+.trend-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 4px; border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.06));
+}
+.trend-row:last-child { border-bottom: none; }
+.trend-name  { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trend-count { margin-left: auto; font-size: .8em; color: var(--bs-secondary-color); flex-shrink: 0; }
+.tag-fa      { background-color: #198754; color: #fff; font-size: .68em; }
+.tag-owned   { background-color: var(--bs-secondary-bg); color: var(--bs-secondary-color); font-size: .68em; font-weight: normal; }
+.delta { font-variant-numeric: tabular-nums; font-weight: 600; flex-shrink: 0; margin-left: auto; }
+.delta.up   { color: #198754; }
+.delta.down { color: #dc3545; }
+.cut-pct { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; color: #dc3545; flex-shrink: 0; }
+/* 100 rows a side would run forever, so each list scrolls in place. */
+.trend-list { max-height: 460px; overflow-y: auto; }
+.trend-rank { font-variant-numeric: tabular-nums; color: var(--bs-secondary-color);
+              font-size: .78em; min-width: 1.6em; flex-shrink: 0; }
+.filter-bar { position: sticky; top: 0; z-index: 5; padding: 8px 0;
+              background: var(--bs-body-bg); }
+.filter-bar .btn { --bs-btn-padding-y: .15rem; --bs-btn-padding-x: .5rem; font-size: .82rem; }
+.empty-note { display: none; }
+.trend-list.is-empty .empty-note { display: block; }
+{% endblock %}
+
+{% macro mover_row(p, field, unit) %}
+<div class="trend-row" data-pos="{{ p.position }}" data-fa="{{ 0 if p.owner else 1 }}">
+    <span class="badge pos-{{ p.position }}">{{ p.position }}</span>
+    <span class="trend-name"><a href="/player/{{ p.id }}">{{ p.name }}</a></span>
+    {% if p.owner %}
+    <span class="badge tag-owned">on <a href="{{ url_for('owner_profile', owner_name=p.owner) }}">{{ p.owner }}</a>'s roster</span>
+    {% else %}
+    <span class="badge tag-fa">FREE AGENT</span>
+    {% endif %}
+    <span class="delta {{ 'up' if p[field] > 0 else 'down' }}">
+        {{ '+' if p[field] > 0 }}{{ "{:,}".format(p[field]) }}{{ unit }}
+    </span>
+</div>
+{% endmacro %}
+
+{% block content %}
+<h1 class="mt-2 mb-1">Trending Players</h1>
+<p class="text-muted small mb-2">
+    The top {{ trends.add | length }} most added and dropped players across all of Sleeper
+    in the last 24 hours — tagged with whether they're available in
+    <strong>this league</strong>. Updates every 15 minutes.
+</p>
+
+<div class="filter-bar d-flex flex-wrap align-items-center gap-2 mb-2">
+    <span class="text-muted small me-1">Position:</span>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Filter by position">
+        <button type="button" class="btn btn-primary" data-pos-filter="ALL">All</button>
+        {% for p in ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'] %}
+        <button type="button" class="btn btn-outline-secondary" data-pos-filter="{{ p }}">{{ p }}</button>
+        {% endfor %}
+    </div>
+    <div class="form-check form-switch ms-2 mb-0">
+        <input class="form-check-input" type="checkbox" id="faOnly">
+        <label class="form-check-label small text-muted" for="faOnly">Free agents only</label>
+    </div>
+</div>
+
+{% if error %}<div class="alert alert-warning">{{ error }}</div>{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="stat-card">
+            <h2 class="h5 mb-3">🔥 Hottest Adds</h2>
+            <div class="trend-list">
+            {% for p in trends.add %}
+            <div class="trend-row" data-pos="{{ p.position }}" data-fa="{{ 0 if p.owner else 1 }}">
+                <span class="trend-rank">{{ loop.index }}</span>
+                <span class="badge pos-{{ p.position }}">{{ p.position }}</span>
+                <span class="trend-name">
+                    {% if p.player_id %}<a href="/player/{{ p.player_id }}">{{ p.name }}</a>{% else %}{{ p.name }}{% endif %}
+                </span>
+                {% if p.owner %}
+                    <span class="badge tag-owned">on <a href="{{ url_for('owner_profile', owner_name=p.owner) }}">{{ p.owner }}</a>'s roster</span>
+                {% else %}
+                    <span class="badge tag-fa">FREE AGENT</span>
+                {% endif %}
+                <span class="trend-count">+{{ "{:,}".format(p.count) }}</span>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No data right now.</p>
+            {% endfor %}
+            <p class="text-muted small mb-0 empty-note">Nothing matches that filter.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="stat-card">
+            <h2 class="h5 mb-3">🗑️ Biggest Drops</h2>
+            <div class="trend-list">
+            {% for p in trends.drop %}
+            <div class="trend-row" data-pos="{{ p.position }}" data-fa="{{ 0 if p.owner else 1 }}">
+                <span class="trend-rank">{{ loop.index }}</span>
+                <span class="badge pos-{{ p.position }}">{{ p.position }}</span>
+                <span class="trend-name">
+                    {% if p.player_id %}<a href="/player/{{ p.player_id }}">{{ p.name }}</a>{% else %}{{ p.name }}{% endif %}
+                </span>
+                {% if p.owner %}
+                    <span class="badge tag-owned">on <a href="{{ url_for('owner_profile', owner_name=p.owner) }}">{{ p.owner }}</a>'s roster</span>
+                {% else %}
+                    <span class="badge tag-fa">FREE AGENT</span>
+                {% endif %}
+                <span class="trend-count">−{{ "{:,}".format(p.count) }}</span>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-0">No data right now.</p>
+            {% endfor %}
+            <p class="text-muted small mb-0 empty-note">Nothing matches that filter.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not market_error %}
+<h2 class="h4 mt-4 mb-1">📈 Market Movers</h2>
+<p class="text-muted small mb-3">
+    What the wider fantasy market is buying and selling — not just who's being
+    added on waivers. Two independent clocks: FantasyCalc's <strong>30-day</strong>
+    trade-value change (slow, driven by actual trades) and KeepTradeCut's
+    <strong>7-day</strong> crowd swing (fast, driven by news). Values are in each
+    site's own units, so compare within a column, not across them.
+</p>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="stat-card">
+            <h3 class="h6 mb-3">📈 Rising — 30-day trade value</h3>
+            <div class="trend-list">
+            {% for p in movers30.up %}{{ mover_row(p, 'trend30', '') }}
+            {% else %}<p class="text-muted small mb-0">No data right now.</p>{% endfor %}
+            <p class="text-muted small mb-0 empty-note">Nothing matches that filter.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="stat-card">
+            <h3 class="h6 mb-3">📉 Falling — 30-day trade value</h3>
+            <div class="trend-list">
+            {% for p in movers30.down %}{{ mover_row(p, 'trend30', '') }}
+            {% else %}<p class="text-muted small mb-0">No data right now.</p>{% endfor %}
+            <p class="text-muted small mb-0 empty-note">Nothing matches that filter.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="stat-card">
+            <h3 class="h6 mb-3">⚡ Rising — 7-day crowd vote</h3>
+            <div class="trend-list">
+            {% for p in movers7.up %}{{ mover_row(p, 'trend7', '') }}
+            {% else %}<p class="text-muted small mb-0">No movement right now.</p>{% endfor %}
+            <p class="text-muted small mb-0 empty-note">Nothing matches that filter.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="stat-card">
+            <h3 class="h6 mb-3">⚡ Falling — 7-day crowd vote</h3>
+            <div class="trend-list">
+            {% for p in movers7.down %}{{ mover_row(p, 'trend7', '') }}
+            {% else %}<p class="text-muted small mb-0">No movement right now.</p>{% endfor %}
+            <p class="text-muted small mb-0 empty-note">Nothing matches that filter.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if most_cut %}
+<div class="stat-card mt-4">
+    <h3 class="h6 mb-1">✂️ Most Cuttable</h3>
+    <p class="text-muted small mb-3">
+        Highest share of KeepTradeCut voters who said <em>cut</em> when shown this
+        player against two others. Minimum 200 votes.
+    </p>
+    <div class="trend-list">
+    {% for p in most_cut %}
+    <div class="trend-row" data-pos="{{ p.position }}" data-fa="{{ 0 if p.owner else 1 }}">
+        <span class="badge pos-{{ p.position }}">{{ p.position }}</span>
+        <span class="trend-name"><a href="/player/{{ p.id }}">{{ p.name }}</a></span>
+        {% if p.owner %}
+        <span class="badge tag-owned">on <a href="{{ url_for('owner_profile', owner_name=p.owner) }}">{{ p.owner }}</a>'s roster</span>
+        {% else %}
+        <span class="badge tag-fa">FREE AGENT</span>
+        {% endif %}
+        <span class="cut-pct">{{ p.cut_pct }}% cut</span>
+    </div>
+    {% endfor %}
+    <p class="text-muted small mb-0 empty-note">Nothing matches that filter.</p>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+<script>
+(function () {
+    // Filters every list on the page at once, so switching to RB narrows the
+    // waiver lists and the market movers together.
+    const lists = document.querySelectorAll('.trend-list');
+    let pos = 'ALL', faOnly = false;
+
+    function apply() {
+        lists.forEach(list => {
+            let shown = 0;
+            list.querySelectorAll('.trend-row').forEach(row => {
+                const okPos = pos === 'ALL' || row.dataset.pos === pos;
+                const okFa  = !faOnly || row.dataset.fa === '1';
+                const show  = okPos && okFa;
+                row.style.display = show ? '' : 'none';
+                if (show) shown++;
+            });
+            list.classList.toggle('is-empty', shown === 0);
+        });
+    }
+
+    document.querySelectorAll('[data-pos-filter]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            pos = btn.dataset.posFilter;
+            document.querySelectorAll('[data-pos-filter]').forEach(b => {
+                const on = b === btn;
+                b.classList.toggle('btn-primary', on);
+                b.classList.toggle('btn-outline-secondary', !on);
+            });
+            apply();
+        });
+    });
+
+    const fa = document.getElementById('faOnly');
+    if (fa) fa.addEventListener('change', () => { faOnly = fa.checked; apply(); });
+})();
+</script>
+
+<a href="/" class="btn btn-secondary mt-4">Back to Home</a>
+{% endblock %}
