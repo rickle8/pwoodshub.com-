@@ -47,7 +47,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             <tbody>
                 {% for owner in active_rankings %}
                 {% set lk = luck_index.get(owner.owner, {'lucky_wins': 0, 'unlucky_losses': 0, 'net_luck': 0}) %}
-                <tr {% if owner.owner == my_owner %}class="me-row"{% endif %}>
+                <tr>
                     <td>{{ owner.rank }}</td>
                     <td class="nowrap">
                         <a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a>
@@ -95,7 +95,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             </thead>
             <tbody>
                 {% for p in playoff_stats %}
-                <tr {% if p.owner == my_owner %}class="me-row"{% endif %}>
+                <tr>
                     <td class="nowrap">
                         <a href="{{ url_for('owner_profile', owner_name=p.owner) }}">{{ p.owner }}</a>
                         {% if p.championships > 0 %}
@@ -142,7 +142,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             </thead>
             <tbody>
                 {% for owner in points_scored %}
-                <tr {% if owner.owner == my_owner %}class="me-row"{% endif %}>
+                <tr>
                     <td>{{ owner.rank }}</td>
                     <td class="nowrap"><a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a></td>
                     <td>{{ owner.seasons }}</td>
@@ -165,7 +165,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             </thead>
             <tbody>
                 {% for owner in retired_rankings %}
-                <tr {% if owner.owner == my_owner %}class="me-row"{% endif %}>
+                <tr>
                     <td>{{ owner.rank }}</td>
                     <td class="nowrap">
                         <a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a>

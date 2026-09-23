@@ -1,1 +1,4 @@
 __pycache__/
+# Server-only: push keys and subscriber list (see push.py).
+live pw site/vapid_private.pem
+live pw site/push_subscriptions.json

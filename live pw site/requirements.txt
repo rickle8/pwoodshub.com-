@@ -1,3 +1,8 @@
 flask==3.1.0
 requests==2.32.3
 espn-api==0.44.1
+# New-note alerts (push.py). Versions pinned to fit the cryptography<45 that
+# PythonAnywhere's preinstalled pyOpenSSL needs.
+pywebpush==2.2.0
+py-vapid==1.9.2
+cryptography>=41.0.5,<45

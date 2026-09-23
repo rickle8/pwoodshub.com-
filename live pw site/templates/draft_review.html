@@ -55,7 +55,7 @@
                    <th class="num">Hits</th><th class="num">Pts</th></tr></thead>
         <tbody>
         {% for g in review.grades %}
-        <tr {% if g.owner == my_owner %}class="me-row"{% endif %}>
+        <tr>
             <td class="fw-bold">{{ g.grade }}</td>
             <td><a href="{{ url_for('owner_profile', owner_name=g.owner) }}">{{ g.owner }}</a></td>
             <td class="num {{ 'over-pos' if g.over > 0 else 'over-neg' }}">{{ '+' if g.over > 0 }}{{ g.over }}</td>
