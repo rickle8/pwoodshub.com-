@@ -169,6 +169,9 @@
                             <li><a class="dropdown-item" href="/odds">🎲 Playoff Odds</a></li>
                             <li><a class="dropdown-item" href="/trends">🔥 Trending Players</a></li>
                             <li><a class="dropdown-item" href="/analyzer">⚖️ Trade Analyzer</a></li>
+                            <li><a class="dropdown-item" href="/trade_finder">🤝 Trade Finder</a></li>
+                            <li><a class="dropdown-item" href="/trades">📜 Trade History</a></li>
+                            <li><a class="dropdown-item" href="/keepers">🔒 Keeper Planner</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/year/{{ current_season }}">Full {{ current_season }} Season</a></li>
                         </ul>
@@ -176,7 +179,15 @@
                     <li class="nav-item"><a class="nav-link" href="/head_to_head">Head-to-Head</a></li>
                     <li class="nav-item"><a class="nav-link" href="/power_rankings">Owners</a></li>
                     <li class="nav-item"><a class="nav-link" href="/records">Records</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/draft">Draft</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="draftMenu" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">Draft</a>
+                        <ul class="dropdown-menu" aria-labelledby="draftMenu">
+                            <li><a class="dropdown-item" href="/draft">📋 Draft Boards</a></li>
+                            <li><a class="dropdown-item" href="/draft_review">📝 Draft Review</a></li>
+                            <li><a class="dropdown-item" href="/keepers">🔒 Keeper Planner</a></li>
+                        </ul>
+                    </li>
                     <li class="nav-item"><a class="nav-link" href="/notes">Notes</a></li>
                     <li class="nav-item"><a class="nav-link" href="/chat">Chat</a></li>
                     {% if my_owner %}

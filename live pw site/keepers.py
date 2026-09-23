@@ -14,6 +14,9 @@ Nothing here calls an API: it's the stored draft plus the current roster.
 
 ROUND_STEP = 4          # each extra keeper year costs this many rounds earlier
 TOP_ROUND = 1
+# Kickers and defenses are picked up off waivers every week; keeping one is
+# never the right use of a keeper slot, whatever the draft market says.
+STREAMED = ("K", "DEF", "D/ST")
 
 
 def next_cost(round_paid, was_keeper):
@@ -23,33 +26,76 @@ def next_cost(round_paid, was_keeper):
     return max(TOP_ROUND, round_paid - ROUND_STEP)
 
 
-def keeper_options(year_data, board=None, resolve_id=None):
+def draft_slots(board, use_adp=True):
+    """{player_id: the overall pick he'd go at in a draft held today}.
+
+    Preseason that's simply ADP. Once games are played ADP freezes, so each
+    player's *current* consensus rank at his position is mapped onto where
+    that position rank went in the draft market: if he's now the 10th-best
+    QB, he'd go where the 10th QB went. That keeps each position's real draft
+    habits (QBs go late in 1QB leagues) while the player's value stays current.
+    Ranking straight off trade values instead makes every backup quarterback
+    look like a steal.
+    """
+    if use_adp:
+        return {pid: v["adp"] for pid, v in board.items() if v.get("adp")}
+
+    curves = {}
+    for v in board.values():
+        if v.get("adp") and v.get("position"):
+            curves.setdefault(v["position"], []).append(v["adp"])
+    for c in curves.values():
+        c.sort()
+
+    out = {}
+    for pid, v in board.items():
+        curve, rank = curves.get(v.get("position")), v.get("rank")
+        if not curve or not rank:
+            continue
+        i = rank - 1
+        lo = min(int(i), len(curve) - 1)
+        hi = min(lo + 1, len(curve) - 1)
+        out[pid] = curve[lo] + (curve[hi] - curve[lo]) * (i - int(i))
+    return out
+
+
+def keeper_options(year_data, board=None, resolve_id=None, slots=None):
     """{owner: [option, ...]} — everyone currently rostered who was drafted by
     that owner this year, priced for next season.
 
-    `board` is the consensus board, used only to show what the market thinks
-    each player is worth against the round he'd cost.
+    `board` is the consensus board and `slots` the draft_slots() estimate,
+    used only to show what the market thinks each player is worth against the
+    round he'd cost.
     """
     board = board or {}
+    slots = slots or {}
     picks = year_data.get("draft") or []
     teams = year_data.get("teams") or []
 
-    # Who each owner drafted this year, and at what price.
+    def key(entry, name_field):
+        pid = entry.get("player_id")
+        if not pid and resolve_id:
+            pid = resolve_id(entry.get(name_field) or "")
+        return str(pid) if pid else "name:" + (entry.get(name_field) or "").lower()
+
+    # Who each owner drafted this year, and at what price. Matched on player id
+    # where there is one: names drift ("DJ Moore" / "D.J. Moore") and collide.
     drafted = {}
     for p in picks:
-        drafted.setdefault(p["owner"], {})[p["player"]] = p
+        drafted.setdefault(p["owner"], {})[key(p, "player")] = p
 
+    team_count = len(teams) or 12
     out = {}
     for t in teams:
         owner = t["owner"]
         mine = drafted.get(owner, {})
         options = []
         for player in t.get("roster", []):
-            pick = mine.get(player["name"])
+            k = key(player, "name")
+            pick = mine.get(k)
             if not pick:
                 continue          # traded for or picked up — not keepable
-            pid = str(player.get("player_id") or
-                      (resolve_id(player["name"]) if resolve_id else "") or "")
+            pid = "" if k.startswith("name:") else k
             v = board.get(pid) or {}
             cost = next_cost(pick["round"], bool(pick.get("keeper")))
             options.append({
@@ -57,13 +103,14 @@ def keeper_options(year_data, board=None, resolve_id=None):
                 "player_id": pid or None,
                 "position": player.get("position", "?"),
                 "drafted_round": pick["round"],
-                "drafted_pick": pick.get("pick"),
+                # Sleeper stores the overall pick, ESPN the pick in the round.
+                "drafted_pick": ((pick.get("pick") or 1) - 1) % team_count + 1,
                 "was_keeper": bool(pick.get("keeper")),
                 "cost_round": cost,
                 # At round 1 the discount has run out; the price stops moving.
                 "maxed": cost == TOP_ROUND,
                 "value": v.get("ktc_value") or v.get("mkt_value"),
-                "adp": v.get("adp"),
+                "adp": slots.get(pid) or v.get("adp"),
                 "consensus_rank": v.get("rank"),
                 "proj_points": v.get("points"),
                 "tier": v.get("tier"),
@@ -90,7 +137,7 @@ def value_verdict(option, teams=12):
     skewed in 1QB formats, so almost nothing looks like a bargain on that scale.
     """
     adp, cost = option.get("adp"), option.get("cost_round")
-    if not adp or not cost:
+    if not adp or not cost or option.get("position") in STREAMED:
         return None, None
     surplus = cost_pick(cost, teams) - adp
     if surplus >= 2 * teams:        # two full rounds of value or better

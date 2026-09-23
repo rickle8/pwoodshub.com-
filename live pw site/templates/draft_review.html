@@ -14,19 +14,25 @@
 
 {% if not review %}
 <p class="text-muted">
-    No per-player scoring available yet. This needs Sleeper's data, so it covers
-    2025 onward.
+    No per-player scoring yet. This needs Sleeper's data, so it covers 2025 onward.
 </p>
 {% else %}
 
 <p class="text-muted small mb-3">
-    Every pick scored by what the player actually produced <strong>for the owner who
-    drafted him</strong>, bench weeks included — a pick's value isn't the owner's
-    lineup calls. Each pick is judged against players <em>at the same position taken
-    in the same range of the draft</em>: a 14th-rounder isn't punished for not being
-    a first, and quarterbacks aren't all "steals" just because they out-score
-    everyone in raw points.
+    Every pick is scored by what the player produced <strong>for the owner who
+    drafted him</strong>, bench weeks included, so it grades the pick and not the
+    lineup calls. Each pick is compared with players <em>at the same position taken
+    around the same spot</em> ("par"). That way a 14th-rounder isn't punished for not
+    being a first-rounder, and quarterbacks don't all look like steals just because
+    they score the most points. Kickers and defenses aren't graded, since
+    everyone streams them.
 </p>
+{% if not review.complete %}
+<div class="alert alert-info small py-2">
+    The {{ review.year }} season is still being played, so these grades will keep
+    changing every week.
+</div>
+{% endif %}
 
 {% if years | length > 1 %}
 <div class="mb-3">
@@ -36,6 +42,31 @@
     {% endfor %}
 </div>
 {% endif %}
+
+<div class="stat-card mb-4" style="height:auto">
+    <h2 class="h5 mb-1">📝 Draft Grades</h2>
+    <p class="text-muted small mb-3">
+        Each owner's total points above or below par across every pick, graded on
+        a curve. "Hits" are picks that beat par.
+    </p>
+    <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Grade</th><th>Owner</th><th class="num">vs Par</th>
+                   <th class="num">Hits</th><th class="num">Pts</th></tr></thead>
+        <tbody>
+        {% for g in review.grades %}
+        <tr {% if g.owner == my_owner %}class="me-row"{% endif %}>
+            <td class="fw-bold">{{ g.grade }}</td>
+            <td><a href="{{ url_for('owner_profile', owner_name=g.owner) }}">{{ g.owner }}</a></td>
+            <td class="num {{ 'over-pos' if g.over > 0 else 'over-neg' }}">{{ '+' if g.over > 0 }}{{ g.over }}</td>
+            <td class="num">{{ g.hits }}/{{ g.picks }}</td>
+            <td class="num text-muted">{{ g.points }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
 
 <div class="row g-4">
     <div class="col-lg-6">
@@ -55,7 +86,7 @@
                         {% if r.player_id %}
                         <a href="{{ url_for('player_view', player_id=r.player_id) }}">{{ r.player }}</a>
                         {% else %}{{ r.player }}{% endif %}
-                        {% if r.keeper %}<span class="keeper-badge">K</span>{% endif %}
+                        {% if r.keeper %}<span class="badge keeper-badge">K</span>{% endif %}
                     </td>
                     <td class="small"><a href="{{ url_for('owner_profile', owner_name=r.owner) }}">{{ r.owner }}</a></td>
                     <td class="num">{{ r.points }}</td>
@@ -72,7 +103,9 @@
         <div class="stat-card">
             <h2 class="h5 mb-1">💀 Biggest Busts</h2>
             <p class="text-muted small mb-3">
-                Rounds 1–8 only — a late flier that misses costs nobody anything.
+                Rounds 1–8 only, since a late-round flier that misses costs nothing.
+                Players traded away who kept scoring aren't counted here; that shows
+                up in the trade grades instead.
             </p>
             <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
@@ -87,7 +120,7 @@
                         {% if r.player_id %}
                         <a href="{{ url_for('player_view', player_id=r.player_id) }}">{{ r.player }}</a>
                         {% else %}{{ r.player }}{% endif %}
-                        {% if r.keeper %}<span class="keeper-badge">K</span>{% endif %}
+                        {% if r.keeper %}<span class="badge keeper-badge">K</span>{% endif %}
                     </td>
                     <td class="small"><a href="{{ url_for('owner_profile', owner_name=r.owner) }}">{{ r.owner }}</a></td>
                     <td class="num">{{ r.points }}</td>
@@ -101,11 +134,11 @@
     </div>
 </div>
 
-<div class="stat-card mt-4">
+<div class="stat-card mt-4" style="height:auto">
     <h2 class="h5 mb-1">Best Pick of Each Round</h2>
     <p class="text-muted small mb-3">
-        Average return per round is in brackets — this is what the draft is
-        actually worth as you go down it.
+        "Round Avg" is what the average pick in that round returned, which shows
+        how much each round of the draft was really worth.
     </p>
     <div class="table-responsive">
     <table class="table table-sm align-middle mb-0">
