@@ -34,6 +34,29 @@
 .lw-toggle { width: 100%; margin-top: 8px; border: 0; background: var(--bs-secondary-bg);
              border-radius: 8px; padding: 7px; font-size: .85em; font-weight: 600; color: var(--bs-body-color); }
 .lw-lineups { margin-top: 8px; }
+/* Side-by-side lineups: one row per slot, each team's player on its side and
+   the slot in the middle, points next to it so the pairs are easy to compare. */
+.vs-row { display: grid; grid-template-columns: 1fr 38px 1fr; align-items: center;
+          border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.06));
+          padding: 4px 0; font-size: .8em; }
+.vs-head { font-weight: 800; font-size: .78em; border-bottom-width: 2px; }
+.vs-head .vs-side { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-side { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.vs-side.r { justify-content: flex-end; text-align: right; }
+.vs-who { min-width: 0; flex: 1; }
+.vs-side.r .vs-who { text-align: right; }
+.vs-name a, .vs-name span.n { display: block; overflow: hidden; text-overflow: ellipsis;
+                              white-space: nowrap; font-weight: 600; }
+.vs-sub { line-height: 1.1; }
+.vs-sub .lw-rk { font-size: .9em; }
+.vs-who .g { display: block; font-size: .85em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-num { flex-shrink: 0; text-align: right; font-variant-numeric: tabular-nums; min-width: 40px; }
+.vs-side.r .vs-num { text-align: left; }
+.vs-num b { display: block; font-size: 1.05em; }
+.vs-num small { color: var(--bs-secondary-color); font-size: .8em; }
+.vs-slot { text-align: center; font-size: .72em; font-weight: 800; color: var(--bs-secondary-color); }
+.vs-row.la .vs-side:first-child .vs-num b, .vs-row.lb .vs-side.r .vs-num b { color: #198754; }
+.vs-row.bench { opacity: .7; }
 .lw-lineups h6 { font-size: .8em; font-weight: 700; margin: 10px 0 4px; }
 .lw-p { display: grid; grid-template-columns: 34px 1fr auto; gap: 6px; align-items: center;
         padding: 4px 0; border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.06));
@@ -135,18 +158,52 @@
             <div class="sc"><div class="pts">${n2(t.points)}</div><div class="pj">${pj}</div></div></div>`;
     }
 
+    // One side of a head-to-head row. `right` mirrors it so both players'
+    // points sit next to the slot label in the middle.
+    function side(p, right) {
+        if (!p) return '<div class="vs-side"></div>';
+        const pts = p.state === 'pre' || p.state === 'bye' ? n1(p.proj) : n2(p.points);
+        const sub = p.state === 'pre' ? 'proj' : p.state === 'in' ? '→ ' + n1(p.live)
+                  : p.state === 'empty' ? '' : 'proj ' + n1(p.proj);
+        const rk = p.week_rank ? `<span class="lw-rk">${esc(p.week_rank)}</span>` : '';
+        const g = p.state === 'empty' ? '' : `<span class="g ${p.state === 'in' ? 'in' : ''}">${esc(p.team)} · ${esc(p.game)}</span>`;
+        const who = `<div class="vs-who"><div class="vs-name">${plink(p)}</div>
+                     <div class="vs-sub">${right ? inj(p) + rk : rk + inj(p)}</div>${g}</div>`;
+        const num = `<div class="vs-num"><b>${pts}</b><small>${sub}</small></div>`;
+        return `<div class="vs-side ${right ? 'r' : ''}">${right ? num + who : who + num}</div>`;
+    }
+
+    function versus(a, b) {
+        const slots = board.slots || [];
+        const n = Math.max(a.starters.length, b.starters.length);
+        let rows = '';
+        for (let k = 0; k < n; k++) {
+            const pa = a.starters[k], pb = b.starters[k];
+            const slot = slots[k] || (pa && pa.pos) || '';
+            const edge = pa && pb ? (pa.live > pb.live ? 'la' : pb.live > pa.live ? 'lb' : '') : '';
+            rows += `<div class="vs-row ${edge}">${side(pa, false)}
+                     <div class="vs-slot">${esc(slot)}</div>${side(pb, true)}</div>`;
+        }
+        const benchN = Math.max(Math.min(a.bench.length, 7), Math.min(b.bench.length, 7));
+        let bench = '';
+        for (let k = 0; k < benchN; k++) {
+            bench += `<div class="vs-row bench">${side(a.bench[k], false)}
+                      <div class="vs-slot">BN</div>${side(b.bench[k], true)}</div>`;
+        }
+        return `<div class="lw-lineups">
+            <div class="vs-row vs-head"><div class="vs-side">${esc(a.team)}</div><div class="vs-slot"></div>
+                <div class="vs-side r">${esc(b.team)}</div></div>
+            ${rows}
+            <div class="vs-row vs-head"><div class="vs-side">Bench</div><div class="vs-slot"></div><div class="vs-side r">Bench</div></div>
+            ${bench}</div>`;
+    }
+
     function matchupsView() {
         if (!board.matchups.length) return '<p class="text-muted">No matchups this week.</p>';
         return board.matchups.map((m, i) => {
             const a = m.a, b = m.b;
             const alerts = [...a.alerts.map(x => a.owner + ': ' + x), ...b.alerts.map(x => b.owner + ': ' + x)];
-            const lineups = open.has(i) ? `<div class="lw-lineups">
-                <h6>${esc(a.team)} starters</h6>${a.starters.map(p => playerRow(p)).join('')}
-                <h6>${esc(b.team)} starters</h6>${b.starters.map(p => playerRow(p)).join('')}
-                <h6>Bench</h6>
-                ${a.bench.slice(0, 6).map(p => playerRow(p, true)).join('')}
-                ${b.bench.slice(0, 6).map(p => playerRow(p, true)).join('')}
-            </div>` : '';
+            const lineups = open.has(i) ? versus(a, b) : '';
             return `<div class="lw-card">
                 ${teamRow(a, a.points > b.points)}
                 ${teamRow(b, b.points > a.points)}

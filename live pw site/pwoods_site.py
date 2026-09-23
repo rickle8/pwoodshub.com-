@@ -1197,6 +1197,9 @@ def get_live_scoreboard():
                                _week_projections(season, week), _all_players(),
                                games, _h2h_line)
     out.update({"week": week, "season": season, "season_type": season_type,
+                # Sleeper lists starters in lineup-slot order, so the page can
+                # pair them up position by position.
+                "slots": [x for x in lineups.DEFAULT_LINEUP],
                 "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
     return out
 
