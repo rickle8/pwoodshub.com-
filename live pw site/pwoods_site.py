@@ -1569,7 +1569,7 @@ def home():
         live_status = {"year": live_year, "played": played, "reg_weeks": reg,
                        "leader": leader}
 
-    return render_template("index.html",
+    return render_template("index.html", **owners_context(),
                            years=sorted(league_data.keys(), reverse=True),
                            champions=champions,
                            live_year=live_year, live_status=live_status,
@@ -2474,6 +2474,11 @@ def head_to_head_view():
 
 @app.route("/power_rankings")
 def power_rankings():
+    return render_template("power_rankings.html", **owners_context())
+
+
+def owners_context():
+    """Everything _owners.html needs: the Owners page and the home page."""
     owner_stats = aggregate_owner_stats()
     rankings = get_power_rankings(owner_stats)
     overall_records = calculate_overall_records(owner_stats)
@@ -2494,16 +2499,13 @@ def power_rankings():
     for owner in average_finish:
         average_finish[owner] = sum(average_finish[owner]) / len(average_finish[owner])
 
-    luck_index = calculate_luck_index()
-
-    return render_template("power_rankings.html",
-                           active_rankings=rankings["active"],
-                           retired_rankings=rankings["retired"],
-                           points_scored=rankings["points_scored"],
-                           overall_records=overall_records,
-                           average_finish=average_finish,
-                           luck_index=luck_index,
-                           playoff_stats=calculate_playoff_stats())
+    return {"active_rankings": rankings["active"],
+            "retired_rankings": rankings["retired"],
+            "points_scored": rankings["points_scored"],
+            "overall_records": overall_records,
+            "average_finish": average_finish,
+            "luck_index": calculate_luck_index(),
+            "playoff_stats": calculate_playoff_stats()}
 
 
 # PINs are short and one SHA-256 is fast, so unlimited guesses is a real

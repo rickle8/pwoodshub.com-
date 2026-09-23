@@ -98,6 +98,12 @@ def main():
                         raise
                     print(f"  ... rate limited, waiting 30s before {rel}")
                     time.sleep(30)
+                except (urllib.error.URLError, ConnectionError, TimeoutError) as e:
+                    # A dropped connection is worth a couple more tries.
+                    if attempt == 3:
+                        raise
+                    print(f"  ... connection dropped ({e}), retrying {rel}")
+                    time.sleep(5)
             ok = code in (200, 201)
             print(f"  {'ok ' if ok else 'ERR'} {code}  {rel:<32} {n:>10,} bytes")
             if not ok:
