@@ -17,6 +17,9 @@
     #yearTabs { grid-template-columns: repeat(3, 1fr); }
     #yearTabs .nav-link { font-size: .82rem; padding: 6px 4px; }
 }
+.division-card { background: var(--stat-card); border: 1px solid var(--bs-border-color);
+                 border-radius: 10px; padding: 10px 12px; }
+.division-name { font-weight: 800; font-size: 1.05rem; margin-bottom: 4px; }
 /* Pages loaded into a tab: their own heading reads as a sub-heading here,
    and "Back to Home" is redundant. */
 .season-fragment h1 { font-size: 1.35rem; margin-top: .25rem !important; }
@@ -112,6 +115,38 @@
             </tbody>
         </table>
         </div>
+
+        {% if division_tables %}
+        <h2 class="h5 mt-4 mb-2">Divisions</h2>
+        <div class="row g-3">
+            {% for name, rows in division_tables %}
+            <div class="col-md-6 col-xl-4">
+                <div class="division-card">
+                    <div class="division-name">{{ name }}</div>
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th></th><th>Team</th><th class="text-end">W-L</th><th class="text-end">PF</th><th class="text-end">GB</th></tr></thead>
+                        <tbody>
+                        {% set lead = rows[0] %}
+                        {% for t in rows %}
+                        <tr>
+                            <td class="text-muted">{{ loop.index }}</td>
+                            <td><a href="{{ url_for('owner_season', owner_name=t.owner, year=year) }}">{{ t.name }}</a>
+                                <div class="small text-muted">{{ t.owner }}</div></td>
+                            <td class="text-end text-nowrap">{{ t.wins }}-{{ t.losses }}{% if t.ties %}-{{ t.ties }}{% endif %}</td>
+                            <td class="text-end">{{ t.points_for | round(1) }}</td>
+                            <td class="text-end text-muted">
+                                {% set gb = ((lead.wins - t.wins) + (t.losses - lead.losses)) / 2 %}
+                                {{ '—' if loop.first else (gb | int if gb == gb | int else gb) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
 
     <!-- PLAYOFFS TAB -->
@@ -337,7 +372,9 @@ function loadPane(pane, url) {
         .then(html => {
             pane.innerHTML = html;
             // Scripts put in with innerHTML don't run; swap in live copies.
+            // Data blocks (type="application/json") are left as they are.
             pane.querySelectorAll('script').forEach(old => {
+                if (old.type && old.type !== 'text/javascript' && old.type !== 'module') return;
                 const s = document.createElement('script');
                 s.textContent = old.textContent;
                 old.replaceWith(s);

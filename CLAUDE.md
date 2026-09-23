@@ -60,6 +60,11 @@ smoke test.
 - `trade_machine.py`: trade analyzer and Trade Finder (1-for-1 and 2-for-1).
 - `keepers.py`, `draft_review.py`, `trades.py`, `lineups.py`, `projections.py`:
   the pages of the same names.
+- `live_week.py`: the This Week page (live projections from ESPN's NFL
+  scoreboard clock, win odds, weekly positional rankings). Inputs are fetched
+  in `pwoods_site.get_live_scoreboard`.
+- The current season's `/year/<season>` page is the hub: its lazy tabs load
+  feature pages via `?fragment=1` (templates that `{% extends layout %}`).
 - `push.py`: web push alerts for new league notes. `static/sw.js` is the
   service worker for the home-screen app. Bump its `VERSION` when you change it.
 - Sleeper seasons store the overall pick number and ESPN seasons store the pick

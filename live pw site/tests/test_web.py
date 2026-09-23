@@ -36,12 +36,19 @@ class WebTestCase(unittest.TestCase):
                                ("PREFS_FILE", "user_prefs.json")):
             setattr(P, name, os.path.join(self.tmp, filename))
         P._pin_failures.clear()
+        # The current season's page asks Sleeper and the value markets for
+        # divisions and player values; keep tests offline and quick.
+        self._net = {"_divisions": P._divisions, "_consensus_board": P._consensus_board}
+        P._divisions = lambda: {}
+        P._consensus_board = lambda season: {}
         P.app.config["TESTING"] = True
         self.client = P.app.test_client()
 
     def tearDown(self):
         for name, value in self._saved.items():
             setattr(P, name, value)
+        for name, fn in self._net.items():
+            setattr(P, name, fn)
         P._pin_failures.clear()
         shutil.rmtree(self.tmp, ignore_errors=True)
 

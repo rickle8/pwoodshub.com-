@@ -27,6 +27,7 @@ import trade_machine
 import keepers
 import draft_review
 import push
+import live_week
 
 app = Flask(__name__)
 
@@ -1132,57 +1133,72 @@ def _league_identity():
     return {"rid_owner": rid_owner, "rid_team": rid_team}
 
 
+def _h2h_line(ao, bo):
+    """Lifetime owner-vs-owner record as one line of text."""
+    rec = calculate_historical_head_to_head().get(ao, {}).get(
+        bo, {"wins": 0, "losses": 0, "ties": 0})
+    ties = f"–{rec['ties']}" if rec["ties"] else ""
+    if rec["wins"] + rec["losses"] + rec["ties"] == 0:
+        return "First ever meeting"
+    if rec["wins"] > rec["losses"]:
+        return f"{ao} leads {rec['wins']}–{rec['losses']}{ties}"
+    if rec["losses"] > rec["wins"]:
+        return f"{bo} leads {rec['losses']}–{rec['wins']}{ties}"
+    return f"All square at {rec['wins']}–{rec['losses']}{ties}"
+
+
+def _nfl_games(season, week):
+    """NFL game states for the week from ESPN's public scoreboard. Refreshed
+    every minute while games are on, every 10 minutes otherwise."""
+    def fetch():
+        url = ("https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+               f"?seasontype=2&week={week}&dates={season}")
+        return live_week.parse_scoreboard(safe_get(url, timeout=15))
+    games = _cached(f"nfl_games:{season}:{week}", 60, fetch)
+    return games
+
+
+def _week_projections(season, week):
+    """Rotowire (via Sleeper) and ESPN projections for one week, blended."""
+    sources = {}
+    try:
+        sources["Rotowire"] = consensus.get_week_projections(season, week)
+    except Exception as e:
+        print(f"Sleeper weekly projections unavailable: {e}")
+    try:
+        sources["ESPN"] = {pid: w[week] for pid, w in consensus.get_espn_weekly(season).items()
+                           if week in w}
+    except Exception as e:
+        print(f"ESPN weekly projections unavailable: {e}")
+    return live_week.blend(sources)
+
+
 def get_live_scoreboard():
-    """Current-week matchups with live points and lifetime owner-vs-owner
-    records. Refreshes from Sleeper at most once a minute."""
+    """This week: matchups with live scores, live projections and win odds,
+    positional rankings and the week's leaders. Refreshes about once a minute."""
     state = _cached("nfl_state", 300,
                     lambda: safe_get("https://api.sleeper.app/v1/state/nfl"))
     week = int(state.get("week") or 1)
+    season = str(state.get("season") or _latest_season())
     season_type = state.get("season_type", "regular")
     if season_type != "regular":
-        return {"week": week, "season_type": season_type, "games": []}
+        return {"week": week, "season_type": season_type, "matchups": [],
+                "rankings": {}, "leaders": {}, "live_games": 0}
 
     ident = _cached("identity", 3600, _league_identity)
     matchups = _cached(f"live_matchups_w{week}", 60,
                        lambda: safe_get(f"https://api.sleeper.app/v1/league/{SLEEPER_LEAGUE_ID}/matchups/{week}") or [])
-
-    groups = {}
-    for entry in matchups:
-        mid = entry.get("matchup_id")
-        if mid is not None:
-            groups.setdefault(mid, []).append(entry)
-
-    h2h = calculate_historical_head_to_head()
-    games = []
-    for mid in sorted(groups):
-        pair = groups[mid]
-        if len(pair) != 2:
-            continue
-        a, b = pair
-        ao = ident["rid_owner"].get(a["roster_id"], "?")
-        bo = ident["rid_owner"].get(b["roster_id"], "?")
-
-        rec = h2h.get(ao, {}).get(bo, {"wins": 0, "losses": 0, "ties": 0})
-        total = rec["wins"] + rec["losses"] + rec["ties"]
-        if total == 0:
-            h2h_line = "First ever meeting"
-        elif rec["wins"] > rec["losses"]:
-            h2h_line = f"{ao} leads {rec['wins']}–{rec['losses']}" + (f"–{rec['ties']}" if rec["ties"] else "")
-        elif rec["losses"] > rec["wins"]:
-            h2h_line = f"{bo} leads {rec['losses']}–{rec['wins']}" + (f"–{rec['ties']}" if rec["ties"] else "")
-        else:
-            h2h_line = f"All square at {rec['wins']}–{rec['losses']}"
-
-        games.append({
-            "team_a":  ident["rid_team"].get(a["roster_id"], "?"),
-            "owner_a": ao,
-            "pts_a":   round(float(a.get("points") or 0), 2),
-            "team_b":  ident["rid_team"].get(b["roster_id"], "?"),
-            "owner_b": bo,
-            "pts_b":   round(float(b.get("points") or 0), 2),
-            "h2h":     h2h_line,
-        })
-    return {"week": week, "season_type": season_type, "games": games}
+    try:
+        games = _nfl_games(season, week)
+    except Exception as e:
+        print(f"NFL scoreboard unavailable: {e}")
+        games = {}
+    out = live_week.build_week(matchups, ident["rid_owner"], ident["rid_team"],
+                               _week_projections(season, week), _all_players(),
+                               games, _h2h_line)
+    out.update({"week": week, "season": season, "season_type": season_type,
+                "updated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
+    return out
 
 
 # Long enough that filtering to a single position still leaves a useful list.
@@ -1558,6 +1574,43 @@ def home():
                            highest_scoring_team_all_time=highest_scoring_team_all_time,
                            lowest_scoring_team_all_time=lowest_scoring_team_all_time)
 
+def _divisions():
+    """owner -> division name for the current Sleeper league, or {} if the
+    league has none. The names are the league's own, set in Sleeper."""
+    def fetch():
+        league = safe_get(f"https://api.sleeper.app/v1/league/{SLEEPER_LEAGUE_ID}") or {}
+        names = {k: v for k, v in (league.get("metadata") or {}).items()
+                 if k.startswith("division_") and v}
+        if not (league.get("settings") or {}).get("divisions"):
+            return {}
+        rosters = safe_get(f"https://api.sleeper.app/v1/league/{SLEEPER_LEAGUE_ID}/rosters") or []
+        owners = _cached("identity", 3600, _league_identity)["rid_owner"]
+        out = {}
+        for r in rosters:
+            d = (r.get("settings") or {}).get("division")
+            if d:
+                out[owners.get(r["roster_id"], "?")] = names.get(f"division_{d}", f"Division {d}")
+        return out
+    try:
+        return _cached("divisions", 3600, fetch)
+    except Exception as e:
+        print(f"Divisions unavailable: {e}")
+        return {}
+
+
+def division_standings(teams, divisions):
+    """[(division, [teams best first])] in the order Sleeper numbers them."""
+    groups = {}
+    for t in teams:
+        d = divisions.get(t.get("owner"))
+        if d:
+            groups.setdefault(d, []).append(t)
+    order = list(dict.fromkeys(divisions.values()))
+    return [(d, sorted(groups[d], key=lambda t: (-t.get("wins", 0), t.get("losses", 0),
+                                                 -t.get("points_for", 0))))
+            for d in order if d in groups]
+
+
 @app.route('/year/<int:year>')
 def year_view(year):
     year_data = league_data.get(str(year), {})
@@ -1615,7 +1668,11 @@ def year_view(year):
             elif ttype == "free_agent":
                 team_txn_counts[owner]["fa_adds"] += len(adds.get(owner, []))
 
+    # Divisions only exist for the league Sleeper is running now.
+    divisions = _divisions() if str(year) == _latest_season() else {}
     return render_template("year.html", year=year, teams=teams,
+                           divisions=divisions,
+                           division_tables=division_standings(teams, divisions),
                            team_weekly_summaries=team_weekly_summaries,
                            playoffs=year_data.get("playoffs", []),
                            draft=year_data.get("draft", []),
@@ -1915,7 +1972,8 @@ def scoreboard_view():
         error = None
     except Exception as e:
         print(f"Scoreboard fetch failed: {e}")
-        board = {"week": None, "season_type": "regular", "games": []}
+        board = {"week": None, "season_type": "regular", "matchups": [],
+                 "rankings": {}, "leaders": {}, "live_games": 0}
         error = "Couldn't reach Sleeper right now. Try again in a minute."
     return render_template("scoreboard.html", board=board, error=error)
 

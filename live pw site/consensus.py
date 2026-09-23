@@ -166,6 +166,26 @@ def remaining_weeks(season):
     return max(0, FANTASY_WEEKS - current_week(season) + 1)
 
 
+def get_week_projections(season, week):
+    """{sleeper_id: Rotowire's half-PPR projection for one week}.
+
+    Cached for 15 minutes: these move during the week as injury news and
+    inactives come in.
+    """
+    def fetch():
+        qs = "&".join(f"position[]={p}" for p in _ALL_POSITIONS)
+        url = (f"https://api.sleeper.com/projections/nfl/{season}/{week}"
+               f"?season_type=regular&{qs}")
+        out = {}
+        for row in safe_get(url, timeout=25) or []:
+            pid = row.get("player_id")
+            pts = (row.get("stats") or {}).get("pts_half_ppr")
+            if pid is not None and pts is not None:
+                out[str(pid)] = float(pts)
+        return out
+    return _cached(f"wk:{season}:{week}", fetch, ttl=900)
+
+
 def get_ros_projections(season, from_week):
     """Rotowire's weekly projections summed from `from_week` to the end.
 
@@ -174,22 +194,13 @@ def get_ros_projections(season, from_week):
     revise after injuries and depth-chart news.
     """
     def fetch():
-        qs = "&".join(f"position[]={p}" for p in _ALL_POSITIONS)
-
-        def week(w):
-            url = (f"https://api.sleeper.com/projections/nfl/{season}/{w}"
-                   f"?season_type=regular&{qs}")
-            return safe_get(url, timeout=25) or []
-
         totals = {}
         weeks = range(from_week, FANTASY_WEEKS + 1)
         with ThreadPoolExecutor(max_workers=6) as pool:
-            for rows in pool.map(week, weeks):
-                for row in rows:
-                    pid = row.get("player_id")
-                    pts = (row.get("stats") or {}).get("pts_half_ppr")
-                    if pid is not None and pts:
-                        totals[str(pid)] = totals.get(str(pid), 0.0) + float(pts)
+            for proj in pool.map(lambda w: get_week_projections(season, w), weeks):
+                for pid, pts in proj.items():
+                    if pts:
+                        totals[pid] = totals.get(pid, 0.0) + pts
         return {p: round(v, 2) for p, v in totals.items() if v > 0}
     return _cached(f"ros:{season}:{from_week}", fetch)
 
@@ -221,12 +232,13 @@ def get_id_bridge():
 _ESPN_POS = {1: "QB", 2: "RB", 3: "WR", 4: "TE", 5: "K"}
 
 
-def get_espn_projections(season, from_week):
-    """{sleeper_id: ESPN projected points from `from_week` to the end}.
+def get_espn_weekly(season):
+    """{sleeper_id: {week: ESPN projected half-PPR points}}.
 
-    ESPN scores in full PPR rather than our half-PPR, which is fine here: the
-    blend only uses where a player ranks at his position. Defenses are left
+    ESPN scores in full PPR; its projected receptions (stat 53) are in the
+    same payload, so half a point per catch comes back off. Defenses are left
     out — ESPN keys them by team, not by a player id anyone else shares.
+    Cached for 15 minutes, like the Sleeper weekly numbers.
     """
     def fetch():
         bridge = get_id_bridge()["espn"]
@@ -250,15 +262,27 @@ def get_espn_projections(season, from_week):
             sid = bridge.get(str(pl.get("id")))
             if not sid:
                 continue
-            pts = sum(st.get("appliedTotal") or 0 for st in pl.get("stats") or []
-                      if st.get("seasonId") == int(season)
-                      and st.get("statSourceId") == 1
-                      and st.get("statSplitTypeId") == 1
-                      and from_week <= (st.get("scoringPeriodId") or 0) <= FANTASY_WEEKS)
-            if pts > 0:
-                out[sid] = round(pts, 1)
+            weeks = {}
+            for st in pl.get("stats") or []:
+                if (st.get("seasonId") == int(season) and st.get("statSourceId") == 1
+                        and st.get("statSplitTypeId") == 1):
+                    rec = float((st.get("stats") or {}).get("53") or 0)
+                    weeks[int(st.get("scoringPeriodId") or 0)] = round(
+                        (st.get("appliedTotal") or 0) - 0.5 * rec, 2)
+            if weeks:
+                out[sid] = weeks
         return out
-    return _cached(f"espn:{season}:{from_week}", fetch)
+    return _cached(f"espn_weekly:{season}", fetch, ttl=900)
+
+
+def get_espn_projections(season, from_week):
+    """{sleeper_id: ESPN projected half-PPR points from `from_week` to the end}."""
+    out = {}
+    for sid, weeks in get_espn_weekly(season).items():
+        pts = sum(v for w, v in weeks.items() if from_week <= w <= FANTASY_WEEKS)
+        if pts > 0:
+            out[sid] = round(pts, 1)
+    return out
 
 
 _FP_PAGES = {"redraft-qb": "QB", "redraft-rb": "RB", "redraft-wr": "WR",
