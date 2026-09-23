@@ -216,7 +216,8 @@ class TestRoutesSmoke(WebTestCase):
     playoff-stats crash before it reached the site."""
 
     OFFLINE_ROUTES = ["/", "/records", "/head_to_head", "/power_rankings",
-                      "/draft", "/rosters", "/notes", "/chat", "/api/prefs"]
+                      "/draft", "/rosters", "/notes", "/chat", "/api/prefs",
+                      "/trades", "/draft_review"]
 
     def test_offline_pages_render(self):
         for route in self.OFFLINE_ROUTES:

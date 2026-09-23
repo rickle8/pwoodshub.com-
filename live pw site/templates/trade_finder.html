@@ -4,88 +4,132 @@
 {% block extra_css %}
 .deal { border: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.12));
         border-radius: 10px; padding: 12px; margin-bottom: 12px; }
-.deal-side { padding: 8px 10px; border-radius: 8px; background: var(--bs-secondary-bg); }
+.deal.mine { border-color: #0d6efd88; }
+.deal-side { padding: 8px 10px; border-radius: 8px; background: var(--bs-secondary-bg); height: 100%; }
+.deal-player { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.deal-player .val { font-size: .8em; color: var(--bs-secondary-color); white-space: nowrap;
+                    font-variant-numeric: tabular-nums; }
 .gain { font-variant-numeric: tabular-nums; font-weight: 700; color: #198754; }
+.loss { font-variant-numeric: tabular-nums; font-weight: 700; color: #dc3545; }
+.why { font-size: .8em; color: var(--bs-secondary-color); }
 .swap-arrow { font-size: 1.3rem; color: var(--bs-secondary-color); }
-.fair-pill { font-size: .7em; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+.pill { font-size: .7em; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+        white-space: nowrap; }
 .fair-hi { background: #19875426; color: #198754; }
 .fair-mid { background: #fd7e1426; color: #fd7e14; }
-.num { text-align: right; font-variant-numeric: tabular-nums; }
+.kind { background: var(--bs-secondary-bg); color: var(--bs-secondary-color); }
+.owner-pick { display: flex; flex-wrap: wrap; gap: 6px; }
 {% endblock %}
 
-{% block content %}
-<h1 class="mt-2 mb-1">Trade Finder</h1>
-<p class="text-muted small mb-3">
-    Every one-for-one swap between every pair of teams, keeping only the ones where
-    <strong>both</strong> rosters end up projecting more points from the lineup they
-    can actually start. That isn't a free lunch — it happens when two teams have
-    opposite surpluses, like a manager with three startable tight ends and a hole at
-    running back. Deals are filtered to a roughly even exchange of trade value, so
-    the other owner has some reason to say yes. Refreshed hourly.
-</p>
-
-{% if not has_board %}
-<div class="alert alert-warning">
-    Player valuations aren't available right now, so there's nothing to search.
-</div>
-{% elif not found %}
-<p class="text-muted">
-    No mutually improving swaps found. That usually means rosters are well balanced —
-    or that everyone's surplus is at the same position.
-</p>
-{% else %}
-
-<p class="text-muted small mb-3">
-    Showing {{ found | length }} idea{{ 's' if found | length != 1 }}, best combined
-    gain first. Points are full-season projections.
-</p>
-
-{% for d in found %}
-<div class="deal">
-    <div class="d-flex justify-content-between align-items-center mb-2">
+{% macro deal_card(d) %}
+<div class="deal {{ 'mine' if my_owner in (d.a, d.b) }}">
+    <div class="d-flex justify-content-between align-items-center mb-2 gap-2">
         <span class="fw-semibold">
             <a href="{{ url_for('owner_profile', owner_name=d.a) }}">{{ d.a }}</a>
             <span class="swap-arrow">⇄</span>
             <a href="{{ url_for('owner_profile', owner_name=d.b) }}">{{ d.b }}</a>
         </span>
-        <span class="fair-pill {{ 'fair-hi' if d.fairness >= 85 else 'fair-mid' }}">
-            {{ d.fairness }}% even
+        <span class="d-flex gap-1">
+            <span class="pill kind">{{ d.kind }}</span>
+            <span class="pill {{ 'fair-hi' if d.fairness >= 88 else 'fair-mid' }}">{{ d.fairness }}% even</span>
         </span>
     </div>
-    <div class="row g-2 align-items-center">
-        <div class="col-md-5">
+    <div class="row g-2 align-items-stretch">
+        {% for side, sends, gain, why, cut in [(d.a, d.a_sends, d.gain_a, d.why_a, d.cut_a),
+                                               (d.b, d.b_sends, d.gain_b, d.why_b, d.cut_b)] %}
+        <div class="col-md-6">
             <div class="deal-side">
-                <div class="text-muted small">{{ d.a }} sends</div>
-                <div>
-                    <span class="badge pos-{{ d.a_sends.position }}">{{ d.a_sends.position }}</span>
-                    <a href="{{ url_for('player_view', player_id=d.a_sends.id) }}">{{ d.a_sends.name }}</a>
-                    <span class="text-muted small">{{ "{:,}".format(d.a_sends.value) if d.a_sends.value }}</span>
+                <div class="text-muted small">{{ side }} sends</div>
+                {% for p in sends %}
+                <div class="deal-player">
+                    <span>
+                        <span class="badge pos-{{ p.position }}">{{ p.position }}</span>
+                        <a href="{{ url_for('player_view', player_id=p.id) }}">{{ p.name }}</a>
+                    </span>
+                    <span class="val">{{ p.points | round | int }} pts · {{ "{:,}".format(p.value) }}</span>
                 </div>
-                <div class="small mt-1">gains <span class="gain">+{{ d.gain_a }}</span></div>
+                {% endfor %}
+                <div class="small mt-1">
+                    {% if gain >= 0 %}<span class="gain">+{{ gain }}</span>
+                    {% else %}<span class="loss">{{ gain }}</span>{% endif %}
+                    pts/week for {{ side }}
+                </div>
+                {% if why %}<div class="why">{{ why }}</div>{% endif %}
+                {% if cut %}<div class="why">would need to cut {{ cut }}</div>{% endif %}
             </div>
         </div>
-        <div class="col-md-2 text-center swap-arrow d-none d-md-block">⇄</div>
-        <div class="col-md-5">
-            <div class="deal-side">
-                <div class="text-muted small">{{ d.b }} sends</div>
-                <div>
-                    <span class="badge pos-{{ d.b_sends.position }}">{{ d.b_sends.position }}</span>
-                    <a href="{{ url_for('player_view', player_id=d.b_sends.id) }}">{{ d.b_sends.name }}</a>
-                    <span class="text-muted small">{{ "{:,}".format(d.b_sends.value) if d.b_sends.value }}</span>
-                </div>
-                <div class="small mt-1">gains <span class="gain">+{{ d.gain_b }}</span></div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </div>
+{% endmacro %}
+
+{% block content %}
+<h1 class="mt-2 mb-1">Trade Finder</h1>
+<p class="text-muted small mb-3">
+    Every <strong>1-for-1</strong> and <strong>2-for-1</strong> between every pair of
+    teams, keeping only deals where <strong>both</strong> teams' best possible
+    starting lineup projects to score more. That happens when two teams have
+    opposite needs, like one team with three good tight ends and another with none.
+    Deals are also kept roughly even on trade value, so the other owner has a reason
+    to say yes. In a 2-for-1, the team getting the single best player has to pay
+    a little extra in total value.
+</p>
+
+<div class="owner-pick mb-3">
+    <a href="{{ url_for('trade_finder_view', owner='all') }}"
+       class="btn btn-sm {{ 'btn-primary' if not owner else 'btn-outline-secondary' }}">Whole league</a>
+    {% for o in owners %}
+    <a href="{{ url_for('trade_finder_view', owner=o) }}"
+       class="btn btn-sm {{ 'btn-primary' if o == owner else 'btn-outline-secondary' }}">{{ o }}</a>
+    {% endfor %}
+</div>
+
+{% if not has_board %}
+<div class="alert alert-warning">
+    Player projections and trade values aren't available right now, so there's
+    nothing to search. Try again in a few minutes.
+</div>
+{% else %}
+
+<h2 class="h5 mb-1">
+    {% if owner %}🤝 Trades that help {{ owner }} and the other team{% else %}🤝 Best trades for both sides{% endif %}
+</h2>
+<p class="text-muted small mb-3">
+    Gains are projected points per week from the lineup each team could start,
+    with at least +{{ min_gain }} for both sides. Deals are sorted by the
+    <em>smaller</em> of the two gains, because the team that gains less is the one
+    you need to convince.
+</p>
+
+{% for d in found %}
+{{ deal_card(d) }}
+{% else %}
+<p class="text-muted">
+    {% if owner %}No trades right now that help both {{ owner }} and another team.
+    That usually means every team that could use your extras has the same extras.
+    {% else %}No trades right now that help both sides. Rosters are either well
+    balanced, or every team has extras at the same position.{% endif %}
+</p>
+{% endfor %}
+
+{% if owner and pitches %}
+<h2 class="h5 mt-4 mb-1">💬 Worth a pitch</h2>
+<p class="text-muted small mb-3">
+    Deals that help {{ owner }} and barely change the other team, fair on trade
+    value. They're a harder sell, but the other owner gives up almost nothing.
+</p>
+{% for d in pitches %}
+{{ deal_card(d) }}
 {% endfor %}
 {% endif %}
 
 <p class="text-muted small mt-3">
-    These are projections, not promises — the model doesn't know about a locker-room
-    fallout or a coach who's about to change his mind. Treat them as conversation
-    starters, and check the details in the <a href="/analyzer">Trade Analyzer</a>.
+    Based on season-long projections and current trade values, refreshed every
+    hour (this list is {{ age_minutes }} min old). Injuries and depth-chart news
+    can make them out of date, so treat these as conversation starters and check
+    the details in the <a href="/analyzer">Trade Analyzer</a>.
 </p>
+{% endif %}
 
 <a href="/analyzer" class="btn btn-secondary mt-2">Trade Analyzer</a>
 <a href="/trades" class="btn btn-outline-secondary mt-2">Trade History</a>

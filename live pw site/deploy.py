@@ -33,20 +33,14 @@ SRC = os.path.dirname(os.path.abspath(__file__))
 # has its own copy with the live secrets and must never be overwritten from here.
 FILES = [
     "consensus.py", "projections.py", "player_stats.py", "recaps.py",
-    "lineups.py", "trades.py", "trade_machine.py",
+    "lineups.py", "trades.py", "trade_machine.py", "keepers.py", "draft_review.py",
     "pwoods_site.py", "sleeper_common.py", "scraper.py", "update_sleeper.py",
     "weekly_recap.py", "live_loop.py",
-    "templates/base.html", "templates/player.html", "templates/odds.html",
-    "templates/trends.html", "templates/owner_season.html", "templates/year.html",
-    "templates/owner.html", "templates/rosters.html", "templates/draft.html",
-    "templates/recaps.html", "templates/owner_hynes.html", "templates/scoreboard.html",
-    "templates/notes.html", "templates/records.html", "templates/_efficiency.html",
-    "templates/analyzer.html", "templates/_analyzer.html",
-    "templates/_trades.html",
-    # Carries the owner-name whitespace fix for the ESPN seasons. Safe to send:
-    # the updater only ever rewrites Sleeper-era seasons.
-    "league_history.json",
-]
+] + sorted(f"templates/{f}" for f in os.listdir(os.path.join(SRC, "templates"))
+           if f.endswith(".html"))
+# league_history.json is deliberately absent too: the always-on task rewrites
+# it on the server every few minutes, so any local copy is already stale and
+# uploading it would roll the live standings back.
 
 TOKEN = os.environ.get("PA_TOKEN", "").strip()
 if not TOKEN:
@@ -91,7 +85,16 @@ def main():
     failed = []
     for rel in FILES:
         try:
-            code, n = upload(rel)
+            for attempt in range(4):
+                try:
+                    code, n = upload(rel)
+                    break
+                except urllib.error.HTTPError as e:
+                    # PythonAnywhere allows ~40 API calls a minute; wait it out.
+                    if e.code != 429 or attempt == 3:
+                        raise
+                    print(f"  ... rate limited, waiting 30s before {rel}")
+                    time.sleep(30)
             ok = code in (200, 201)
             print(f"  {'ok ' if ok else 'ERR'} {code}  {rel:<32} {n:>10,} bytes")
             if not ok:
@@ -124,6 +127,10 @@ def main():
               ("/player/9509", "Consensus Value", True),
               ("/records", "All-Time Owner Ledger", True),
               ("/year/2025", "tab-efficiency", True),
+              ("/trade_finder", "Trade Finder", True),
+              ("/trades", "Trade History", True),
+              ("/keepers", "Keeper Planner", True),
+              ("/draft_review", "Draft Grades", True),
               ("/", 'href="/history"', False)]
     time.sleep(5)
     bad = 0

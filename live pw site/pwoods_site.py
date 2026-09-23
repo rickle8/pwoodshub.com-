@@ -23,6 +23,8 @@ import consensus
 import lineups
 import trades
 import trade_machine
+import keepers
+import draft_review
 
 app = Flask(__name__)
 
@@ -2166,6 +2168,29 @@ def analyzer_view(season=None):
     return render_template("analyzer.html", analyzer=ctx)
 
 
+def _season_resolver(year_data):
+    """Name -> player id for one season's transactions.
+
+    Transactions only record names, and some names belong to two NFL players
+    (there's more than one Michael Carter). When the global lookup can't
+    decide, pick the namesake who actually shows up on a roster that season.
+    """
+    on_rosters = set()
+    for owners in (year_data.get("weekly_lineups") or {}).values():
+        for entry in (owners or {}).values():
+            on_rosters.update((entry or {}).get("points") or {})
+
+    def resolve(name):
+        pid = resolve_player_id(name)
+        if pid:
+            return pid
+        key = (name or "").lower()
+        matches = [p for p, info in _all_players().items()
+                   if info.get("name", "").lower() == key and p in on_rosters]
+        return matches[0] if len(matches) == 1 else None
+    return resolve
+
+
 def _trade_history(season):
     """Graded trades for one season, or None if that season has none to grade.
 
@@ -2175,13 +2200,121 @@ def _trade_history(season):
     year_data = league_data.get(str(season)) or {}
     if not year_data.get("weekly_lineups"):
         return None
-    graded = trades.grade_season_trades(year_data, resolve_player_id)
+    graded = trades.grade_season_trades(year_data, _season_resolver(year_data))
     if not graded:
         return None
     # Sorted here rather than in Jinja — dictsort can't order by a nested key.
     records = sorted(trades.owner_trade_record(graded).items(),
                      key=lambda kv: -kv[1]["net"])
     return {"graded": graded, "records": records, "year": str(season)}
+
+
+def _latest_season():
+    return max(league_data.keys(), key=int)
+
+
+@app.route('/trades')
+@app.route('/trades/<int:year>')
+def trades_view(year=None):
+    """Every graded trade, one season at a time."""
+    years = [y for y in sorted(league_data, key=int, reverse=True)
+             if _trade_history(y)]
+    if not years:
+        return render_template("trades.html", graded=[], records=[],
+                               years=[], year=None)
+    year_str = str(year) if year and str(year) in years else years[0]
+    th = _trade_history(year_str)
+    return render_template("trades.html", graded=th["graded"],
+                           records=th["records"], years=years, year=year_str)
+
+
+def _trade_finder_deals(season):
+    """Every candidate deal for the current rosters. Cached for an hour: the
+    search is a second or two of lineup maths across 66 pairs of teams."""
+    def build():
+        board = _consensus_board(season)
+        if not board:
+            return {"deals": [], "has_board": False, "ts": time.time()}
+        teams = league_data.get(season, {}).get("teams", [])
+        return {"deals": trade_machine.find_trades(teams, board),
+                "has_board": True, "ts": time.time()}
+    return _cached(f"trade_finder:{season}", 3600, build)
+
+
+@app.route('/trade_finder')
+def trade_finder_view():
+    season = _latest_season()
+    result = _trade_finder_deals(season)
+    owners = sorted(t["owner"] for t in league_data[season].get("teams", []))
+    # No choice made yet: start on the visitor's own team if they've told us
+    # who they are. "all" is the league-wide list.
+    owner = request.args.get("owner")
+    if owner is None:
+        owner = inject_nav_context().get("my_owner", "")
+    if owner not in owners:
+        owner = ""
+    deals = result["deals"]
+    if owner:
+        found = trade_machine.pick_ideas(deals, owner=owner, limit=12,
+                                         per_player=3, per_pair=3)
+        pitches = trade_machine.pick_ideas(deals, owner=owner, limit=8,
+                                           per_player=2, per_pair=2, mutual=False)
+    else:
+        found, pitches = trade_machine.pick_ideas(deals, limit=20), []
+    age = int((time.time() - result["ts"]) / 60)
+    return render_template("trade_finder.html", found=found, pitches=pitches,
+                           owners=owners, owner=owner, season=season,
+                           has_board=result["has_board"], age_minutes=age,
+                           min_gain=trade_machine.MIN_WEEKLY_GAIN)
+
+
+@app.route('/keepers')
+def keepers_view():
+    season = _latest_season()
+    year_data = league_data[season]
+    board = _consensus_board(season)
+    preseason = season_phase(season) == "preseason"
+    slots = keepers.draft_slots(board, use_adp=preseason) if board else {}
+    teams_n = len(year_data.get("teams", [])) or 12
+    options = keepers.keeper_options(year_data, board, resolve_player_id, slots)
+
+    rows, steals = [], []
+    for owner in sorted(options):
+        opts = options[owner]
+        for o in opts:
+            o["verdict"], o["surplus"] = keepers.value_verdict(o, teams_n)
+            o["cost_pick"] = round(keepers.cost_pick(o["cost_round"], teams_n))
+            if o["verdict"] == "steal":
+                steals.append(dict(o, owner=owner))
+        # Best value first — the question on this page is "who do I keep?"
+        opts.sort(key=lambda o: (o["surplus"] is None, -(o["surplus"] or 0)))
+        if opts and opts[0]["surplus"] is not None:
+            opts[0]["best"] = True
+        rows.append((owner, opts))
+    steals.sort(key=lambda o: -o["surplus"])
+    return render_template("keepers.html", rows=rows, steals=steals[:12],
+                           year=season, next_year=int(season) + 1,
+                           has_values=bool(slots), preseason=preseason,
+                           in_season=not season_is_complete(year_data))
+
+
+@app.route('/draft_review')
+@app.route('/draft_review/<int:year>')
+def draft_review_view(year=None):
+    years = [y for y in sorted(league_data, key=int, reverse=True)
+             if league_data[y].get("player_scoring") and league_data[y].get("draft")]
+    if not years:
+        return render_template("draft_review.html", review=None, years=[])
+    # A draft a couple of weeks old hasn't told us much yet, so default to the
+    # newest finished season and let the buttons reach the live one.
+    finished = [y for y in years if season_is_complete(league_data[y])]
+    year_str = (str(year) if year and str(year) in years
+                else (finished or years)[0])
+    review = draft_review.review_draft(league_data[year_str], resolve_player_id)
+    if review:
+        review["year"] = year_str
+        review["complete"] = season_is_complete(league_data[year_str])
+    return render_template("draft_review.html", review=review, years=years)
 
 
 @app.route('/trends')

@@ -16,27 +16,33 @@
 {% block content %}
 <h1 class="mt-2 mb-1">Keeper Planner — {{ next_year }}</h1>
 <p class="text-muted small mb-3">
-    Everyone still on a roster who that owner <strong>drafted in {{ year }}</strong>, and
+    Every player on a roster who that owner <strong>drafted in {{ year }}</strong>, and
     what he'd cost to keep next season. League rules: you can only keep a player you
-    drafted, the first keep costs the round you took him in, and every year after that
-    costs four rounds earlier — capped at round 1.
+    drafted, the first keep costs the round you took him in, and each year after that
+    costs four rounds earlier, never earlier than round 1.
+    {% if in_season %}Rosters change until the season ends, so this list
+    shows rosters as they are today.{% endif %}
     {% if has_values %}
-    "Worth it?" compares where he's actually being drafted (ADP) against the pick
-    his keeper round costs — surplus is measured in draft picks, so "+50" means
-    keeping him is like getting a pick 50 slots earlier than you paid.
+    "Worth it?" compares the pick he'd cost against
+    {% if preseason %}where he's being drafted right now (ADP).{% else %}where he'd go
+    in a draft held today. That's estimated from his current rank at his position
+    and where that rank went in this year's drafts, since ADP stops updating once
+    games start.{% endif %}
+    Surplus is in draft picks: "+50" means keeping him is like getting him 50
+    picks earlier than he'd go. Each team's best-value option is marked ⭐.
     {% endif %}
 </p>
 
 {% if steals %}
-<div class="stat-card mb-4">
+<div class="stat-card mb-4" style="height:auto">
     <h2 class="h5 mb-1">💎 Best Value Keepers</h2>
     <p class="text-muted small mb-3">
-        Being drafted far earlier than the round they'd cost to keep.
+        Players who'd go at least two rounds earlier than the round they'd cost to keep.
     </p>
     <div class="table-responsive">
     <table class="table table-sm align-middle mb-0">
         <thead><tr><th>Player</th><th>Owner</th><th class="num">Costs</th>
-                   <th class="num">ADP</th><th class="num">Surplus</th></tr></thead>
+                   <th class="num">Goes At</th><th class="num">Surplus</th></tr></thead>
         <tbody>
         {% for o in steals %}
         <tr>
@@ -49,7 +55,7 @@
             <td><a href="{{ url_for('owner_profile', owner_name=o.owner) }}">{{ o.owner }}</a></td>
             <td class="num cost-round">R{{ o.cost_round }}
                 <span class="maxed">(pick {{ o.cost_pick }})</span></td>
-            <td class="num">{{ o.adp | stat }}</td>
+            <td class="num">{{ o.adp | round | int if o.adp else '—' }}</td>
             <td class="num fw-bold text-success">+{{ o.surplus | round | int }}</td>
         </tr>
         {% endfor %}
@@ -60,14 +66,14 @@
 {% endif %}
 
 {% for owner, opts in rows %}
-<div class="stat-card mb-3">
+<div class="stat-card mb-3 {{ 'border border-primary' if owner == my_owner }}" style="height:auto">
     <h2 class="h6 mb-2">
         <a href="{{ url_for('owner_profile', owner_name=owner) }}">{{ owner }}</a>
         <span class="text-muted fw-normal small">— {{ opts | length }} eligible</span>
     </h2>
     {% if not opts %}
     <p class="text-muted small mb-0">
-        Nobody eligible — everyone on this roster was traded for or picked up.
+        Nobody eligible. Everyone on this roster was traded for or picked up.
     </p>
     {% else %}
     <div class="table-responsive">
@@ -77,27 +83,28 @@
                 <th>Player</th>
                 <th class="num">Drafted</th>
                 <th class="num">Keeps For</th>
-                <th class="num">ADP</th>
+                <th class="num">Goes At</th>
                 <th class="num">Proj Pts</th>
                 <th>Worth It?</th>
             </tr>
         </thead>
         <tbody>
         {% for o in opts %}
-        <tr>
+        <tr {% if o.best %}class="table-success"{% endif %}>
             <td>
                 <span class="badge pos-{{ o.position }}">{{ o.position }}</span>
                 {% if o.player_id %}
                 <a href="{{ url_for('player_view', player_id=o.player_id) }}">{{ o.name }}</a>
                 {% else %}{{ o.name }}{% endif %}
-                {% if o.was_keeper %}<span class="keeper-badge">KEPT {{ year }}</span>{% endif %}
+                {% if o.best %}⭐{% endif %}
+                {% if o.was_keeper %}<span class="badge keeper-badge">KEPT {{ year }}</span>{% endif %}
             </td>
-            <td class="num text-muted">R{{ o.drafted_round }}{% if o.drafted_pick %}.{{ o.drafted_pick }}{% endif %}</td>
+            <td class="num text-muted">{{ o.drafted_round }}.{{ '%02d'|format(o.drafted_pick) }}</td>
             <td class="num">
                 <span class="cost-round">R{{ o.cost_round }}</span>
                 {% if o.maxed %}<div class="maxed">capped</div>{% endif %}
             </td>
-            <td class="num">{{ o.adp | stat }}</td>
+            <td class="num">{{ o.adp | round | int if o.adp else '—' }}</td>
             <td class="num text-muted">{{ o.proj_points | stat }}</td>
             <td>
                 {% if o.verdict %}
