@@ -225,6 +225,23 @@ class TestRoutesSmoke(WebTestCase):
             with self.subTest(route=route):
                 self.assertEqual(self.client.get(route).status_code, 200)
 
+    def test_tab_pages_render_without_the_site_frame(self):
+        """?fragment=1 is how the season page's tabs load other pages; a second
+        navbar inside a tab would mean the layout switch broke."""
+        for route in ("/recaps", "/rosters"):
+            with self.subTest(route=route):
+                full = self.client.get(route).get_data(as_text=True)
+                part = self.client.get(route + "?fragment=1").get_data(as_text=True)
+                self.assertIn("site-nav", full)
+                self.assertNotIn("site-nav", part)
+                self.assertIn("season-fragment", part)
+
+    def test_only_the_current_season_is_the_hub(self):
+        latest = max(P.league_data, key=int)
+        oldest = min(P.league_data, key=int)
+        self.assertIn('data-src="/odds"', self.client.get(f"/year/{latest}").get_data(as_text=True))
+        self.assertNotIn('data-src=', self.client.get(f"/year/{oldest}").get_data(as_text=True))
+
     def test_every_season_page_renders(self):
         for year in sorted(P.league_data):
             with self.subTest(year=year):

@@ -2,13 +2,21 @@
 {% block title %}{{ year }} Season{% endblock %}
 
 {% block extra_css %}
-.season-tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-.season-tools a { display: flex; align-items: center; gap: 8px; padding: 12px 14px; min-height: 48px;
-                  background: var(--stat-card); border: 1px solid var(--bs-border-color);
-                  border-radius: 10px; text-decoration: none; color: var(--bs-body-color);
-                  font-weight: 600; font-size: .95rem; }
-.season-tools a:hover, .season-tools a:active { border-color: #0d6efd; color: #0d6efd; }
-.season-tools span { line-height: 1.2; }
+/* One scrollable row of tabs on a phone rather than four wrapped rows. */
+#yearTabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+#yearTabs::-webkit-scrollbar { display: none; }
+#yearTabs .nav-link { white-space: nowrap; }
+/* Fade the right edge so it's obvious there are more tabs to swipe to. */
+@media (max-width: 991.98px) {
+    #yearTabs { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+                mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+                padding-right: 24px; }
+}
+/* Pages loaded into a tab: their own heading reads as a sub-heading here,
+   and "Back to Home" is redundant. */
+.season-fragment h1 { font-size: 1.35rem; margin-top: .25rem !important; }
+.season-fragment a.btn[href="/"] { display: none; }
+.lazy-status { padding: 2rem 0; text-align: center; color: var(--bs-secondary-color); }
 .table-success { background-color: rgba(25,135,84,.15) !important; }
 .table-danger  { background-color: rgba(220,53,69,.12) !important; }
 /* Draft pick cards */
@@ -42,31 +50,38 @@
     {% endif %}
 </div>
 
-{% if year|string == current_season %}
-<!-- The current season's tools, same list as the season menu in the nav. -->
-<div class="season-tools mb-3">
-    <a href="/scoreboard">📊<span>This Week</span></a>
-    <a href="/recaps">📰<span>Weekly Recaps</span></a>
-    <a href="/rosters">👥<span>Current Rosters</span></a>
-    <a href="/odds">🎲<span>Playoff Odds</span></a>
-    <a href="/trends">🔥<span>Trending Players</span></a>
-    <a href="/analyzer">⚖️<span>Trade Analyzer</span></a>
-    <a href="/trade_finder">🤝<span>Trade Finder</span></a>
-    <a href="/trades">📜<span>Trade History</span></a>
-    <a href="/keepers">🔒<span>Keeper Planner</span></a>
-</div>
-{% endif %}
-
 <!-- Nav tabs -->
+{% set live = year|string == current_season %}
+{# The current season's page is the hub for everything in the season menu.
+   Tabs with data-src load that page the first time they're opened, so the
+   page itself stays quick. #}
+{% set lazy = [
+    ("tab-week", "This Week", "/scoreboard"),
+    ("tab-recaps", "Recaps", "/recaps"),
+    ("tab-odds", "Playoff Odds", "/odds"),
+    ("tab-rosters", "Rosters", "/rosters"),
+    ("tab-trending", "Trending", "/trends"),
+    ("tab-finder", "Trade Finder", "/trade_finder"),
+    ("tab-keepers", "Keepers", "/keepers"),
+] if live else [] %}
 <ul class="nav nav-tabs mb-3" id="yearTabs" role="tablist">
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-standings">Standings</button></li>
+    {% for id, label, _ in lazy[:4] %}
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#{{ id }}">{{ label }}</button></li>
+    {% endfor %}
     {% if playoffs %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-playoffs">Playoffs</button></li>{% endif %}
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-teams">Teams</button></li>
-    {% if draft %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-draft">Draft</button></li>{% endif %}
-    {% if transactions %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-transactions">Transactions</button></li>{% endif %}
-    {% if efficiency %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-efficiency">Lineup Efficiency</button></li>{% endif %}
-    {% if trade_history %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-trade-history">Trade History</button></li>{% endif %}
+    {% for id, label, _ in lazy[4:6] %}
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#{{ id }}">{{ label }}</button></li>
+    {% endfor %}
     {% if analyzer %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-analyzer">Trade Analyzer</button></li>{% endif %}
+    {% if trade_history %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-trade-history">Trade History</button></li>{% endif %}
+    {% if transactions %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-transactions">Transactions</button></li>{% endif %}
+    {% if draft %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-draft">Draft</button></li>{% endif %}
+    {% for id, label, _ in lazy[6:] %}
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#{{ id }}">{{ label }}</button></li>
+    {% endfor %}
+    {% if efficiency %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-efficiency">Lineup Efficiency</button></li>{% endif %}
 </ul>
 
 <div class="tab-content">
@@ -279,6 +294,12 @@
     </div>
     {% endif %}
 
+    {% for id, label, src in lazy %}
+    <div class="tab-pane fade" id="{{ id }}" data-src="{{ src }}">
+        <div class="lazy-status">Loading {{ label }}…</div>
+    </div>
+    {% endfor %}
+
 </div><!-- end tab-content -->
 
 <a href="/" class="btn btn-secondary mt-3">Back to Home</a>
@@ -286,16 +307,93 @@
 
 {% block extra_js %}
 <script>
-// Open a tab straight from the URL hash, so /year/2025#tab-efficiency lands on
-// the efficiency table rather than dumping you on Standings. Bootstrap doesn't
-// do this itself. Old /history and /efficiency links redirect here.
-(function () {
+// Open a tab straight from the URL hash, so /year/2026#tab-odds lands on the
+// playoff odds rather than dumping you on Standings. Bootstrap doesn't do this
+// itself. The nav menu links here, and old /history and /efficiency links
+// redirect here.
+function showTabFromHash() {
     // Only plain ids, so nothing from the URL reaches the selector unescaped.
     const id = window.location.hash.slice(1);
-    if (!/^[\w-]+$/.test(id)) return;
-    const btn = document.querySelector('[data-bs-target="#' + id + '"]');
-    if (btn) new bootstrap.Tab(btn).show();
-})();
+    if (!/^[\w-]+$/.test(id)) return false;
+    const btn = document.querySelector('#yearTabs [data-bs-target="#' + id + '"]');
+    if (!btn) return false;
+    bootstrap.Tab.getOrCreateInstance(btn).show();
+    btn.scrollIntoView({block: 'nearest', inline: 'center'});
+    return true;
+}
+window.addEventListener('hashchange', showTabFromHash);
+
+// ── Tabs that load another page on first open ────────────────────────────
+function loadPane(pane, url) {
+    pane.dataset.loaded = '1';
+    pane.innerHTML = '<div class="lazy-status">Loading…</div>';
+    const sep = url.includes('?') ? '&' : '?';
+    fetch(url + sep + 'fragment=1')
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(html => {
+            pane.innerHTML = html;
+            // Scripts put in with innerHTML don't run; swap in live copies.
+            pane.querySelectorAll('script').forEach(old => {
+                const s = document.createElement('script');
+                s.textContent = old.textContent;
+                old.replaceWith(s);
+            });
+        })
+        .catch(() => {
+            delete pane.dataset.loaded;
+            pane.innerHTML = '<div class="lazy-status">Couldn\'t load this right now. ' +
+                '<a href="' + url + '">Open it on its own page</a> or try again in a minute.</div>';
+        });
+}
+document.querySelectorAll('#yearTabs button').forEach(btn => {
+    btn.addEventListener('show.bs.tab', () => {
+        const pane = document.querySelector(btn.dataset.bsTarget);
+        if (pane && pane.dataset.src && !pane.dataset.loaded) loadPane(pane, pane.dataset.src);
+    });
+});
+// Pages that have a tab here. A link to one of them (from the nav menu, or
+// from inside another tab) switches tabs instead of leaving the page.
+const TAB_FOR_PATH = {'/analyzer': 'tab-analyzer', '/trades': 'tab-trade-history'};
+document.querySelectorAll('.tab-pane[data-src]').forEach(p => { TAB_FOR_PATH[p.dataset.src] = p.id; });
+
+function switchTo(id) {
+    const btn = document.querySelector('#yearTabs [data-bs-target="#' + id + '"]');
+    if (!btn) return false;
+    bootstrap.Tab.getOrCreateInstance(btn).show();
+    btn.scrollIntoView({block: 'nearest', inline: 'center'});
+    document.getElementById('yearTabs').scrollIntoView({block: 'start'});
+    history.replaceState(null, '', '#' + id);
+    return true;
+}
+
+document.addEventListener('click', e => {
+    const a = e.target.closest('a[href]');
+    if (!a || a.target || e.metaKey || e.ctrlKey) return;
+    const u = new URL(a.href, location.href);
+    if (u.origin !== location.origin) return;
+
+    // The nav menu's links to this very page: just change tab, and close the menu.
+    if (u.pathname === location.pathname && u.hash.startsWith('#tab-')) {
+        if (switchTo(u.hash.slice(1))) {
+            e.preventDefault();
+            const menu = document.getElementById('siteNav');
+            if (menu && menu.classList.contains('show')) bootstrap.Collapse.getOrCreateInstance(menu).hide();
+        }
+        return;
+    }
+    const pane = a.closest('.tab-pane');
+    if (!pane) return;
+    // Plain link to another feature that has a tab here.
+    const other = !u.search && TAB_FOR_PATH[u.pathname];
+    if (other && other !== pane.id && switchTo(other)) { e.preventDefault(); return; }
+    // Same feature, different view (another recap week, another owner in the
+    // Trade Finder): reload the tab in place.
+    if (pane.dataset.src && u.pathname.startsWith(pane.dataset.src)) {
+        e.preventDefault();
+        loadPane(pane, u.pathname + u.search);
+        document.getElementById('yearTabs').scrollIntoView({block: 'start'});
+    }
+});
 
 // Draft filter
 const draftFilter = document.getElementById('draftFilter');
@@ -329,7 +427,8 @@ document.querySelectorAll('.txn-filter').forEach(btn => {
 // Persist active tab in sessionStorage
 const tabButtons = document.querySelectorAll('#yearTabs button[data-bs-toggle="tab"]');
 const savedTab = sessionStorage.getItem('yearTab-{{ year }}');
-if (savedTab) {
+// A tab named in the URL wins over the one you were last on.
+if (!showTabFromHash() && savedTab) {
     const btn = document.querySelector(`#yearTabs button[data-bs-target="${savedTab}"]`);
     if (btn) bootstrap.Tab.getOrCreateInstance(btn).show();
 }
