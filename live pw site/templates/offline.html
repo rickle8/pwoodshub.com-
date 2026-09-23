@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1565c0">
+    <title>Offline · PW League</title>
+    {# Self-contained on purpose: this page is shown when nothing else can load. #}
+    <style>
+        body { margin: 0; min-height: 100vh; display: flex; align-items: center;
+               justify-content: center; background: #add8e6; color: #212529;
+               font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+        .card { background: rgba(255,255,255,.8); border-radius: 12px; padding: 28px 24px;
+                margin: 16px; max-width: 360px; text-align: center; }
+        .pw { display: inline-block; background: #ff69b4; color: #fff; font-weight: bold;
+              border: 3px dashed yellow; border-radius: 50%; padding: 10px 14px;
+              transform: rotate(-10deg); font-size: 22px; }
+        h1 { font-size: 1.3rem; margin: 18px 0 8px; }
+        p { color: #555; line-height: 1.4; }
+        button { background: #1565c0; color: #fff; border: 0; border-radius: 8px;
+                 padding: 10px 20px; font-size: 1rem; }
+        @media (prefers-color-scheme: dark) {
+            body { background: #0d1b2a; color: #e9ecef; }
+            .card { background: rgba(20,35,55,.95); }
+            p { color: #adb5bd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <span class="pw">PW</span>
+        <h1>No connection</h1>
+        <p>You're offline, and this page hasn't been saved yet. Pages you've opened
+           before still work. Everything updates once you're back online.</p>
+        <button onclick="location.reload()">Try again</button>
+    </div>
+</body>
+</html>
