@@ -2,15 +2,20 @@
 {% block title %}{{ year }} Season{% endblock %}
 
 {% block extra_css %}
-/* One scrollable row of tabs on a phone rather than four wrapped rows. */
-#yearTabs { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-#yearTabs::-webkit-scrollbar { display: none; }
-#yearTabs .nav-link { white-space: nowrap; }
-/* Fade the right edge so it's obvious there are more tabs to swipe to. */
-@media (max-width: 991.98px) {
-    #yearTabs { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
-                mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
-                padding-right: 24px; }
+/* Every tab visible at once: a grid of buttons instead of a tab strip, so
+   nothing hides off the edge of a phone screen. */
+#yearTabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+            gap: 6px; border-bottom: 0; }
+#yearTabs .nav-item { min-width: 0; }
+#yearTabs .nav-link { width: 100%; height: 100%; min-height: 42px; padding: 6px 8px;
+                      border: 1px solid var(--bs-border-color); border-radius: 8px;
+                      background: var(--stat-card); color: var(--bs-body-color);
+                      font-size: .9rem; font-weight: 600; line-height: 1.15; }
+#yearTabs .nav-link:hover { border-color: #0d6efd; }
+#yearTabs .nav-link.active { background: #1565c0; border-color: #1565c0; color: #fff; }
+@media (max-width: 575.98px) {
+    #yearTabs { grid-template-columns: repeat(3, 1fr); }
+    #yearTabs .nav-link { font-size: .82rem; padding: 6px 4px; }
 }
 /* Pages loaded into a tab: their own heading reads as a sub-heading here,
    and "Back to Home" is redundant. */
@@ -318,7 +323,6 @@ function showTabFromHash() {
     const btn = document.querySelector('#yearTabs [data-bs-target="#' + id + '"]');
     if (!btn) return false;
     bootstrap.Tab.getOrCreateInstance(btn).show();
-    btn.scrollIntoView({block: 'nearest', inline: 'center'});
     return true;
 }
 window.addEventListener('hashchange', showTabFromHash);
@@ -360,7 +364,6 @@ function switchTo(id) {
     const btn = document.querySelector('#yearTabs [data-bs-target="#' + id + '"]');
     if (!btn) return false;
     bootstrap.Tab.getOrCreateInstance(btn).show();
-    btn.scrollIntoView({block: 'nearest', inline: 'center'});
     document.getElementById('yearTabs').scrollIntoView({block: 'start'});
     history.replaceState(null, '', '#' + id);
     return true;
