@@ -18,6 +18,16 @@ sources that are genuinely open:
      redraft board is *format-agnostic* — passing ppr=0.5 changes nothing, they
      publish one set of values for all scoring. It is 1QB, which does match us.
 
+  5. ESPN — ESPN's own week-by-week projections, a second independent
+     projection model (bye weeks come through as zeros).
+  6. FantasyPros expert consensus — the average ranking of the dozens of
+     analysts FantasyPros polls, republished weekly as open data by
+     DynastyProcess (github.com/dynastyprocess/data).
+
+Projections (Rotowire through Sleeper, and ESPN) are rest-of-season once the
+season starts: each week's projection summed from the current week on, so
+injuries, byes and role changes show up as soon as the projectors react.
+
 They disagree often enough to be worth averaging: preseason 2026 had Jaxon
 Smith-Njigba 4th by trade value but 8th by ADP.
 
@@ -28,12 +38,15 @@ opinions. Sources that are missing for a player simply drop out of that
 player's average.
 """
 
+import csv
 import html
+import io
 import json
 import re
 import urllib.request
 
 import time
+from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 
 from sleeper_common import safe_get
@@ -51,10 +64,18 @@ _UA = {"User-Agent": "PeytonWoodsLeague/1.0 (private fantasy league history site
 # still insisting on a guy who has been hurt since week 2. The other three keep
 # moving, so once real games exist ADP drops out and the remaining weights
 # renormalise on their own (the blend divides by whatever sources it has).
-WEIGHTS = {"proj": 0.45, "adp": 0.25, "market": 0.15, "ktc": 0.15}
+WEIGHTS = {"proj": 0.25, "espn": 0.20, "fpecr": 0.25, "adp": 0.25,
+           "market": 0.15, "ktc": 0.15}
 
-SOURCE_NAMES = {"proj": "Rotowire projections", "adp": "Sleeper ADP",
+SOURCE_NAMES = {"proj": "Rotowire projections", "espn": "ESPN projections",
+                "fpecr": "FantasyPros expert consensus", "adp": "Sleeper ADP",
                 "market": "FantasyCalc trade values", "ktc": "KeepTradeCut"}
+SOURCE_ORDER = ("proj", "espn", "fpecr", "adp", "market", "ktc")
+
+# The league's fantasy season, playoffs included. Once games have been played
+# projections are summed over the weeks that are left, because points a player
+# already scored can't be traded for or started again.
+FANTASY_WEEKS = 17
 
 UNRANKED = 999          # Sleeper's "no ADP" sentinel
 _ALL_POSITIONS = ("QB", "RB", "WR", "TE", "K", "DEF")
@@ -120,6 +141,164 @@ def get_projections_and_adp(season):
                 adp[pid] = float(a)
         return pts, adp
     return _cached(f"proj_adp:{season}", fetch)
+
+
+def current_week(season):
+    """First fantasy week that hasn't been played yet, from Sleeper's NFL state.
+
+    1 before the season, FANTASY_WEEKS + 1 once it's over.
+    """
+    try:
+        # Asked on every board lookup, so cached; the week only flips weekly.
+        state = _cached("nfl_state", lambda: safe_get(
+            "https://api.sleeper.app/v1/state/nfl", timeout=15) or {}, ttl=1800)
+    except Exception:
+        return 1
+    if str(season) != str(state.get("season")):
+        return FANTASY_WEEKS + 1 if int(season) < int(state.get("season") or 0) else 1
+    if state.get("season_type") != "regular":
+        return 1
+    return max(1, int(state.get("week") or 1))
+
+
+def remaining_weeks(season):
+    """How many fantasy weeks a projection now covers."""
+    return max(0, FANTASY_WEEKS - current_week(season) + 1)
+
+
+def get_ros_projections(season, from_week):
+    """Rotowire's weekly projections summed from `from_week` to the end.
+
+    Sleeper's season-long number is a full-season total that still counts the
+    weeks already played; the weekly ones are what the projectors actually
+    revise after injuries and depth-chart news.
+    """
+    def fetch():
+        qs = "&".join(f"position[]={p}" for p in _ALL_POSITIONS)
+
+        def week(w):
+            url = (f"https://api.sleeper.com/projections/nfl/{season}/{w}"
+                   f"?season_type=regular&{qs}")
+            return safe_get(url, timeout=25) or []
+
+        totals = {}
+        weeks = range(from_week, FANTASY_WEEKS + 1)
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            for rows in pool.map(week, weeks):
+                for row in rows:
+                    pid = row.get("player_id")
+                    pts = (row.get("stats") or {}).get("pts_half_ppr")
+                    if pid is not None and pts:
+                        totals[str(pid)] = totals.get(str(pid), 0.0) + float(pts)
+        return {p: round(v, 2) for p, v in totals.items() if v > 0}
+    return _cached(f"ros:{season}:{from_week}", fetch)
+
+
+def _get_text(url, timeout=30):
+    req = urllib.request.Request(url, headers=_UA)
+    return urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "replace")
+
+
+def get_id_bridge():
+    """ESPN and FantasyPros ids -> Sleeper ids, from DynastyProcess's open
+    cross-reference of every site's player ids."""
+    def fetch():
+        text = _get_text("https://raw.githubusercontent.com/dynastyprocess/"
+                         "data/master/files/db_playerids.csv", timeout=40)
+        espn, fp = {}, {}
+        for row in csv.DictReader(io.StringIO(text)):
+            sid = row.get("sleeper_id")
+            if not sid or sid == "NA":
+                continue
+            if row.get("espn_id") not in (None, "", "NA"):
+                espn[row["espn_id"]] = sid
+            if row.get("fantasypros_id") not in (None, "", "NA"):
+                fp[row["fantasypros_id"]] = sid
+        return {"espn": espn, "fp": fp}
+    return _cached("id_bridge", fetch, ttl=24 * 3600)
+
+
+_ESPN_POS = {1: "QB", 2: "RB", 3: "WR", 4: "TE", 5: "K"}
+
+
+def get_espn_projections(season, from_week):
+    """{sleeper_id: ESPN projected points from `from_week` to the end}.
+
+    ESPN scores in full PPR rather than our half-PPR, which is fine here: the
+    blend only uses where a player ranks at his position. Defenses are left
+    out — ESPN keys them by team, not by a player id anyone else shares.
+    """
+    def fetch():
+        bridge = get_id_bridge()["espn"]
+        filt = {"players": {
+            "filterActive": {"value": True},
+            "filterSlotIds": {"value": [0, 2, 4, 6, 17]},
+            "filterStatsForSourceIds": {"value": [1]},       # 1 = projection
+            "filterStatsForSplitTypeIds": {"value": [1]},    # 1 = single week
+            "sortPercOwned": {"sortPriority": 1, "sortAsc": False},
+            "limit": 800}}
+        req = urllib.request.Request(
+            f"https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons/"
+            f"{season}/segments/0/leaguedefaults/3?view=kona_player_info",
+            headers={**_UA, "X-Fantasy-Filter": json.dumps(filt)})
+        data = json.loads(urllib.request.urlopen(req, timeout=40).read())
+        out = {}
+        for p in data.get("players") or []:
+            pl = p.get("player") or {}
+            if pl.get("defaultPositionId") not in _ESPN_POS:
+                continue
+            sid = bridge.get(str(pl.get("id")))
+            if not sid:
+                continue
+            pts = sum(st.get("appliedTotal") or 0 for st in pl.get("stats") or []
+                      if st.get("seasonId") == int(season)
+                      and st.get("statSourceId") == 1
+                      and st.get("statSplitTypeId") == 1
+                      and from_week <= (st.get("scoringPeriodId") or 0) <= FANTASY_WEEKS)
+            if pts > 0:
+                out[sid] = round(pts, 1)
+        return out
+    return _cached(f"espn:{season}:{from_week}", fetch)
+
+
+_FP_PAGES = {"redraft-qb": "QB", "redraft-rb": "RB", "redraft-wr": "WR",
+             "redraft-te": "TE", "redraft-k": "K", "redraft-dst": "DEF"}
+# DynastyProcess team codes that differ from Sleeper's defense ids.
+_TEAM_FIX = {"JAC": "JAX", "LVR": "LV", "KCC": "KC", "GBP": "GB", "NEP": "NE",
+             "NOS": "NO", "SFO": "SF", "TBB": "TB", "LAR": "LAR", "WAS": "WAS"}
+
+
+def get_fp_ecr():
+    """{sleeper_id: {"ecr": average expert rank at his position, ...}}.
+
+    FantasyPros' expert consensus rankings, as republished every week by
+    DynastyProcess. Lower is better; `best`/`worst` are the extremes among the
+    experts polled.
+    """
+    def fetch():
+        bridge = get_id_bridge()["fp"]
+        text = _get_text("https://raw.githubusercontent.com/dynastyprocess/"
+                         "data/master/files/db_fpecr_latest.csv", timeout=40)
+        out = {}
+        for row in csv.DictReader(io.StringIO(text)):
+            pos = _FP_PAGES.get(row.get("page_type"))
+            if not pos or row.get("ecr_type") != "rp":
+                continue
+            if pos == "DEF":
+                team = row.get("team") or row.get("tm") or ""
+                sid = _TEAM_FIX.get(team, team)
+            else:
+                sid = bridge.get(row.get("id") or "")
+            try:
+                ecr = float(row.get("ecr"))
+            except (TypeError, ValueError):
+                continue
+            if sid:
+                out[sid] = {"ecr": ecr, "best": row.get("best"),
+                            "worst": row.get("worst"),
+                            "date": row.get("scrape_date")}
+        return out
+    return _cached("fp_ecr", fetch)
 
 
 def get_market_values():
@@ -303,11 +482,31 @@ def build_board(season, players, use_adp=None):
     if use_adp is None:
         use_adp = adp_is_live(season)
 
+    week = current_week(season)
+    in_season = 1 < week <= FANTASY_WEEKS
+
     def fetch():
         try:
             proj, adp = get_projections_and_adp(season)
         except Exception:
             proj, adp = {}, {}
+        if in_season:
+            # Rest of season once games exist; the full-season total would
+            # still be crediting players for weeks that are already over.
+            try:
+                proj = get_ros_projections(season, week) or proj
+            except Exception:
+                pass
+        try:
+            espn = get_espn_projections(season, week if in_season else 1)
+        except Exception as e:
+            print(f"ESPN projections unavailable: {e}")
+            espn = {}
+        try:
+            ecr = get_fp_ecr()
+        except Exception as e:
+            print(f"FantasyPros ECR unavailable: {e}")
+            ecr = {}
         try:
             market = get_market_values()
         except Exception:
@@ -338,17 +537,25 @@ def build_board(season, players, use_adp=None):
                       if p in market and market[p].get("value")}
             k_vals = {p: ktc[p]["value"] for p in pids
                       if p in ktc and ktc[p].get("value")}
+            e_vals = {p: espn[p] for p in pids if p in espn}
+            f_vals = {p: ecr[p]["ecr"] for p in pids if p in ecr}
 
             r_proj = _ranks(p_vals, higher_is_better=True)
             r_adp = _ranks(a_vals, higher_is_better=False)
             r_mkt = _ranks(m_vals, higher_is_better=True)
             r_ktc = _ranks(k_vals, higher_is_better=True)
+            r_espn = _ranks(e_vals, higher_is_better=True)
+            r_fp = _ranks(f_vals, higher_is_better=False)
             curve = sorted(p_vals.values(), reverse=True)
 
             for pid in pids:
                 parts = []
                 if pid in r_proj:
                     parts.append(("proj", r_proj[pid]))
+                if pid in r_espn:
+                    parts.append(("espn", r_espn[pid]))
+                if pid in r_fp:
+                    parts.append(("fpecr", r_fp[pid]))
                 if pid in r_adp and use_adp:
                     parts.append(("adp", r_adp[pid]))
                 if pid in r_mkt:
@@ -383,12 +590,21 @@ def build_board(season, players, use_adp=None):
                     "ktc_value":  k_vals.get(pid),
                     "ktc_rank":   r_ktc.get(pid),
                     "ktc":        ktc.get(pid),
+                    "espn_pts":   e_vals.get(pid),
+                    "espn_rank":  r_espn.get(pid),
+                    "fp_ecr":     f_vals.get(pid),
+                    "fp_rank":    r_fp.get(pid),
+                    "fp_best":    (ecr.get(pid) or {}).get("best"),
+                    "fp_worst":   (ecr.get(pid) or {}).get("worst"),
+                    # Weeks the projection covers: 17 preseason, fewer as the
+                    # season goes. Divide points by this for a per-week rate.
+                    "weeks":      FANTASY_WEEKS - week + 1 if in_season else FANTASY_WEEKS,
                 }
         return board
 
     # The flag is part of the key: the board must not keep serving a
     # preseason blend after week 1 kicks off.
-    return _cached(f"board:{season}:adp{int(use_adp)}", fetch)
+    return _cached(f"board:{season}:adp{int(use_adp)}:wk{week}", fetch)
 
 
 def active_sources(board):
@@ -396,4 +612,4 @@ def active_sources(board):
     live = set()
     for v in board.values():
         live.update(v["sources"])
-    return [SOURCE_NAMES[s] for s in ("proj", "adp", "market", "ktc") if s in live]
+    return [SOURCE_NAMES[s] for s in SOURCE_ORDER if s in live]

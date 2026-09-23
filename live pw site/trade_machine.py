@@ -98,7 +98,7 @@ def evaluate(side_a, side_b, board, lineup=None):
 # trades them and their projections are noise.
 
 TRADE_POSITIONS = ("QB", "RB", "WR", "TE")
-SEASON_WEEKS = 17          # consensus points are full-season totals
+SEASON_WEEKS = 17          # fallback; boards say how many weeks they cover
 CANDIDATES_PER_TEAM = 12   # most valuable players per roster worth shopping
 MIN_WEEKLY_GAIN = 0.3      # below this a "gain" is projection noise
 PITCH_MAX_LOSS = 0.3       # "worth a pitch": the other side loses at most this
@@ -173,7 +173,15 @@ class _Team:
                 "points": round(self.points.get(pid, 0.0), 1)}
 
 
-def _score_deal(a, b, a_send, b_send):
+def board_weeks(board):
+    """How many weeks the board's points cover (rest of season in-season)."""
+    for v in board.values():
+        if v.get("weeks"):
+            return max(1, v["weeks"])
+    return SEASON_WEEKS
+
+
+def _score_deal(a, b, a_send, b_send, weeks=SEASON_WEEKS):
     """A mutually improving deal as a dict, or None."""
     a_val = package_value(a.values[p] for p in a_send)
     b_val = package_value(b.values[p] for p in b_send)
@@ -185,8 +193,8 @@ def _score_deal(a, b, a_send, b_send):
 
     # A deal is kept if both sides gain, or if one side gains and the other
     # barely notices — the second kind is only shown to the side that gains.
-    min_gain = MIN_WEEKLY_GAIN * SEASON_WEEKS
-    max_loss = -PITCH_MAX_LOSS * SEASON_WEEKS
+    min_gain = MIN_WEEKLY_GAIN * weeks
+    max_loss = -PITCH_MAX_LOSS * weeks
     gain_a, why_a, cut_a = a.after(a_send, b_send, b)
     if gain_a < max_loss:
         return None
@@ -202,8 +210,8 @@ def _score_deal(a, b, a_send, b_send):
         "a_sends": [a.card(p) for p in a_send],
         "b_sends": [b.card(p) for p in b_send],
         "kind": f"{max(len(a_send), len(b_send))}-for-{min(len(a_send), len(b_send))}",
-        "gain_a": round(gain_a / SEASON_WEEKS, 1),
-        "gain_b": round(gain_b / SEASON_WEEKS, 1),
+        "gain_a": round(gain_a / weeks, 1),
+        "gain_b": round(gain_b / weeks, 1),
         "why_a": why_a, "why_b": why_b,
         "cut_a": a.names.get(cut_a) if cut_a else None,
         "cut_b": b.names.get(cut_b) if cut_b else None,
@@ -211,7 +219,7 @@ def _score_deal(a, b, a_send, b_send):
         "mutual": mutual,
         # Ranked on the smaller gain: a deal is only as good as it is for the
         # side that gets less out of it, because that side has to say yes.
-        "score": min(gain_a, gain_b) / SEASON_WEEKS,
+        "score": min(gain_a, gain_b) / weeks,
     }
 
 
@@ -222,6 +230,7 @@ def find_trades(teams, board):
     A 2-for-1 is only kept when it beats both of the 1-for-1s inside it —
     otherwise the extra player is just a throw-in.
     """
+    weeks = board_weeks(board)
     squads = [_Team(t["owner"], t.get("roster") or [], board) for t in teams]
     deals = []
     for i, a in enumerate(squads):
@@ -229,7 +238,7 @@ def find_trades(teams, board):
             singles = {}
             for pa in a.candidates:
                 for pb in b.candidates:
-                    d = _score_deal(a, b, (pa,), (pb,))
+                    d = _score_deal(a, b, (pa,), (pb,), weeks)
                     singles[(pa, pb)] = d["score"] if d and d["mutual"] else 0.0
                     if d:
                         deals.append(d)
@@ -240,7 +249,7 @@ def find_trades(teams, board):
                     for y in range(x + 1, len(cands)):
                         pair = (cands[x], cands[y])
                         for po in one.candidates:
-                            d = _score_deal(two, one, pair, (po,))
+                            d = _score_deal(two, one, pair, (po,), weeks)
                             if not d:
                                 continue
                             best_single = max(

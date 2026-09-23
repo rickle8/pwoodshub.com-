@@ -46,7 +46,10 @@ def get_season_projections(season, players=None):
     if players:
         board = consensus.build_board(season, players)
         if board:
-            return {pid: v["points"] for pid, v in board.items() if v["points"]}
+            # In-season the board is rest-of-season; scale it back to a
+            # 17-game pace so the per-week maths below stays the same.
+            return {pid: v["points"] * SEASON_GAMES / (v.get("weeks") or SEASON_GAMES)
+                    for pid, v in board.items() if v["points"]}
 
     def fetch():
         qs = "&".join(f"position[]={p}" for p in _ALL_POSITIONS)

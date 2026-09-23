@@ -115,7 +115,7 @@ tfoot.totals-row td { border-top: 2px solid var(--bs-border-color); font-weight:
             <div class="l">Consensus Rank</div></div></div>
         <div class="col-4 col-md-2"><div class="pw-tile">
             <div class="v">{{ market.points | stat }}</div>
-            <div class="l">Proj Pts ({{ scoring }})</div></div></div>
+            <div class="l">{{ 'Rest-of-Season' if market.weeks and market.weeks < 17 else 'Proj' }} Pts ({{ scoring }})</div></div></div>
         <div class="col-4 col-md-2"><div class="pw-tile">
             <div class="v">{{ market.adp if market.adp else '—' }}</div>
             <div class="l">ADP</div></div></div>
@@ -140,9 +140,19 @@ tfoot.totals-row td { border-top: 2px solid var(--bs-border-color); font-weight:
         <thead><tr><th>Source</th><th>What it measures</th><th class="text-end">Has him at</th></tr></thead>
         <tbody>
             {% if market.proj_rank %}
-            <tr><td>Rotowire projection</td><td class="small text-muted">Expected half-PPR points</td>
+            <tr><td>Rotowire projection</td><td class="small text-muted">Expected half-PPR points{{ ', rest of season' if market.weeks and market.weeks < 17 }}</td>
                 <td class="text-end"><strong>{{ market.position }}{{ market.proj_rank }}</strong>
                     <span class="text-muted small">({{ market.proj_pts | stat }} pts)</span></td></tr>
+            {% endif %}
+            {% if market.espn_rank %}
+            <tr><td>ESPN projection</td><td class="small text-muted">ESPN's own week-by-week model</td>
+                <td class="text-end"><strong>{{ market.position }}{{ market.espn_rank }}</strong>
+                    <span class="text-muted small">({{ market.espn_pts | stat }} PPR pts)</span></td></tr>
+            {% endif %}
+            {% if market.fp_rank %}
+            <tr><td>FantasyPros experts</td><td class="small text-muted">Average rank across dozens of analysts</td>
+                <td class="text-end"><strong>{{ market.position }}{{ market.fp_rank }}</strong>
+                    <span class="text-muted small">(experts: {{ market.fp_best }}–{{ market.fp_worst }})</span></td></tr>
             {% endif %}
             {% if market.adp_rank %}
             <tr><td>Sleeper ADP</td><td class="small text-muted">Where real drafters take him</td>
