@@ -178,14 +178,29 @@ function timeAgo(ts) {
 }
 
 // ── Chat rendering ────────────────────────────────────────────────────────────
-let lastCount = 0;
+// nextIndex is an ABSOLUTE position in the server's log, not a count of what we
+// received. The server only sends a trailing window, so once the log grows past
+// that window its length stops changing — a count would freeze the chat.
+let nextIndex  = 0;
+let everRendered = false;
 
-function renderMessages(msgs) {
-    if (msgs.length === lastCount) return;
-    const box      = document.getElementById('chatBox');
+function renderMessages(payload) {
+    const msgs  = payload.messages;
+    const first = payload.first_index;
+    const box   = document.getElementById('chatBox');
+
+    // We fell behind the window (long absence, or the log was trimmed):
+    // rebuild from whatever the server can still show us.
+    if (nextIndex < first) {
+        box.innerHTML = '';
+        nextIndex = first;
+    }
+    const start = nextIndex - first;
+    if (start >= msgs.length) return;          // nothing new
+
     const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
 
-    msgs.slice(lastCount).forEach(msg => {
+    msgs.slice(start).forEach(msg => {
         const isOwn = msg.username === me;
 
         const row = document.createElement('div');
@@ -223,15 +238,16 @@ function renderMessages(msgs) {
         box.appendChild(row);
     });
 
-    lastCount = msgs.length;
-    if (atBottom || lastCount <= 20) box.scrollTop = box.scrollHeight;
+    nextIndex = first + msgs.length;
+    if (atBottom || !everRendered) box.scrollTop = box.scrollHeight;
+    everRendered = true;
 }
 
 // ── Polling ───────────────────────────────────────────────────────────────────
 async function fetchMessages() {
     try {
-        const msgs = await (await fetch('/get_messages')).json();
-        renderMessages(msgs);
+        const payload = await (await fetch('/get_messages')).json();
+        if (payload && Array.isArray(payload.messages)) renderMessages(payload);
     } catch (e) { console.error(e); }
 }
 fetchMessages();

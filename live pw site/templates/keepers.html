@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Keeper Planner{% endblock %}
+
+{% block extra_css %}
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.verdict-steal   { background: #19875426; color: #198754; }
+.verdict-good    { background: #0d6efd1f; color: #0d6efd; }
+.verdict-fair    { background: var(--bs-secondary-bg); color: var(--bs-secondary-color); }
+.verdict-overpay { background: #dc354518; color: #dc3545; }
+.v-tag { font-size: .68em; font-weight: 700; letter-spacing: .03em;
+         padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+.cost-round { font-weight: 700; font-variant-numeric: tabular-nums; }
+.maxed { font-size: .68em; color: var(--bs-secondary-color); }
+{% endblock %}
+
+{% block content %}
+<h1 class="mt-2 mb-1">Keeper Planner — {{ next_year }}</h1>
+<p class="text-muted small mb-3">
+    Everyone still on a roster who that owner <strong>drafted in {{ year }}</strong>, and
+    what he'd cost to keep next season. League rules: you can only keep a player you
+    drafted, the first keep costs the round you took him in, and every year after that
+    costs four rounds earlier — capped at round 1.
+    {% if has_values %}
+    "Worth it?" compares where he's actually being drafted (ADP) against the pick
+    his keeper round costs — surplus is measured in draft picks, so "+50" means
+    keeping him is like getting a pick 50 slots earlier than you paid.
+    {% endif %}
+</p>
+
+{% if steals %}
+<div class="stat-card mb-4">
+    <h2 class="h5 mb-1">💎 Best Value Keepers</h2>
+    <p class="text-muted small mb-3">
+        Being drafted far earlier than the round they'd cost to keep.
+    </p>
+    <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+        <thead><tr><th>Player</th><th>Owner</th><th class="num">Costs</th>
+                   <th class="num">ADP</th><th class="num">Surplus</th></tr></thead>
+        <tbody>
+        {% for o in steals %}
+        <tr>
+            <td>
+                <span class="badge pos-{{ o.position }}">{{ o.position }}</span>
+                {% if o.player_id %}
+                <a href="{{ url_for('player_view', player_id=o.player_id) }}">{{ o.name }}</a>
+                {% else %}{{ o.name }}{% endif %}
+            </td>
+            <td><a href="{{ url_for('owner_profile', owner_name=o.owner) }}">{{ o.owner }}</a></td>
+            <td class="num cost-round">R{{ o.cost_round }}
+                <span class="maxed">(pick {{ o.cost_pick }})</span></td>
+            <td class="num">{{ o.adp | stat }}</td>
+            <td class="num fw-bold text-success">+{{ o.surplus | round | int }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+
+{% for owner, opts in rows %}
+<div class="stat-card mb-3">
+    <h2 class="h6 mb-2">
+        <a href="{{ url_for('owner_profile', owner_name=owner) }}">{{ owner }}</a>
+        <span class="text-muted fw-normal small">— {{ opts | length }} eligible</span>
+    </h2>
+    {% if not opts %}
+    <p class="text-muted small mb-0">
+        Nobody eligible — everyone on this roster was traded for or picked up.
+    </p>
+    {% else %}
+    <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th class="num">Drafted</th>
+                <th class="num">Keeps For</th>
+                <th class="num">ADP</th>
+                <th class="num">Proj Pts</th>
+                <th>Worth It?</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for o in opts %}
+        <tr>
+            <td>
+                <span class="badge pos-{{ o.position }}">{{ o.position }}</span>
+                {% if o.player_id %}
+                <a href="{{ url_for('player_view', player_id=o.player_id) }}">{{ o.name }}</a>
+                {% else %}{{ o.name }}{% endif %}
+                {% if o.was_keeper %}<span class="keeper-badge">KEPT {{ year }}</span>{% endif %}
+            </td>
+            <td class="num text-muted">R{{ o.drafted_round }}{% if o.drafted_pick %}.{{ o.drafted_pick }}{% endif %}</td>
+            <td class="num">
+                <span class="cost-round">R{{ o.cost_round }}</span>
+                {% if o.maxed %}<div class="maxed">capped</div>{% endif %}
+            </td>
+            <td class="num">{{ o.adp | stat }}</td>
+            <td class="num text-muted">{{ o.proj_points | stat }}</td>
+            <td>
+                {% if o.verdict %}
+                <span class="v-tag verdict-{{ o.verdict }}">
+                    {{ {'steal': 'steal', 'good': 'good value', 'fair': 'fair', 'overpay': 'overpay'}[o.verdict] }}
+                </span>
+                <span class="text-muted small">
+                    {{ '+' if o.surplus > 0 }}{{ o.surplus | round | int }}
+                </span>
+                {% else %}<span class="text-muted small">—</span>{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+
+<a href="/" class="btn btn-secondary mt-3">Back to Home</a>
+{% endblock %}

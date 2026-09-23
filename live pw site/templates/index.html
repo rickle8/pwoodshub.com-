@@ -1,16 +1,77 @@
 {% extends "base.html" %}
 {% block title %}Peyton Woods League History{% endblock %}
 
+{% block extra_css %}
+/* One season per row, newest first. */
+.season-row   { display: flex; align-items: baseline; gap: 10px;
+                background: var(--stat-card); text-decoration: none; color: inherit;
+                padding: 9px 14px;
+                border: 1px solid var(--bs-border-color-translucent);
+                border-bottom: none; }
+.season-row:first-of-type { border-radius: 10px 10px 0 0; }
+.season-row:last-of-type  { border-radius: 0 0 10px 10px; border-bottom: 1px solid
+                            var(--bs-border-color-translucent); }
+.season-row:hover { background: var(--bs-secondary-bg); }
+.season-year  { font-weight: 700; font-variant-numeric: tabular-nums;
+                min-width: 3.4em; flex-shrink: 0; }
+.season-owner { font-weight: 600; }
+.season-team  { font-size: .85em; color: var(--bs-secondary-color);
+                margin-left: auto; text-align: right; }
+.season-mine  { box-shadow: inset 3px 0 0 0 #0d6efd;
+                background: rgba(13,110,253,.07); }
+[data-bs-theme="dark"] .season-mine { background: rgba(13,110,253,.18); }
+
+@media (max-width: 575.98px) {
+    /* Team names are long; stack them under the owner rather than squeezing. */
+    .season-row  { flex-wrap: wrap; }
+    .season-team { margin-left: 0; flex-basis: 100%; text-align: left; }
+}
+
+.season-live { display: flex; align-items: center; justify-content: space-between;
+               gap: 12px; background: var(--stat-card); border-radius: 10px;
+               padding: 14px 16px; text-decoration: none; color: inherit;
+               border: 1px solid #0d6efd; }
+.season-live-label { font-weight: 700; }
+.season-live-sub   { font-size: .85em; color: var(--bs-secondary-color); margin-top: 2px; }
+.season-live-go    { font-weight: 600; color: #0d6efd; white-space: nowrap; }
+{% endblock %}
+
 {% block content %}
 <h1 class="mb-3">Peyton Woods League History</h1>
 
-<h2>Seasons</h2>
-<div class="list-group mb-4">
+{% if live_status %}
+<!-- Season in progress: no champion yet, so show where it actually stands -->
+<a href="/year/{{ live_status.year }}" class="season-live mb-3">
+    <div>
+        <div class="season-live-label">{{ live_status.year }} Season · in progress</div>
+        <div class="season-live-sub">
+            {% if live_status.played %}
+                Week {{ live_status.played }} of {{ live_status.reg_weeks }} complete
+                {% if live_status.leader %}
+                    · {{ live_status.leader.owner }} leads at
+                    {{ live_status.leader.wins }}-{{ live_status.leader.losses }}
+                {% endif %}
+            {% else %}
+                Drafted and ready — week 1 hasn't been played yet
+            {% endif %}
+        </div>
+    </div>
+    <span class="season-live-go">View →</span>
+</a>
+{% endif %}
+
+<h2 class="h4">Champions</h2>
+<div class="mb-4">
     {% for year in years %}
-        <a href="/year/{{ year }}" class="list-group-item list-group-item-action">
-            {% set champ = champions.get(year, {}) %}
-            {{ year }} &mdash; {{ champ.get('team', '—') }} (Owner: {{ champ.get('owner', '—') }})
+        {% if year != live_year %}
+        {% set champ = champions.get(year, {}) %}
+        <a href="/year/{{ year }}"
+           class="season-row {% if my_owner and champ.get('owner') == my_owner %}season-mine{% endif %}">
+            <span class="season-year">{{ year }}</span>
+            <span class="season-owner">{{ champ.get('owner', '—') }}</span>
+            <span class="season-team">{{ champ.get('team', '—') }}</span>
         </a>
+        {% endif %}
     {% endfor %}
 </div>
 

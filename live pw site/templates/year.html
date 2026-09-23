@@ -58,7 +58,7 @@
             </thead>
             <tbody>
                 {% for team in teams %}
-                <tr {% if team.rank == 1 and season_complete %}class="table-warning"{% endif %}>
+                <tr class="{{ 'table-warning ' if team.rank == 1 and season_complete }}{{ 'me-row' if team.owner == my_owner }}">
                     <td>{{ team.rank }}{% if team.rank == 1 and season_complete %} 👑{% endif %}</td>
                     <td><a href="{{ url_for('owner_season', owner_name=team.owner, year=year) }}">{{ team.name }}</a></td>
                     <td><a href="{{ url_for('owner_profile', owner_name=team.owner) }}">{{ team.owner }}</a></td>

@@ -34,7 +34,13 @@ USERNAME_TO_OWNER = {
     "everyonesdad12": "Hugh Ritter",
     "chris nuggy":    "Chris Nguyen",
     "chrisnuggy":     "Chris Nguyen",
+    # Logan Duffy renamed himself on Sleeper in 2026; the old handle stays so
+    # earlier seasons keep resolving. Sleeper stopped returning `username` in
+    # the league users payload, so display_name is now the only key that can
+    # match — every rename lands here and has to be added, or the sanity check
+    # in update_sleeper.py rejects the rebuild and the site stops updating.
     "doganluffy":     "Logan Duffy",
+    "wojmelvina":     "Logan Duffy",
     "calmpalmtree":   "Chris Evans",
     "rickle8":        "Eric Kenney",
     "lebrookj":       "Brook Price",

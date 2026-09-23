@@ -38,6 +38,7 @@ h2[id] { scroll-margin-top: 60px; }
     Every completed season. <strong>Best Record</strong> is the regular-season leader,
     which is frequently not the owner who took the trophy home.
 </p>
+<p class="scroll-hint">← swipe the table sideways for the rest of the columns</p>
 <div class="table-responsive">
 <table class="table table-striped table-sm align-middle">
     <thead>
@@ -46,7 +47,7 @@ h2[id] { scroll-margin-top: 60px; }
     </thead>
     <tbody>
         {% for r in roll %}
-        <tr>
+        <tr {% if my_owner and my_owner == r.champion.owner %}class="me-row"{% endif %}>
             <td><a href="{{ url_for('year_view', year=r.year|int) }}"><strong>{{ r.year }}</strong></a>
                 <span class="rec-sub d-block">{{ r.teams }} teams</span></td>
             {% for key in ['champion', 'runner_up', 'third'] %}
@@ -83,6 +84,7 @@ h2[id] { scroll-margin-top: 60px; }
     Sorted by titles, then win percentage — click any column header to re-sort.
     Ties count as half a win in the percentage.
 </p>
+<p class="scroll-hint">← swipe the table sideways for the rest of the columns</p>
 <div class="table-responsive">
 <table class="table table-striped table-sm align-middle" id="ledgerTable">
     <thead>
@@ -102,7 +104,7 @@ h2[id] { scroll-margin-top: 60px; }
     </thead>
     <tbody>
         {% for o in ledger %}
-        <tr>
+        <tr {% if o.owner == my_owner %}class="me-row"{% endif %}>
             <td>
                 <a href="{{ url_for('owner_profile', owner_name=o.owner) }}">{{ o.owner }}</a>
                 {% if not o.active %}<span class="rec-sub">(retired)</span>{% endif %}
@@ -140,7 +142,7 @@ h2[id] { scroll-margin-top: 60px; }
             <thead><tr><th>#</th><th>Owner</th><th>Team</th><th>Score</th><th>Week</th><th>Year</th></tr></thead>
             <tbody>
                 {% for entry in weekly_high_scores %}
-                <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+                <tr class="{{ 'table-warning ' if loop.index == 1 }}{{ 'me-row' if entry.owner == my_owner }}">
                     <td>{{ loop.index }}</td>
                     <td><a href="{{ url_for('owner_profile', owner_name=entry.owner) }}">{{ entry.owner }}</a></td>
                     <td class="rec-sub">{{ entry.team }}</td>
@@ -160,7 +162,7 @@ h2[id] { scroll-margin-top: 60px; }
             <thead><tr><th>#</th><th>Owner</th><th>Team</th><th>Score</th><th>Week</th><th>Year</th></tr></thead>
             <tbody>
                 {% for entry in weekly_low_scores %}
-                <tr {% if loop.index == 1 %}class="table-danger"{% endif %}>
+                <tr class="{{ 'table-danger ' if loop.index == 1 }}{{ 'me-row' if entry.owner == my_owner }}">
                     <td>{{ loop.index }}</td>
                     <td><a href="{{ url_for('owner_profile', owner_name=entry.owner) }}">{{ entry.owner }}</a></td>
                     <td class="rec-sub">{{ entry.team }}</td>
@@ -185,7 +187,7 @@ h2[id] { scroll-margin-top: 60px; }
             <thead><tr><th>#</th><th>Owner</th><th>Team</th><th>Pts For</th><th>Record</th><th>Year</th></tr></thead>
             <tbody>
                 {% for s in season_scoring.top %}
-                <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+                <tr class="{{ 'table-warning ' if loop.index == 1 }}{{ 'me-row' if s.owner == my_owner }}">
                     <td>{{ loop.index }}</td>
                     <td><a href="{{ url_for('owner_profile', owner_name=s.owner) }}">{{ s.owner }}</a></td>
                     <td class="rec-sub">{{ s.team }}</td>
@@ -205,7 +207,7 @@ h2[id] { scroll-margin-top: 60px; }
             <thead><tr><th>#</th><th>Owner</th><th>Team</th><th>Pts For</th><th>Record</th><th>Year</th></tr></thead>
             <tbody>
                 {% for s in season_scoring.bottom %}
-                <tr {% if loop.index == 1 %}class="table-danger"{% endif %}>
+                <tr class="{{ 'table-danger ' if loop.index == 1 }}{{ 'me-row' if s.owner == my_owner }}">
                     <td>{{ loop.index }}</td>
                     <td><a href="{{ url_for('owner_profile', owner_name=s.owner) }}">{{ s.owner }}</a></td>
                     <td class="rec-sub">{{ s.team }}</td>
@@ -227,7 +229,7 @@ h2[id] { scroll-margin-top: 60px; }
     <thead><tr><th>#</th><th>Winner</th><th>Score</th><th>Loser</th><th>Score</th><th>Margin</th><th>Week</th><th>Year</th></tr></thead>
     <tbody>
         {% for g in blowouts %}
-        <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+        <tr class="{{ 'table-warning ' if loop.index == 1 }}{{ 'me-row' if my_owner in (g.winner, g.loser) }}">
             <td>{{ loop.index }}</td>
             <td><a href="{{ url_for('owner_profile', owner_name=g.winner) }}">{{ g.winner }}</a></td>
             <td class="rec-num lucky">{{ g.winner_score | round(2) }}</td>
@@ -249,7 +251,7 @@ h2[id] { scroll-margin-top: 60px; }
     <thead><tr><th>#</th><th>Combined</th><th>Owner</th><th>Score</th><th>Owner</th><th>Score</th><th>Week</th><th>Year</th></tr></thead>
     <tbody>
         {% for g in shootouts %}
-        <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+        <tr class="{{ 'table-warning ' if loop.index == 1 }}{{ 'me-row' if my_owner in (g.home_owner, g.away_owner) }}">
             <td>{{ loop.index }}</td>
             <td class="rec-num"><strong>{{ g.combined }}</strong></td>
             <td><a href="{{ url_for('owner_profile', owner_name=g.home_owner) }}">{{ g.home_owner }}</a></td>
@@ -273,7 +275,7 @@ h2[id] { scroll-margin-top: 60px; }
     </thead>
     <tbody>
         {% for entry in most_points_in_loss %}
-        <tr {% if loop.index == 1 %}class="table-warning"{% endif %}>
+        <tr class="{{ 'table-warning ' if loop.index == 1 }}{{ 'me-row' if entry.owner == my_owner }}">
             <td>{{ loop.index }}</td>
             <td class="rec-sub">{{ entry.team }}</td>
             <td><a href="{{ url_for('owner_profile', owner_name=entry.owner) }}">{{ entry.owner }}</a></td>
@@ -334,7 +336,7 @@ h2[id] { scroll-margin-top: 60px; }
     </thead>
     <tbody>
         {% for owner, s in streaks | dictsort %}
-        <tr>
+        <tr {% if owner == my_owner %}class="me-row"{% endif %}>
             <td><a href="{{ url_for('owner_profile', owner_name=owner) }}">{{ owner }}</a></td>
             <td class="lucky">{{ s.win_streak }}</td>
             <td class="unlucky">{{ s.loss_streak }}</td>

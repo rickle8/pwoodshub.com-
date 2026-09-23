@@ -61674,14 +61674,14 @@
                 "name": "Emporer Zurg",
                 "team_id": 1,
                 "owner": "Eric Kenney",
-                "wins": 0,
+                "wins": 2,
                 "losses": 0,
                 "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
+                "points_for": 285.81,
+                "points_against": 211.0,
+                "avg_points_for": 142.9,
+                "avg_points_against": 105.5,
+                "point_differential": 37.4,
                 "rank": 1,
                 "roster": [
                     {
@@ -61695,14 +61695,14 @@
                         "player_id": "11575"
                     },
                     {
-                        "name": "Chris Bell",
+                        "name": "Antonio Williams",
                         "position": "WR",
-                        "player_id": "13311"
+                        "player_id": "13301"
                     },
                     {
-                        "name": "Seth McGowan",
+                        "name": "Demond Claiborne",
                         "position": "RB",
-                        "player_id": "13424"
+                        "player_id": "13347"
                     },
                     {
                         "name": "Travis Kelce",
@@ -61713,16 +61713,6 @@
                         "name": "Chris Godwin",
                         "position": "WR",
                         "player_id": "4037"
-                    },
-                    {
-                        "name": "Patrick Mahomes",
-                        "position": "QB",
-                        "player_id": "4046"
-                    },
-                    {
-                        "name": "Aaron Jones",
-                        "position": "RB",
-                        "player_id": "4199"
                     },
                     {
                         "name": "Lamar Jackson",
@@ -61760,130 +61750,357 @@
                         "player_id": "8130"
                     },
                     {
+                        "name": "Kyren Williams",
+                        "position": "RB",
+                        "player_id": "8150"
+                    },
+                    {
                         "name": "Rashid Shaheed",
                         "position": "WR",
                         "player_id": "8676"
                     },
                     {
-                        "name": "Dontayvion Wicks",
-                        "position": "WR",
-                        "player_id": "9486"
-                    },
-                    {
                         "name": "Jaxon Smith-Njigba",
                         "position": "WR",
                         "player_id": "9488"
+                    },
+                    {
+                        "name": "Tampa Bay Buccaneers",
+                        "position": "DEF",
+                        "player_id": "TB"
                     }
                 ]
             },
             {
-                "name": "Edward Inc.",
-                "team_id": 2,
-                "owner": "Chris Nguyen",
-                "wins": 0,
+                "name": "XXL Orbs",
+                "team_id": 4,
+                "owner": "Sam Dennis",
+                "wins": 2,
                 "losses": 0,
                 "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
+                "points_for": 250.28,
+                "points_against": 206.06,
+                "avg_points_for": 125.1,
+                "avg_points_against": 103.0,
+                "point_differential": 22.1,
                 "rank": 2,
                 "roster": [
                     {
-                        "name": "Roschon Johnson",
-                        "position": "RB",
-                        "player_id": "10235"
+                        "name": "Tre Tucker",
+                        "position": "WR",
+                        "player_id": "10213"
                     },
                     {
-                        "name": "Jayden Daniels",
+                        "name": "Chris Rodriguez",
+                        "position": "RB",
+                        "player_id": "10219"
+                    },
+                    {
+                        "name": "Bo Nix",
                         "position": "QB",
-                        "player_id": "11566"
+                        "player_id": "11563"
                     },
                     {
-                        "name": "Braelon Allen",
+                        "name": "Devaughn Vele",
+                        "position": "WR",
+                        "player_id": "11834"
+                    },
+                    {
+                        "name": "Bhayshul Tuten",
                         "position": "RB",
-                        "player_id": "11576"
+                        "player_id": "12490"
                     },
                     {
-                        "name": "Cam Skattebo",
+                        "name": "Harold Fannin",
+                        "position": "TE",
+                        "player_id": "12506"
+                    },
+                    {
+                        "name": "Carnell Tate",
+                        "position": "WR",
+                        "player_id": "13279"
+                    },
+                    {
+                        "name": "Kenyon Sadiq",
+                        "position": "TE",
+                        "player_id": "13330"
+                    },
+                    {
+                        "name": "DJ Moore",
+                        "position": "WR",
+                        "player_id": "4983"
+                    },
+                    {
+                        "name": "Josh Allen",
+                        "position": "QB",
+                        "player_id": "4984"
+                    },
+                    {
+                        "name": "Devin Singletary",
                         "position": "RB",
-                        "player_id": "12481"
+                        "player_id": "6130"
                     },
                     {
-                        "name": "Jordyn Tyson",
-                        "position": "WR",
-                        "player_id": "13281"
-                    },
-                    {
-                        "name": "Makai Lemon",
-                        "position": "WR",
-                        "player_id": "13294"
-                    },
-                    {
-                        "name": "Mike Evans",
-                        "position": "WR",
-                        "player_id": "2216"
-                    },
-                    {
-                        "name": "Ka'imi Fairbairn",
+                        "name": "Chase McLaughlin",
                         "position": "K",
-                        "player_id": "3451"
+                        "player_id": "6650"
                     },
                     {
-                        "name": "Saquon Barkley",
+                        "name": "Michael Pittman",
+                        "position": "WR",
+                        "player_id": "6819"
+                    },
+                    {
+                        "name": "Khalil Shakir",
+                        "position": "WR",
+                        "player_id": "8134"
+                    },
+                    {
+                        "name": "George Pickens",
+                        "position": "WR",
+                        "player_id": "8137"
+                    },
+                    {
+                        "name": "Kenneth Walker",
                         "position": "RB",
-                        "player_id": "4866"
+                        "player_id": "8151"
                     },
                     {
-                        "name": "Sam Darnold",
-                        "position": "QB",
-                        "player_id": "4943"
-                    },
-                    {
-                        "name": "Jauan Jennings",
+                        "name": "Tank Dell",
                         "position": "WR",
-                        "player_id": "7049"
+                        "player_id": "9502"
                     },
                     {
-                        "name": "Kyle Pitts",
-                        "position": "TE",
-                        "player_id": "7553"
-                    },
-                    {
-                        "name": "Nico Collins",
-                        "position": "WR",
-                        "player_id": "7569"
-                    },
-                    {
-                        "name": "Garrett Wilson",
-                        "position": "WR",
-                        "player_id": "8146"
-                    },
-                    {
-                        "name": "Christian Watson",
-                        "position": "WR",
-                        "player_id": "8167"
-                    },
-                    {
-                        "name": "Chig Okonkwo",
-                        "position": "TE",
-                        "player_id": "8210"
-                    },
-                    {
-                        "name": "Josh Downs",
-                        "position": "WR",
-                        "player_id": "9500"
-                    },
-                    {
-                        "name": "Zach Charbonnet",
-                        "position": "RB",
-                        "player_id": "9753"
-                    },
-                    {
-                        "name": "Philadelphia Eagles",
+                        "name": "Cincinnati Bengals",
                         "position": "DEF",
-                        "player_id": "PHI"
+                        "player_id": "CIN"
+                    },
+                    {
+                        "name": "Los Angeles Chargers",
+                        "position": "DEF",
+                        "player_id": "LAC"
+                    }
+                ]
+            },
+            {
+                "name": "GEYtonwoods",
+                "team_id": 8,
+                "owner": "Brook Price",
+                "wins": 2,
+                "losses": 0,
+                "ties": 0,
+                "points_for": 233.74,
+                "points_against": 202.18,
+                "avg_points_for": 116.9,
+                "avg_points_against": 101.1,
+                "point_differential": 15.8,
+                "rank": 3,
+                "roster": [
+                    {
+                        "name": "Chris Brooks",
+                        "position": "RB",
+                        "player_id": "11370"
+                    },
+                    {
+                        "name": "Drake Maye",
+                        "position": "QB",
+                        "player_id": "11564"
+                    },
+                    {
+                        "name": "Jonathon Brooks",
+                        "position": "RB",
+                        "player_id": "11583"
+                    },
+                    {
+                        "name": "Brock Bowers",
+                        "position": "TE",
+                        "player_id": "11604"
+                    },
+                    {
+                        "name": "Ladd McConkey",
+                        "position": "WR",
+                        "player_id": "11635"
+                    },
+                    {
+                        "name": "Kaleb Johnson",
+                        "position": "RB",
+                        "player_id": "12504"
+                    },
+                    {
+                        "name": "TreVeyon Henderson",
+                        "position": "RB",
+                        "player_id": "12529"
+                    },
+                    {
+                        "name": "Emmett Johnson",
+                        "position": "RB",
+                        "player_id": "13337"
+                    },
+                    {
+                        "name": "Stefon Diggs",
+                        "position": "WR",
+                        "player_id": "2449"
+                    },
+                    {
+                        "name": "Derrick Henry",
+                        "position": "RB",
+                        "player_id": "3198"
+                    },
+                    {
+                        "name": "Dalton Schultz",
+                        "position": "TE",
+                        "player_id": "5001"
+                    },
+                    {
+                        "name": "Eddy Pineiro",
+                        "position": "K",
+                        "player_id": "5189"
+                    },
+                    {
+                        "name": "A.J. Brown",
+                        "position": "WR",
+                        "player_id": "5859"
+                    },
+                    {
+                        "name": "Jakobi Meyers",
+                        "position": "WR",
+                        "player_id": "5947"
+                    },
+                    {
+                        "name": "Jaylen Waddle",
+                        "position": "WR",
+                        "player_id": "7526"
+                    },
+                    {
+                        "name": "Wan'Dale Robinson",
+                        "position": "WR",
+                        "player_id": "8126"
+                    },
+                    {
+                        "name": "Malik Willis",
+                        "position": "QB",
+                        "player_id": "8161"
+                    },
+                    {
+                        "name": "Keaton Mitchell",
+                        "position": "RB",
+                        "player_id": "9511"
+                    },
+                    {
+                        "name": "Pittsburgh Steelers",
+                        "position": "DEF",
+                        "player_id": "PIT"
+                    }
+                ]
+            },
+            {
+                "name": "Mid Slop",
+                "team_id": 6,
+                "owner": "Logan Duffy",
+                "wins": 1,
+                "losses": 1,
+                "ties": 0,
+                "points_for": 249.86,
+                "points_against": 278.51,
+                "avg_points_for": 124.9,
+                "avg_points_against": 139.3,
+                "point_differential": -14.3,
+                "rank": 4,
+                "roster": [
+                    {
+                        "name": "Jayden Reed",
+                        "position": "WR",
+                        "player_id": "10222"
+                    },
+                    {
+                        "name": "Bucky Irving",
+                        "position": "RB",
+                        "player_id": "11584"
+                    },
+                    {
+                        "name": "Jalen McMillan",
+                        "position": "WR",
+                        "player_id": "11618"
+                    },
+                    {
+                        "name": "Rome Odunze",
+                        "position": "WR",
+                        "player_id": "11620"
+                    },
+                    {
+                        "name": "George Holani",
+                        "position": "RB",
+                        "player_id": "12048"
+                    },
+                    {
+                        "name": "Woody Marks",
+                        "position": "RB",
+                        "player_id": "12474"
+                    },
+                    {
+                        "name": "Malachi Fields",
+                        "position": "WR",
+                        "player_id": "13285"
+                    },
+                    {
+                        "name": "Trey Smack",
+                        "position": "K",
+                        "player_id": "13545"
+                    },
+                    {
+                        "name": "Christian McCaffrey",
+                        "position": "RB",
+                        "player_id": "4034"
+                    },
+                    {
+                        "name": "Dallas Goedert",
+                        "position": "TE",
+                        "player_id": "5022"
+                    },
+                    {
+                        "name": "Josh Jacobs",
+                        "position": "RB",
+                        "player_id": "5850"
+                    },
+                    {
+                        "name": "Tee Higgins",
+                        "position": "WR",
+                        "player_id": "6801"
+                    },
+                    {
+                        "name": "Trevor Lawrence",
+                        "position": "QB",
+                        "player_id": "7523"
+                    },
+                    {
+                        "name": "Jordan Mason",
+                        "position": "RB",
+                        "player_id": "8408"
+                    },
+                    {
+                        "name": "Chase Brown",
+                        "position": "RB",
+                        "player_id": "9224"
+                    },
+                    {
+                        "name": "Parker Washington",
+                        "position": "WR",
+                        "player_id": "9487"
+                    },
+                    {
+                        "name": "Kayshon Boutte",
+                        "position": "WR",
+                        "player_id": "9504"
+                    },
+                    {
+                        "name": "Zay Flowers",
+                        "position": "WR",
+                        "player_id": "9997"
+                    },
+                    {
+                        "name": "New England Patriots",
+                        "position": "DEF",
+                        "player_id": "NE"
                     }
                 ]
             },
@@ -61891,15 +62108,15 @@
                 "name": "Big Tipper 🧚",
                 "team_id": 3,
                 "owner": "Malin Craig",
-                "wins": 0,
-                "losses": 0,
+                "wins": 1,
+                "losses": 1,
                 "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 3,
+                "points_for": 248.48,
+                "points_against": 234.66,
+                "avg_points_for": 124.2,
+                "avg_points_against": 117.3,
+                "point_differential": 6.9,
+                "rank": 5,
                 "roster": [
                     {
                         "name": "Sam LaPorta",
@@ -61994,125 +62211,24 @@
                 ]
             },
             {
-                "name": "XXL Orbs",
-                "team_id": 4,
-                "owner": "Sam Dennis",
-                "wins": 0,
-                "losses": 0,
-                "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 4,
-                "roster": [
-                    {
-                        "name": "Tre Tucker",
-                        "position": "WR",
-                        "player_id": "10213"
-                    },
-                    {
-                        "name": "Chris Rodriguez",
-                        "position": "RB",
-                        "player_id": "10219"
-                    },
-                    {
-                        "name": "Bo Nix",
-                        "position": "QB",
-                        "player_id": "11563"
-                    },
-                    {
-                        "name": "Ryan Flournoy",
-                        "position": "WR",
-                        "player_id": "11783"
-                    },
-                    {
-                        "name": "Devaughn Vele",
-                        "position": "WR",
-                        "player_id": "11834"
-                    },
-                    {
-                        "name": "Bhayshul Tuten",
-                        "position": "RB",
-                        "player_id": "12490"
-                    },
-                    {
-                        "name": "Harold Fannin",
-                        "position": "TE",
-                        "player_id": "12506"
-                    },
-                    {
-                        "name": "Carnell Tate",
-                        "position": "WR",
-                        "player_id": "13279"
-                    },
-                    {
-                        "name": "Kenyon Sadiq",
-                        "position": "TE",
-                        "player_id": "13330"
-                    },
-                    {
-                        "name": "De'Zhaun Stribling",
-                        "position": "WR",
-                        "player_id": "13417"
-                    },
-                    {
-                        "name": "DJ Moore",
-                        "position": "WR",
-                        "player_id": "4983"
-                    },
-                    {
-                        "name": "Josh Allen",
-                        "position": "QB",
-                        "player_id": "4984"
-                    },
-                    {
-                        "name": "Chase McLaughlin",
-                        "position": "K",
-                        "player_id": "6650"
-                    },
-                    {
-                        "name": "Michael Pittman",
-                        "position": "WR",
-                        "player_id": "6819"
-                    },
-                    {
-                        "name": "Khalil Shakir",
-                        "position": "WR",
-                        "player_id": "8134"
-                    },
-                    {
-                        "name": "George Pickens",
-                        "position": "WR",
-                        "player_id": "8137"
-                    },
-                    {
-                        "name": "Kenneth Walker",
-                        "position": "RB",
-                        "player_id": "8151"
-                    },
-                    {
-                        "name": "Los Angeles Chargers",
-                        "position": "DEF",
-                        "player_id": "LAC"
-                    }
-                ]
-            },
-            {
                 "name": "Ocean Dan",
                 "team_id": 5,
                 "owner": "Roldan Navarrete",
-                "wins": 0,
-                "losses": 0,
+                "wins": 1,
+                "losses": 1,
                 "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 5,
+                "points_for": 247.14,
+                "points_against": 231.38,
+                "avg_points_for": 123.6,
+                "avg_points_against": 115.7,
+                "point_differential": 7.9,
+                "rank": 6,
                 "roster": [
+                    {
+                        "name": "Emari Demercado",
+                        "position": "RB",
+                        "player_id": "11199"
+                    },
                     {
                         "name": "Caleb Williams",
                         "position": "QB",
@@ -62194,11 +62310,6 @@
                         "player_id": "9225"
                     },
                     {
-                        "name": "Tank Dell",
-                        "position": "WR",
-                        "player_id": "9502"
-                    },
-                    {
                         "name": "Quentin Johnston",
                         "position": "WR",
                         "player_id": "9754"
@@ -62211,447 +62322,18 @@
                 ]
             },
             {
-                "name": "Mid Slop",
-                "team_id": 6,
-                "owner": "Logan Duffy",
-                "wins": 0,
-                "losses": 0,
-                "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 6,
-                "roster": [
-                    {
-                        "name": "Jayden Reed",
-                        "position": "WR",
-                        "player_id": "10222"
-                    },
-                    {
-                        "name": "Bucky Irving",
-                        "position": "RB",
-                        "player_id": "11584"
-                    },
-                    {
-                        "name": "Jalen McMillan",
-                        "position": "WR",
-                        "player_id": "11618"
-                    },
-                    {
-                        "name": "Rome Odunze",
-                        "position": "WR",
-                        "player_id": "11620"
-                    },
-                    {
-                        "name": "Woody Marks",
-                        "position": "RB",
-                        "player_id": "12474"
-                    },
-                    {
-                        "name": "Malachi Fields",
-                        "position": "WR",
-                        "player_id": "13285"
-                    },
-                    {
-                        "name": "Trey Smack",
-                        "position": "K",
-                        "player_id": "13545"
-                    },
-                    {
-                        "name": "Christian McCaffrey",
-                        "position": "RB",
-                        "player_id": "4034"
-                    },
-                    {
-                        "name": "Dallas Goedert",
-                        "position": "TE",
-                        "player_id": "5022"
-                    },
-                    {
-                        "name": "Josh Jacobs",
-                        "position": "RB",
-                        "player_id": "5850"
-                    },
-                    {
-                        "name": "Tee Higgins",
-                        "position": "WR",
-                        "player_id": "6801"
-                    },
-                    {
-                        "name": "Trevor Lawrence",
-                        "position": "QB",
-                        "player_id": "7523"
-                    },
-                    {
-                        "name": "Jordan Mason",
-                        "position": "RB",
-                        "player_id": "8408"
-                    },
-                    {
-                        "name": "Chase Brown",
-                        "position": "RB",
-                        "player_id": "9224"
-                    },
-                    {
-                        "name": "Parker Washington",
-                        "position": "WR",
-                        "player_id": "9487"
-                    },
-                    {
-                        "name": "Kayshon Boutte",
-                        "position": "WR",
-                        "player_id": "9504"
-                    },
-                    {
-                        "name": "Zay Flowers",
-                        "position": "WR",
-                        "player_id": "9997"
-                    },
-                    {
-                        "name": "New England Patriots",
-                        "position": "DEF",
-                        "player_id": "NE"
-                    }
-                ]
-            },
-            {
-                "name": "Auto Draft Kings",
-                "team_id": 7,
-                "owner": "Hugh Ritter",
-                "wins": 0,
-                "losses": 0,
-                "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 7,
-                "roster": [
-                    {
-                        "name": "Dalton Kincaid",
-                        "position": "TE",
-                        "player_id": "10236"
-                    },
-                    {
-                        "name": "Brian Thomas",
-                        "position": "WR",
-                        "player_id": "11631"
-                    },
-                    {
-                        "name": "Tyrone Tracy",
-                        "position": "RB",
-                        "player_id": "11655"
-                    },
-                    {
-                        "name": "Harrison Mevis",
-                        "position": "K",
-                        "player_id": "12015"
-                    },
-                    {
-                        "name": "Oronde Gadsden",
-                        "position": "TE",
-                        "player_id": "12493"
-                    },
-                    {
-                        "name": "Omarion Hampton",
-                        "position": "RB",
-                        "player_id": "12507"
-                    },
-                    {
-                        "name": "Kaelon Black",
-                        "position": "RB",
-                        "player_id": "13414"
-                    },
-                    {
-                        "name": "Alvin Kamara",
-                        "position": "RB",
-                        "player_id": "4035"
-                    },
-                    {
-                        "name": "Cooper Kupp",
-                        "position": "WR",
-                        "player_id": "4039"
-                    },
-                    {
-                        "name": "Joe Burrow",
-                        "position": "QB",
-                        "player_id": "6770"
-                    },
-                    {
-                        "name": "CeeDee Lamb",
-                        "position": "WR",
-                        "player_id": "6786"
-                    },
-                    {
-                        "name": "D'Andre Swift",
-                        "position": "RB",
-                        "player_id": "6790"
-                    },
-                    {
-                        "name": "Jordan Love",
-                        "position": "QB",
-                        "player_id": "6804"
-                    },
-                    {
-                        "name": "J.K. Dobbins",
-                        "position": "RB",
-                        "player_id": "6806"
-                    },
-                    {
-                        "name": "Cameron Dicker",
-                        "position": "K",
-                        "player_id": "8259"
-                    },
-                    {
-                        "name": "Tucker Kraft",
-                        "position": "TE",
-                        "player_id": "9484"
-                    },
-                    {
-                        "name": "Puka Nacua",
-                        "position": "WR",
-                        "player_id": "9493"
-                    },
-                    {
-                        "name": "Los Angeles Rams",
-                        "position": "DEF",
-                        "player_id": "LAR"
-                    }
-                ]
-            },
-            {
-                "name": "Cis Peyton",
-                "team_id": 8,
-                "owner": "Brook Price",
-                "wins": 0,
-                "losses": 0,
-                "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 8,
-                "roster": [
-                    {
-                        "name": "Drake Maye",
-                        "position": "QB",
-                        "player_id": "11564"
-                    },
-                    {
-                        "name": "Jonathon Brooks",
-                        "position": "RB",
-                        "player_id": "11583"
-                    },
-                    {
-                        "name": "AJ Barner",
-                        "position": "TE",
-                        "player_id": "11603"
-                    },
-                    {
-                        "name": "Brock Bowers",
-                        "position": "TE",
-                        "player_id": "11604"
-                    },
-                    {
-                        "name": "Ladd McConkey",
-                        "position": "WR",
-                        "player_id": "11635"
-                    },
-                    {
-                        "name": "Kaleb Johnson",
-                        "position": "RB",
-                        "player_id": "12504"
-                    },
-                    {
-                        "name": "TreVeyon Henderson",
-                        "position": "RB",
-                        "player_id": "12529"
-                    },
-                    {
-                        "name": "Emmett Johnson",
-                        "position": "RB",
-                        "player_id": "13337"
-                    },
-                    {
-                        "name": "Stefon Diggs",
-                        "position": "WR",
-                        "player_id": "2449"
-                    },
-                    {
-                        "name": "Derrick Henry",
-                        "position": "RB",
-                        "player_id": "3198"
-                    },
-                    {
-                        "name": "Eddy Pineiro",
-                        "position": "K",
-                        "player_id": "5189"
-                    },
-                    {
-                        "name": "A.J. Brown",
-                        "position": "WR",
-                        "player_id": "5859"
-                    },
-                    {
-                        "name": "Jakobi Meyers",
-                        "position": "WR",
-                        "player_id": "5947"
-                    },
-                    {
-                        "name": "Jaylen Waddle",
-                        "position": "WR",
-                        "player_id": "7526"
-                    },
-                    {
-                        "name": "Wan'Dale Robinson",
-                        "position": "WR",
-                        "player_id": "8126"
-                    },
-                    {
-                        "name": "Malik Willis",
-                        "position": "QB",
-                        "player_id": "8161"
-                    },
-                    {
-                        "name": "Keaton Mitchell",
-                        "position": "RB",
-                        "player_id": "9511"
-                    },
-                    {
-                        "name": "Pittsburgh Steelers",
-                        "position": "DEF",
-                        "player_id": "PIT"
-                    }
-                ]
-            },
-            {
-                "name": "Current Champ",
-                "team_id": 9,
-                "owner": "Niall oliver",
-                "wins": 0,
-                "losses": 0,
-                "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 9,
-                "roster": [
-                    {
-                        "name": "Rashee Rice",
-                        "position": "WR",
-                        "player_id": "10229"
-                    },
-                    {
-                        "name": "MarShawn Lloyd",
-                        "position": "RB",
-                        "player_id": "11581"
-                    },
-                    {
-                        "name": "Malik Nabers",
-                        "position": "WR",
-                        "player_id": "11632"
-                    },
-                    {
-                        "name": "Dylan Sampson",
-                        "position": "RB",
-                        "player_id": "12469"
-                    },
-                    {
-                        "name": "Luther Burden",
-                        "position": "WR",
-                        "player_id": "12519"
-                    },
-                    {
-                        "name": "Kyle Monangai",
-                        "position": "RB",
-                        "player_id": "12534"
-                    },
-                    {
-                        "name": "Ja'Kobi Lane",
-                        "position": "WR",
-                        "player_id": "13293"
-                    },
-                    {
-                        "name": "Caleb Douglas",
-                        "position": "WR",
-                        "player_id": "13296"
-                    },
-                    {
-                        "name": "KC Concepcion",
-                        "position": "WR",
-                        "player_id": "13298"
-                    },
-                    {
-                        "name": "Ted Hurst",
-                        "position": "WR",
-                        "player_id": "13317"
-                    },
-                    {
-                        "name": "Jason Myers",
-                        "position": "K",
-                        "player_id": "2747"
-                    },
-                    {
-                        "name": "Jared Goff",
-                        "position": "QB",
-                        "player_id": "3163"
-                    },
-                    {
-                        "name": "James Conner",
-                        "position": "RB",
-                        "player_id": "4137"
-                    },
-                    {
-                        "name": "Juwan Johnson",
-                        "position": "TE",
-                        "player_id": "7002"
-                    },
-                    {
-                        "name": "Rhamondre Stevenson",
-                        "position": "RB",
-                        "player_id": "7611"
-                    },
-                    {
-                        "name": "Alec Pierce",
-                        "position": "WR",
-                        "player_id": "8142"
-                    },
-                    {
-                        "name": "Bijan Robinson",
-                        "position": "RB",
-                        "player_id": "9509"
-                    },
-                    {
-                        "name": "Houston Texans",
-                        "position": "DEF",
-                        "player_id": "HOU"
-                    },
-                    {
-                        "name": "Tennessee Titans",
-                        "position": "DEF",
-                        "player_id": "TEN"
-                    }
-                ]
-            },
-            {
                 "name": "Not Washed Yet",
                 "team_id": 10,
                 "owner": "Chris Evans",
-                "wins": 0,
-                "losses": 0,
+                "wins": 1,
+                "losses": 1,
                 "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 10,
+                "points_for": 236.16,
+                "points_against": 208.8,
+                "avg_points_for": 118.1,
+                "avg_points_against": 104.4,
+                "point_differential": 13.7,
+                "rank": 7,
                 "roster": [
                     {
                         "name": "Michael Wilson",
@@ -62667,11 +62349,6 @@
                         "name": "Cam Little",
                         "position": "K",
                         "player_id": "11786"
-                    },
-                    {
-                        "name": "Jordan James",
-                        "position": "RB",
-                        "player_id": "12467"
                     },
                     {
                         "name": "Jaxson Dart",
@@ -62692,6 +62369,11 @@
                         "name": "Dak Prescott",
                         "position": "QB",
                         "player_id": "3294"
+                    },
+                    {
+                        "name": "Samaje Perine",
+                        "position": "RB",
+                        "player_id": "4147"
                     },
                     {
                         "name": "George Kittle",
@@ -62749,15 +62431,15 @@
                 "name": "The Daddy Longlegs 🕷️",
                 "team_id": 11,
                 "owner": "Grant Lewis",
-                "wins": 0,
-                "losses": 0,
+                "wins": 1,
+                "losses": 1,
                 "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 11,
+                "points_for": 227.53,
+                "points_against": 219.98,
+                "avg_points_for": 113.8,
+                "avg_points_against": 110.0,
+                "point_differential": 3.8,
+                "rank": 8,
                 "roster": [
                     {
                         "name": "Brandon Aubrey",
@@ -62840,9 +62522,9 @@
                         "player_id": "9226"
                     },
                     {
-                        "name": "Tyjae Spears",
-                        "position": "RB",
-                        "player_id": "9508"
+                        "name": "Dontayvion Wicks",
+                        "position": "WR",
+                        "player_id": "9486"
                     },
                     {
                         "name": "Jordan Addison",
@@ -62857,18 +62539,235 @@
                 ]
             },
             {
+                "name": "Edward Inc.",
+                "team_id": 2,
+                "owner": "Chris Nguyen",
+                "wins": 1,
+                "losses": 1,
+                "ties": 0,
+                "points_for": 208.1,
+                "points_against": 215.98,
+                "avg_points_for": 104.0,
+                "avg_points_against": 108.0,
+                "point_differential": -3.9,
+                "rank": 9,
+                "roster": [
+                    {
+                        "name": "Jayden Daniels",
+                        "position": "QB",
+                        "player_id": "11566"
+                    },
+                    {
+                        "name": "Braelon Allen",
+                        "position": "RB",
+                        "player_id": "11576"
+                    },
+                    {
+                        "name": "Cam Skattebo",
+                        "position": "RB",
+                        "player_id": "12481"
+                    },
+                    {
+                        "name": "Jordyn Tyson",
+                        "position": "WR",
+                        "player_id": "13281"
+                    },
+                    {
+                        "name": "Makai Lemon",
+                        "position": "WR",
+                        "player_id": "13294"
+                    },
+                    {
+                        "name": "Mike Evans",
+                        "position": "WR",
+                        "player_id": "2216"
+                    },
+                    {
+                        "name": "Ka'imi Fairbairn",
+                        "position": "K",
+                        "player_id": "3451"
+                    },
+                    {
+                        "name": "Saquon Barkley",
+                        "position": "RB",
+                        "player_id": "4866"
+                    },
+                    {
+                        "name": "Sam Darnold",
+                        "position": "QB",
+                        "player_id": "4943"
+                    },
+                    {
+                        "name": "Mike Gesicki",
+                        "position": "TE",
+                        "player_id": "4993"
+                    },
+                    {
+                        "name": "Jauan Jennings",
+                        "position": "WR",
+                        "player_id": "7049"
+                    },
+                    {
+                        "name": "Kyle Pitts",
+                        "position": "TE",
+                        "player_id": "7553"
+                    },
+                    {
+                        "name": "Nico Collins",
+                        "position": "WR",
+                        "player_id": "7569"
+                    },
+                    {
+                        "name": "Garrett Wilson",
+                        "position": "WR",
+                        "player_id": "8146"
+                    },
+                    {
+                        "name": "Christian Watson",
+                        "position": "WR",
+                        "player_id": "8167"
+                    },
+                    {
+                        "name": "Chig Okonkwo",
+                        "position": "TE",
+                        "player_id": "8210"
+                    },
+                    {
+                        "name": "Josh Downs",
+                        "position": "WR",
+                        "player_id": "9500"
+                    },
+                    {
+                        "name": "Zach Charbonnet",
+                        "position": "RB",
+                        "player_id": "9753"
+                    },
+                    {
+                        "name": "Philadelphia Eagles",
+                        "position": "DEF",
+                        "player_id": "PHI"
+                    }
+                ]
+            },
+            {
+                "name": "Auto Draft Kings",
+                "team_id": 7,
+                "owner": "Hugh Ritter",
+                "wins": 0,
+                "losses": 2,
+                "ties": 0,
+                "points_for": 204.36,
+                "points_against": 269.95,
+                "avg_points_for": 102.2,
+                "avg_points_against": 135.0,
+                "point_differential": -32.8,
+                "rank": 10,
+                "roster": [
+                    {
+                        "name": "Dalton Kincaid",
+                        "position": "TE",
+                        "player_id": "10236"
+                    },
+                    {
+                        "name": "Brian Thomas",
+                        "position": "WR",
+                        "player_id": "11631"
+                    },
+                    {
+                        "name": "Tyrone Tracy",
+                        "position": "RB",
+                        "player_id": "11655"
+                    },
+                    {
+                        "name": "Oronde Gadsden",
+                        "position": "TE",
+                        "player_id": "12493"
+                    },
+                    {
+                        "name": "Omarion Hampton",
+                        "position": "RB",
+                        "player_id": "12507"
+                    },
+                    {
+                        "name": "Kaelon Black",
+                        "position": "RB",
+                        "player_id": "13414"
+                    },
+                    {
+                        "name": "Alvin Kamara",
+                        "position": "RB",
+                        "player_id": "4035"
+                    },
+                    {
+                        "name": "Cooper Kupp",
+                        "position": "WR",
+                        "player_id": "4039"
+                    },
+                    {
+                        "name": "Joe Burrow",
+                        "position": "QB",
+                        "player_id": "6770"
+                    },
+                    {
+                        "name": "CeeDee Lamb",
+                        "position": "WR",
+                        "player_id": "6786"
+                    },
+                    {
+                        "name": "D'Andre Swift",
+                        "position": "RB",
+                        "player_id": "6790"
+                    },
+                    {
+                        "name": "Jordan Love",
+                        "position": "QB",
+                        "player_id": "6804"
+                    },
+                    {
+                        "name": "J.K. Dobbins",
+                        "position": "RB",
+                        "player_id": "6806"
+                    },
+                    {
+                        "name": "Cameron Dicker",
+                        "position": "K",
+                        "player_id": "8259"
+                    },
+                    {
+                        "name": "Tucker Kraft",
+                        "position": "TE",
+                        "player_id": "9484"
+                    },
+                    {
+                        "name": "Puka Nacua",
+                        "position": "WR",
+                        "player_id": "9493"
+                    },
+                    {
+                        "name": "Los Angeles Rams",
+                        "position": "DEF",
+                        "player_id": "LAR"
+                    },
+                    {
+                        "name": "San Francisco 49ers",
+                        "position": "DEF",
+                        "player_id": "SF"
+                    }
+                ]
+            },
+            {
                 "name": "Greasy Guys",
                 "team_id": 12,
                 "owner": "mitch Reuter",
                 "wins": 0,
-                "losses": 0,
+                "losses": 2,
                 "ties": 0,
-                "points_for": 0.0,
-                "points_against": 0.0,
-                "avg_points_for": 0,
-                "avg_points_against": 0,
-                "point_differential": 0,
-                "rank": 12,
+                "points_for": 197.4,
+                "points_against": 272.08,
+                "avg_points_for": 98.7,
+                "avg_points_against": 136.0,
+                "point_differential": -37.3,
+                "rank": 11,
                 "roster": [
                     {
                         "name": "Adonai Mitchell",
@@ -62891,24 +62790,34 @@
                         "player_id": "12514"
                     },
                     {
-                        "name": "Cyrus Allen",
-                        "position": "WR",
-                        "player_id": "13413"
-                    },
-                    {
                         "name": "Hunter Henry",
                         "position": "TE",
                         "player_id": "3214"
                     },
                     {
+                        "name": "Kalif Raymond",
+                        "position": "WR",
+                        "player_id": "3634"
+                    },
+                    {
+                        "name": "Patrick Mahomes",
+                        "position": "QB",
+                        "player_id": "4046"
+                    },
+                    {
+                        "name": "Aaron Jones",
+                        "position": "RB",
+                        "player_id": "4199"
+                    },
+                    {
+                        "name": "Kendrick Bourne",
+                        "position": "WR",
+                        "player_id": "4454"
+                    },
+                    {
                         "name": "Baker Mayfield",
                         "position": "QB",
                         "player_id": "4892"
-                    },
-                    {
-                        "name": "Kyler Murray",
-                        "position": "QB",
-                        "player_id": "5849"
                     },
                     {
                         "name": "Tony Pollard",
@@ -62941,11 +62850,6 @@
                         "player_id": "8148"
                     },
                     {
-                        "name": "Kyren Williams",
-                        "position": "RB",
-                        "player_id": "8150"
-                    },
-                    {
                         "name": "Brian Robinson",
                         "position": "RB",
                         "player_id": "8154"
@@ -62961,11 +62865,196 @@
                         "player_id": "MIN"
                     }
                 ]
+            },
+            {
+                "name": "Current Champ",
+                "team_id": 9,
+                "owner": "Niall oliver",
+                "wins": 0,
+                "losses": 2,
+                "ties": 0,
+                "points_for": 177.12,
+                "points_against": 215.4,
+                "avg_points_for": 88.6,
+                "avg_points_against": 107.7,
+                "point_differential": -19.1,
+                "rank": 12,
+                "roster": [
+                    {
+                        "name": "Rashee Rice",
+                        "position": "WR",
+                        "player_id": "10229"
+                    },
+                    {
+                        "name": "MarShawn Lloyd",
+                        "position": "RB",
+                        "player_id": "11581"
+                    },
+                    {
+                        "name": "Malik Nabers",
+                        "position": "WR",
+                        "player_id": "11632"
+                    },
+                    {
+                        "name": "Raheim Sanders",
+                        "position": "RB",
+                        "player_id": "12472"
+                    },
+                    {
+                        "name": "Luther Burden",
+                        "position": "WR",
+                        "player_id": "12519"
+                    },
+                    {
+                        "name": "Kyle Monangai",
+                        "position": "RB",
+                        "player_id": "12534"
+                    },
+                    {
+                        "name": "Tyler Loop",
+                        "position": "K",
+                        "player_id": "12711"
+                    },
+                    {
+                        "name": "Caleb Douglas",
+                        "position": "WR",
+                        "player_id": "13296"
+                    },
+                    {
+                        "name": "KC Concepcion",
+                        "position": "WR",
+                        "player_id": "13298"
+                    },
+                    {
+                        "name": "Ted Hurst",
+                        "position": "WR",
+                        "player_id": "13317"
+                    },
+                    {
+                        "name": "Jared Goff",
+                        "position": "QB",
+                        "player_id": "3163"
+                    },
+                    {
+                        "name": "James Conner",
+                        "position": "RB",
+                        "player_id": "4137"
+                    },
+                    {
+                        "name": "Juwan Johnson",
+                        "position": "TE",
+                        "player_id": "7002"
+                    },
+                    {
+                        "name": "Rhamondre Stevenson",
+                        "position": "RB",
+                        "player_id": "7611"
+                    },
+                    {
+                        "name": "Alec Pierce",
+                        "position": "WR",
+                        "player_id": "8142"
+                    },
+                    {
+                        "name": "Bryce Young",
+                        "position": "QB",
+                        "player_id": "9228"
+                    },
+                    {
+                        "name": "Bijan Robinson",
+                        "position": "RB",
+                        "player_id": "9509"
+                    },
+                    {
+                        "name": "Houston Texans",
+                        "position": "DEF",
+                        "player_id": "HOU"
+                    },
+                    {
+                        "name": "Kansas City Chiefs",
+                        "position": "DEF",
+                        "player_id": "KC"
+                    }
+                ]
             }
         ],
         "weekly_scores": {
-            "1": [],
-            "2": [],
+            "1": [
+                {
+                    "home_team": "Emporer Zurg",
+                    "away_team": "Current Champ",
+                    "home_score": 133.76,
+                    "away_score": 107.24
+                },
+                {
+                    "home_team": "Edward Inc.",
+                    "away_team": "Mid Slop",
+                    "home_score": 126.46,
+                    "away_score": 146.1
+                },
+                {
+                    "home_team": "Big Tipper 🧚",
+                    "away_team": "XXL Orbs",
+                    "home_score": 89.3,
+                    "away_score": 127.56
+                },
+                {
+                    "home_team": "Ocean Dan",
+                    "away_team": "Greasy Guys",
+                    "home_score": 155.96,
+                    "away_score": 107.02
+                },
+                {
+                    "home_team": "Auto Draft Kings",
+                    "away_team": "The Daddy Longlegs 🕷️",
+                    "home_score": 97.26,
+                    "away_score": 110.77
+                },
+                {
+                    "home_team": "GEYtonwoods",
+                    "away_team": "Not Washed Yet",
+                    "home_score": 117.62,
+                    "away_score": 111.8
+                }
+            ],
+            "2": [
+                {
+                    "home_team": "Emporer Zurg",
+                    "away_team": "Mid Slop",
+                    "home_score": 152.05,
+                    "away_score": 103.76
+                },
+                {
+                    "home_team": "Edward Inc.",
+                    "away_team": "Current Champ",
+                    "home_score": 81.64,
+                    "away_score": 69.88
+                },
+                {
+                    "home_team": "Big Tipper 🧚",
+                    "away_team": "Auto Draft Kings",
+                    "home_score": 159.18,
+                    "away_score": 107.1
+                },
+                {
+                    "home_team": "XXL Orbs",
+                    "away_team": "The Daddy Longlegs 🕷️",
+                    "home_score": 122.72,
+                    "away_score": 116.76
+                },
+                {
+                    "home_team": "Ocean Dan",
+                    "away_team": "Not Washed Yet",
+                    "home_score": 91.18,
+                    "away_score": 124.36
+                },
+                {
+                    "home_team": "GEYtonwoods",
+                    "away_team": "Greasy Guys",
+                    "home_score": 116.12,
+                    "away_score": 90.38
+                }
+            ],
             "3": [],
             "4": [],
             "5": [],
@@ -62980,18 +63069,150 @@
             "14": []
         },
         "head_to_head": {
-            "Eric Kenney": {},
-            "Chris Nguyen": {},
-            "Malin Craig": {},
-            "Sam Dennis": {},
-            "Roldan Navarrete": {},
-            "Logan Duffy": {},
-            "Hugh Ritter": {},
-            "Brook Price": {},
-            "Niall oliver": {},
-            "Chris Evans": {},
-            "Grant Lewis": {},
-            "mitch Reuter": {}
+            "Eric Kenney": {
+                "Niall oliver": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                },
+                "Logan Duffy": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                }
+            },
+            "Chris Nguyen": {
+                "Logan Duffy": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                },
+                "Niall oliver": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                }
+            },
+            "Malin Craig": {
+                "Sam Dennis": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                },
+                "Hugh Ritter": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                }
+            },
+            "Sam Dennis": {
+                "Malin Craig": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                },
+                "Grant Lewis": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                }
+            },
+            "Roldan Navarrete": {
+                "mitch Reuter": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                },
+                "Chris Evans": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                }
+            },
+            "Logan Duffy": {
+                "Chris Nguyen": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                },
+                "Eric Kenney": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                }
+            },
+            "Hugh Ritter": {
+                "Grant Lewis": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                },
+                "Malin Craig": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                }
+            },
+            "Brook Price": {
+                "Chris Evans": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                },
+                "mitch Reuter": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                }
+            },
+            "Niall oliver": {
+                "Eric Kenney": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                },
+                "Chris Nguyen": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                }
+            },
+            "Chris Evans": {
+                "Brook Price": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                },
+                "Roldan Navarrete": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                }
+            },
+            "Grant Lewis": {
+                "Hugh Ritter": {
+                    "wins": 1,
+                    "losses": 0,
+                    "ties": 0
+                },
+                "Sam Dennis": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                }
+            },
+            "mitch Reuter": {
+                "Roldan Navarrete": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                },
+                "Brook Price": {
+                    "wins": 0,
+                    "losses": 1,
+                    "ties": 0
+                }
+            }
         },
         "playoffs": [],
         "draft": [
@@ -64943,6 +65164,180 @@
         "transactions": [
             {
                 "week": 1,
+                "type": "waiver",
+                "adds": {
+                    "Chris Nguyen": [
+                        "Mike Gesicki"
+                    ]
+                },
+                "drops": {
+                    "Chris Nguyen": [
+                        "Roschon Johnson"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "waiver",
+                "adds": {
+                    "Brook Price": [
+                        "Chris Brooks"
+                    ]
+                },
+                "drops": {}
+            },
+            {
+                "week": 1,
+                "type": "waiver",
+                "adds": {
+                    "Hugh Ritter": [
+                        "San Francisco 49ers"
+                    ]
+                },
+                "drops": {
+                    "Hugh Ritter": [
+                        "Harrison Mevis"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "waiver",
+                "adds": {
+                    "Niall oliver": [
+                        "Tyler Loop"
+                    ]
+                },
+                "drops": {
+                    "Niall oliver": [
+                        "Jason Myers"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "waiver",
+                "adds": {
+                    "Niall oliver": [
+                        "Kansas City Chiefs"
+                    ]
+                },
+                "drops": {
+                    "Niall oliver": [
+                        "Tennessee Titans"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "waiver",
+                "adds": {
+                    "Niall oliver": [
+                        "Raheim Sanders"
+                    ]
+                },
+                "drops": {
+                    "Niall oliver": [
+                        "Dylan Sampson"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "waiver",
+                "adds": {
+                    "Niall oliver": [
+                        "Bryce Young"
+                    ]
+                },
+                "drops": {
+                    "Niall oliver": [
+                        "Ja'Kobi Lane"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "waiver",
+                "adds": {
+                    "Grant Lewis": [
+                        "Dontayvion Wicks"
+                    ]
+                },
+                "drops": {
+                    "Grant Lewis": [
+                        "Tyjae Spears"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "free_agent",
+                "adds": {
+                    "Sam Dennis": [
+                        "Devaughn Vele"
+                    ]
+                },
+                "drops": {}
+            },
+            {
+                "week": 1,
+                "type": "free_agent",
+                "adds": {
+                    "Roldan Navarrete": [
+                        "Emari Demercado"
+                    ]
+                },
+                "drops": {
+                    "Roldan Navarrete": [
+                        "Tank Dell"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "free_agent",
+                "adds": {
+                    "Chris Evans": [
+                        "Samaje Perine"
+                    ]
+                },
+                "drops": {
+                    "Chris Evans": [
+                        "Jordan James"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "free_agent",
+                "adds": {
+                    "Sam Dennis": [
+                        "Nicholas Singleton"
+                    ]
+                },
+                "drops": {
+                    "Sam Dennis": [
+                        "Devaughn Vele"
+                    ]
+                }
+            },
+            {
+                "week": 1,
+                "type": "free_agent",
+                "adds": {
+                    "Eric Kenney": [
+                        "Las Vegas Raiders"
+                    ]
+                },
+                "drops": {
+                    "Eric Kenney": [
+                        "Dontayvion Wicks"
+                    ]
+                }
+            },
+            {
+                "week": 1,
                 "type": "free_agent",
                 "adds": {
                     "Eric Kenney": [
@@ -65060,9 +65455,3152 @@
                     ]
                 },
                 "drops": {}
+            },
+            {
+                "week": 2,
+                "type": "trade",
+                "adds": {
+                    "mitch Reuter": [
+                        "Patrick Mahomes",
+                        "Aaron Jones"
+                    ],
+                    "Eric Kenney": [
+                        "Kyren Williams"
+                    ]
+                },
+                "drops": {
+                    "Eric Kenney": [
+                        "Patrick Mahomes",
+                        "Aaron Jones"
+                    ],
+                    "mitch Reuter": [
+                        "Kyren Williams"
+                    ]
+                }
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "Brook Price": [
+                        "Dalton Schultz"
+                    ]
+                },
+                "drops": {
+                    "Brook Price": [
+                        "AJ Barner"
+                    ]
+                }
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "Logan Duffy": [
+                        "George Holani"
+                    ]
+                },
+                "drops": {}
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "Sam Dennis": [
+                        "Cincinnati Bengals"
+                    ]
+                },
+                "drops": {
+                    "Sam Dennis": [
+                        "De'Zhaun Stribling"
+                    ]
+                }
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "Sam Dennis": [
+                        "Tank Dell"
+                    ]
+                },
+                "drops": {
+                    "Sam Dennis": [
+                        "Ryan Flournoy"
+                    ]
+                }
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "Eric Kenney": [
+                        "Demond Claiborne"
+                    ]
+                },
+                "drops": {
+                    "Eric Kenney": [
+                        "Seth McGowan"
+                    ]
+                }
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "Eric Kenney": [
+                        "Antonio Williams"
+                    ]
+                },
+                "drops": {
+                    "Eric Kenney": [
+                        "Chris Bell"
+                    ]
+                }
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "Sam Dennis": [
+                        "Devin Singletary"
+                    ]
+                },
+                "drops": {
+                    "Sam Dennis": [
+                        "Nicholas Singleton"
+                    ]
+                }
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "mitch Reuter": [
+                        "Kendrick Bourne"
+                    ]
+                },
+                "drops": {
+                    "mitch Reuter": [
+                        "Cyrus Allen"
+                    ]
+                }
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "mitch Reuter": [
+                        "Kalif Raymond"
+                    ]
+                },
+                "drops": {
+                    "mitch Reuter": [
+                        "Kyler Murray"
+                    ]
+                }
+            },
+            {
+                "week": 2,
+                "type": "free_agent",
+                "adds": {
+                    "Eric Kenney": [
+                        "Tampa Bay Buccaneers"
+                    ]
+                },
+                "drops": {
+                    "Eric Kenney": [
+                        "Las Vegas Raiders"
+                    ]
+                }
             }
         ],
-        "player_scoring": {},
-        "weekly_lineups": {}
+        "player_scoring": {
+            "11539": {
+                "Eric Kenney": {
+                    "points": 14.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 7.0,
+                    "best_week": 1
+                }
+            },
+            "11575": {
+                "Eric Kenney": {
+                    "points": 4.4,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13311": {
+                "Eric Kenney": {
+                    "points": 3.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13424": {
+                "Eric Kenney": {
+                    "points": 8.7,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "1466": {
+                "Eric Kenney": {
+                    "points": 29.2,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "4037": {
+                "Eric Kenney": {
+                    "points": 13.6,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 7.3,
+                    "best_week": 2
+                }
+            },
+            "4046": {
+                "Eric Kenney": {
+                    "points": 50.64,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "4199": {
+                "Eric Kenney": {
+                    "points": 20.5,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 10.5,
+                    "best_week": 2
+                }
+            },
+            "4881": {
+                "Eric Kenney": {
+                    "points": 39.76,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 24.96,
+                    "best_week": 1
+                }
+            },
+            "5872": {
+                "Eric Kenney": {
+                    "points": 25.15,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 6.45,
+                    "best_week": 2
+                }
+            },
+            "6813": {
+                "Eric Kenney": {
+                    "points": 50.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 27.2,
+                    "best_week": 2
+                }
+            },
+            "7021": {
+                "Eric Kenney": {
+                    "points": 8.5,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 3.1,
+                    "best_week": 1
+                }
+            },
+            "7525": {
+                "Eric Kenney": {
+                    "points": 29.5,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 22.7,
+                    "best_week": 2
+                }
+            },
+            "8121": {
+                "Eric Kenney": {
+                    "points": 11.1,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "8130": {
+                "Eric Kenney": {
+                    "points": 34.1,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 20.0,
+                    "best_week": 1
+                }
+            },
+            "8676": {
+                "Eric Kenney": {
+                    "points": 16.45,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 5.8,
+                    "best_week": 1
+                }
+            },
+            "9488": {
+                "Eric Kenney": {
+                    "points": 60.2,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 38.0,
+                    "best_week": 2
+                }
+            },
+            "LV": {
+                "Eric Kenney": {
+                    "points": 14.0,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 14.0,
+                    "best_week": 1
+                }
+            },
+            "10235": {
+                "Chris Nguyen": {
+                    "points": 0.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11566": {
+                "Chris Nguyen": {
+                    "points": 32.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 17.66,
+                    "best_week": 1
+                }
+            },
+            "11576": {
+                "Chris Nguyen": {
+                    "points": 12.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12481": {
+                "Chris Nguyen": {
+                    "points": 21.6,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 14.1,
+                    "best_week": 1
+                }
+            },
+            "13281": {
+                "Chris Nguyen": {
+                    "points": 0.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13294": {
+                "Chris Nguyen": {
+                    "points": 2.4,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "2216": {
+                "Chris Nguyen": {
+                    "points": 20.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 13.9,
+                    "best_week": 1
+                }
+            },
+            "3451": {
+                "Chris Nguyen": {
+                    "points": 15.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 9.0,
+                    "best_week": 1
+                }
+            },
+            "4866": {
+                "Chris Nguyen": {
+                    "points": 11.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 8.5,
+                    "best_week": 1
+                }
+            },
+            "4943": {
+                "Chris Nguyen": {
+                    "points": 0.52,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "7049": {
+                "Chris Nguyen": {
+                    "points": 0.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "7553": {
+                "Chris Nguyen": {
+                    "points": 2.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 2.0,
+                    "best_week": 2
+                }
+            },
+            "7569": {
+                "Chris Nguyen": {
+                    "points": 17.7,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 17.7,
+                    "best_week": 1
+                }
+            },
+            "8146": {
+                "Chris Nguyen": {
+                    "points": 25.1,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 14.2,
+                    "best_week": 2
+                }
+            },
+            "8167": {
+                "Chris Nguyen": {
+                    "points": 41.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 29.7,
+                    "best_week": 1
+                }
+            },
+            "8210": {
+                "Chris Nguyen": {
+                    "points": 2.6,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9500": {
+                "Chris Nguyen": {
+                    "points": 15.4,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 10.7,
+                    "best_week": 2
+                }
+            },
+            "9753": {
+                "Chris Nguyen": {
+                    "points": 0.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "PHI": {
+                "Chris Nguyen": {
+                    "points": 10.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 5.0,
+                    "best_week": 1
+                }
+            },
+            "10859": {
+                "Malin Craig": {
+                    "points": 21.5,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 14.2,
+                    "best_week": 2
+                }
+            },
+            "11586": {
+                "Malin Craig": {
+                    "points": 15.1,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 9.7,
+                    "best_week": 2
+                }
+            },
+            "11624": {
+                "Malin Craig": {
+                    "points": 14.3,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12512": {
+                "Malin Craig": {
+                    "points": 13.3,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 7.3,
+                    "best_week": 2
+                }
+            },
+            "12527": {
+                "Malin Craig": {
+                    "points": 38.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 29.7,
+                    "best_week": 1
+                }
+            },
+            "12530": {
+                "Malin Craig": {
+                    "points": 1.6,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13274": {
+                "Malin Craig": {
+                    "points": 5.5,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13305": {
+                "Malin Craig": {
+                    "points": 4.8,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13345": {
+                "Malin Craig": {
+                    "points": 14.65,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "2133": {
+                "Malin Craig": {
+                    "points": 39.6,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 35.5,
+                    "best_week": 2
+                }
+            },
+            "421": {
+                "Malin Craig": {
+                    "points": 31.08,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 4.1,
+                    "best_week": 1
+                }
+            },
+            "4227": {
+                "Malin Craig": {
+                    "points": 23.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 16.0,
+                    "best_week": 2
+                }
+            },
+            "5045": {
+                "Malin Craig": {
+                    "points": 6.1,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 2.1,
+                    "best_week": 1
+                }
+            },
+            "7564": {
+                "Malin Craig": {
+                    "points": 25.2,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 23.0,
+                    "best_week": 2
+                }
+            },
+            "8155": {
+                "Malin Craig": {
+                    "points": 30.5,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 18.8,
+                    "best_week": 1
+                }
+            },
+            "8183": {
+                "Malin Craig": {
+                    "points": 49.58,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 28.48,
+                    "best_week": 2
+                }
+            },
+            "9480": {
+                "Malin Craig": {
+                    "points": 12.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "BAL": {
+                "Malin Craig": {
+                    "points": 13.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 8.0,
+                    "best_week": 1
+                }
+            },
+            "10213": {
+                "Sam Dennis": {
+                    "points": 24.1,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "10219": {
+                "Sam Dennis": {
+                    "points": 3.6,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11563": {
+                "Sam Dennis": {
+                    "points": 19.56,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11783": {
+                "Sam Dennis": {
+                    "points": 3.2,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11834": {
+                "Sam Dennis": {
+                    "points": 25.3,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 8.9,
+                    "best_week": 2
+                }
+            },
+            "12490": {
+                "Sam Dennis": {
+                    "points": 22.5,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 13.2,
+                    "best_week": 2
+                }
+            },
+            "12506": {
+                "Sam Dennis": {
+                    "points": 11.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 7.9,
+                    "best_week": 2
+                }
+            },
+            "13279": {
+                "Sam Dennis": {
+                    "points": 10.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 5.8,
+                    "best_week": 1
+                }
+            },
+            "13288": {
+                "Sam Dennis": {
+                    "points": 0.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13330": {
+                "Sam Dennis": {
+                    "points": 12.6,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13417": {
+                "Sam Dennis": {
+                    "points": 0.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "4983": {
+                "Sam Dennis": {
+                    "points": 18.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 18.5,
+                    "best_week": 1
+                }
+            },
+            "4984": {
+                "Sam Dennis": {
+                    "points": 76.48,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 40.82,
+                    "best_week": 2
+                }
+            },
+            "6650": {
+                "Sam Dennis": {
+                    "points": 27.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 16.0,
+                    "best_week": 2
+                }
+            },
+            "6819": {
+                "Sam Dennis": {
+                    "points": 7.3,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 7.3,
+                    "best_week": 1
+                }
+            },
+            "8134": {
+                "Sam Dennis": {
+                    "points": 12.85,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "8137": {
+                "Sam Dennis": {
+                    "points": 11.3,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 7.0,
+                    "best_week": 2
+                }
+            },
+            "8151": {
+                "Sam Dennis": {
+                    "points": 53.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 32.6,
+                    "best_week": 1
+                }
+            },
+            "LAC": {
+                "Sam Dennis": {
+                    "points": 4.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 4.0,
+                    "best_week": 2
+                }
+            },
+            "11199": {
+                "Roldan Navarrete": {
+                    "points": 1.5,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11560": {
+                "Roldan Navarrete": {
+                    "points": 44.98,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 37.26,
+                    "best_week": 1
+                }
+            },
+            "11646": {
+                "Roldan Navarrete": {
+                    "points": 45.3,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 29.8,
+                    "best_week": 1
+                }
+            },
+            "12492": {
+                "Roldan Navarrete": {
+                    "points": 7.8,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12517": {
+                "Roldan Navarrete": {
+                    "points": 0.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 0.8,
+                    "best_week": 2
+                }
+            },
+            "12533": {
+                "Roldan Navarrete": {
+                    "points": 17.4,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 5.3,
+                    "best_week": 2
+                }
+            },
+            "13286": {
+                "Roldan Navarrete": {
+                    "points": 11.3,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 6.8,
+                    "best_week": 1
+                }
+            },
+            "13287": {
+                "Roldan Navarrete": {
+                    "points": 18.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 12.0,
+                    "best_week": 1
+                }
+            },
+            "1479": {
+                "Roldan Navarrete": {
+                    "points": 7.2,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "1945": {
+                "Roldan Navarrete": {
+                    "points": 12.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 8.0,
+                    "best_week": 1
+                }
+            },
+            "5995": {
+                "Roldan Navarrete": {
+                    "points": 6.1,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "6797": {
+                "Roldan Navarrete": {
+                    "points": 21.14,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 7.88,
+                    "best_week": 2
+                }
+            },
+            "7547": {
+                "Roldan Navarrete": {
+                    "points": 54.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 30.7,
+                    "best_week": 2
+                }
+            },
+            "7588": {
+                "Roldan Navarrete": {
+                    "points": 28.2,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 21.7,
+                    "best_week": 1
+                }
+            },
+            "8132": {
+                "Roldan Navarrete": {
+                    "points": 10.9,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "8800": {
+                "Roldan Navarrete": {
+                    "points": 0.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9225": {
+                "Roldan Navarrete": {
+                    "points": 13.6,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9754": {
+                "Roldan Navarrete": {
+                    "points": 4.6,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 2.7,
+                    "best_week": 1
+                }
+            },
+            "SEA": {
+                "Roldan Navarrete": {
+                    "points": 24.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 14.0,
+                    "best_week": 1
+                }
+            },
+            "10222": {
+                "Logan Duffy": {
+                    "points": 4.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 3.5,
+                    "best_week": 1
+                }
+            },
+            "11584": {
+                "Logan Duffy": {
+                    "points": 27.8,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 11.0,
+                    "best_week": 2
+                }
+            },
+            "11618": {
+                "Logan Duffy": {
+                    "points": 0.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11620": {
+                "Logan Duffy": {
+                    "points": 12.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12474": {
+                "Logan Duffy": {
+                    "points": 16.4,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13285": {
+                "Logan Duffy": {
+                    "points": 7.5,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13545": {
+                "Logan Duffy": {
+                    "points": 21.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 13.0,
+                    "best_week": 1
+                }
+            },
+            "4034": {
+                "Logan Duffy": {
+                    "points": 31.9,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 20.6,
+                    "best_week": 2
+                }
+            },
+            "5022": {
+                "Logan Duffy": {
+                    "points": 22.6,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 21.7,
+                    "best_week": 1
+                }
+            },
+            "5850": {
+                "Logan Duffy": {
+                    "points": 0.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "6801": {
+                "Logan Duffy": {
+                    "points": 19.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 12.0,
+                    "best_week": 2
+                }
+            },
+            "7523": {
+                "Logan Duffy": {
+                    "points": 32.26,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 26.1,
+                    "best_week": 1
+                }
+            },
+            "8408": {
+                "Logan Duffy": {
+                    "points": 11.9,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9224": {
+                "Logan Duffy": {
+                    "points": 26.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 16.3,
+                    "best_week": 1
+                }
+            },
+            "9487": {
+                "Logan Duffy": {
+                    "points": 30.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 16.3,
+                    "best_week": 1
+                }
+            },
+            "9504": {
+                "Logan Duffy": {
+                    "points": 7.8,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9997": {
+                "Logan Duffy": {
+                    "points": 23.5,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 23.5,
+                    "best_week": 1
+                }
+            },
+            "NE": {
+                "Logan Duffy": {
+                    "points": 27.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 20.0,
+                    "best_week": 2
+                }
+            },
+            "10236": {
+                "Hugh Ritter": {
+                    "points": 34.5,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 19.0,
+                    "best_week": 2
+                }
+            },
+            "11631": {
+                "Hugh Ritter": {
+                    "points": 11.0,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 5.5,
+                    "best_week": 1
+                }
+            },
+            "11655": {
+                "Hugh Ritter": {
+                    "points": 2.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12015": {
+                "Hugh Ritter": {
+                    "points": 1.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12493": {
+                "Hugh Ritter": {
+                    "points": 13.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12507": {
+                "Hugh Ritter": {
+                    "points": 24.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 16.5,
+                    "best_week": 2
+                }
+            },
+            "13414": {
+                "Hugh Ritter": {
+                    "points": 10.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "4035": {
+                "Hugh Ritter": {
+                    "points": 4.7,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "4039": {
+                "Hugh Ritter": {
+                    "points": 7.5,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "6770": {
+                "Hugh Ritter": {
+                    "points": 30.34,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 14.16,
+                    "best_week": 1
+                }
+            },
+            "6786": {
+                "Hugh Ritter": {
+                    "points": 44.2,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 31.3,
+                    "best_week": 2
+                }
+            },
+            "6790": {
+                "Hugh Ritter": {
+                    "points": 42.3,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 31.9,
+                    "best_week": 1
+                }
+            },
+            "6804": {
+                "Hugh Ritter": {
+                    "points": 33.28,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 13.8,
+                    "best_week": 2
+                }
+            },
+            "6806": {
+                "Hugh Ritter": {
+                    "points": 7.2,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 3.6,
+                    "best_week": 1
+                }
+            },
+            "8259": {
+                "Hugh Ritter": {
+                    "points": 3.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 2.0,
+                    "best_week": 1
+                }
+            },
+            "9484": {
+                "Hugh Ritter": {
+                    "points": 10.5,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 8.0,
+                    "best_week": 1
+                }
+            },
+            "9493": {
+                "Hugh Ritter": {
+                    "points": 9.9,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 9.9,
+                    "best_week": 1
+                }
+            },
+            "LAR": {
+                "Hugh Ritter": {
+                    "points": 12.0,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 1.0,
+                    "best_week": 1
+                }
+            },
+            "11564": {
+                "Brook Price": {
+                    "points": 17.84,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 9.82,
+                    "best_week": 1
+                }
+            },
+            "11583": {
+                "Brook Price": {
+                    "points": 8.3,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 6.7,
+                    "best_week": 1
+                }
+            },
+            "11603": {
+                "Brook Price": {
+                    "points": 2.3,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 2.3,
+                    "best_week": 1
+                }
+            },
+            "11604": {
+                "Brook Price": {
+                    "points": 0.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11635": {
+                "Brook Price": {
+                    "points": 21.7,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 16.7,
+                    "best_week": 1
+                }
+            },
+            "12504": {
+                "Brook Price": {
+                    "points": 5.8,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12529": {
+                "Brook Price": {
+                    "points": 13.6,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 13.6,
+                    "best_week": 2
+                }
+            },
+            "13337": {
+                "Brook Price": {
+                    "points": 14.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "2449": {
+                "Brook Price": {
+                    "points": 32.7,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 19.2,
+                    "best_week": 2
+                }
+            },
+            "3198": {
+                "Brook Price": {
+                    "points": 51.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 34.8,
+                    "best_week": 1
+                }
+            },
+            "5189": {
+                "Brook Price": {
+                    "points": 15.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 10.0,
+                    "best_week": 1
+                }
+            },
+            "5859": {
+                "Brook Price": {
+                    "points": 4.1,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 4.1,
+                    "best_week": 1
+                }
+            },
+            "5947": {
+                "Brook Price": {
+                    "points": 14.5,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 3.3,
+                    "best_week": 2
+                }
+            },
+            "7526": {
+                "Brook Price": {
+                    "points": 18.5,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 17.8,
+                    "best_week": 2
+                }
+            },
+            "8126": {
+                "Brook Price": {
+                    "points": 7.7,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "8161": {
+                "Brook Price": {
+                    "points": 29.18,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9511": {
+                "Brook Price": {
+                    "points": 10.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "PIT": {
+                "Brook Price": {
+                    "points": 27.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 19.0,
+                    "best_week": 1
+                }
+            },
+            "10229": {
+                "Niall oliver": {
+                    "points": 19.2,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 10.3,
+                    "best_week": 2
+                }
+            },
+            "11581": {
+                "Niall oliver": {
+                    "points": 11.3,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11632": {
+                "Niall oliver": {
+                    "points": 10.5,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 9.9,
+                    "best_week": 1
+                }
+            },
+            "12469": {
+                "Niall oliver": {
+                    "points": 3.2,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12519": {
+                "Niall oliver": {
+                    "points": 11.7,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 7.0,
+                    "best_week": 1
+                }
+            },
+            "12534": {
+                "Niall oliver": {
+                    "points": 26.2,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13293": {
+                "Niall oliver": {
+                    "points": 1.6,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13296": {
+                "Niall oliver": {
+                    "points": 14.8,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 2.9,
+                    "best_week": 2
+                }
+            },
+            "13298": {
+                "Niall oliver": {
+                    "points": 12.0,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 6.8,
+                    "best_week": 1
+                }
+            },
+            "13317": {
+                "Niall oliver": {
+                    "points": 8.8,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "2747": {
+                "Niall oliver": {
+                    "points": 7.0,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 7.0,
+                    "best_week": 1
+                }
+            },
+            "3163": {
+                "Niall oliver": {
+                    "points": 46.22,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 16.44,
+                    "best_week": 1
+                }
+            },
+            "4137": {
+                "Niall oliver": {
+                    "points": 0.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "7002": {
+                "Niall oliver": {
+                    "points": 21.5,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 12.9,
+                    "best_week": 1
+                }
+            },
+            "7611": {
+                "Niall oliver": {
+                    "points": 15.1,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 12.0,
+                    "best_week": 1
+                }
+            },
+            "8142": {
+                "Niall oliver": {
+                    "points": 9.7,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9509": {
+                "Niall oliver": {
+                    "points": 36.9,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 27.3,
+                    "best_week": 1
+                }
+            },
+            "HOU": {
+                "Niall oliver": {
+                    "points": 3.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "TEN": {
+                "Niall oliver": {
+                    "points": -1.0,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "10232": {
+                "Chris Evans": {
+                    "points": 10.9,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11647": {
+                "Chris Evans": {
+                    "points": 1.3,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11786": {
+                "Chris Evans": {
+                    "points": 19.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 12.0,
+                    "best_week": 1
+                }
+            },
+            "12508": {
+                "Chris Evans": {
+                    "points": 27.4,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12526": {
+                "Chris Evans": {
+                    "points": 20.6,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 12.6,
+                    "best_week": 2
+                }
+            },
+            "13346": {
+                "Chris Evans": {
+                    "points": 30.9,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "3294": {
+                "Chris Evans": {
+                    "points": 44.16,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 29.76,
+                    "best_week": 2
+                }
+            },
+            "4147": {
+                "Chris Evans": {
+                    "points": 9.2,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "4217": {
+                "Chris Evans": {
+                    "points": 18.2,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 16.0,
+                    "best_week": 2
+                }
+            },
+            "5892": {
+                "Chris Evans": {
+                    "points": 30.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 27.4,
+                    "best_week": 1
+                }
+            },
+            "5927": {
+                "Chris Evans": {
+                    "points": 8.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 6.0,
+                    "best_week": 2
+                }
+            },
+            "7594": {
+                "Chris Evans": {
+                    "points": 35.6,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 13.4,
+                    "best_week": 2
+                }
+            },
+            "8110": {
+                "Chris Evans": {
+                    "points": 19.9,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "8112": {
+                "Chris Evans": {
+                    "points": 11.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 6.9,
+                    "best_week": 2
+                }
+            },
+            "8180": {
+                "Chris Evans": {
+                    "points": 5.6,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "8228": {
+                "Chris Evans": {
+                    "points": 16.5,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 7.8,
+                    "best_week": 1
+                }
+            },
+            "9221": {
+                "Chris Evans": {
+                    "points": 51.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 31.1,
+                    "best_week": 1
+                }
+            },
+            "DEN": {
+                "Chris Evans": {
+                    "points": 11.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 9.0,
+                    "best_week": 2
+                }
+            },
+            "11533": {
+                "Grant Lewis": {
+                    "points": 19.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 17.0,
+                    "best_week": 2
+                }
+            },
+            "11610": {
+                "Grant Lewis": {
+                    "points": 20.15,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11643": {
+                "Grant Lewis": {
+                    "points": 10.25,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12489": {
+                "Grant Lewis": {
+                    "points": 11.65,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 11.65,
+                    "best_week": 1
+                }
+            },
+            "12501": {
+                "Grant Lewis": {
+                    "points": 20.3,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 7.8,
+                    "best_week": 2
+                }
+            },
+            "12518": {
+                "Grant Lewis": {
+                    "points": 20.2,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 11.4,
+                    "best_week": 2
+                }
+            },
+            "12545": {
+                "Grant Lewis": {
+                    "points": 45.58,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "5012": {
+                "Grant Lewis": {
+                    "points": 14.8,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 7.9,
+                    "best_week": 2
+                }
+            },
+            "5844": {
+                "Grant Lewis": {
+                    "points": 16.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "5846": {
+                "Grant Lewis": {
+                    "points": 10.7,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 6.0,
+                    "best_week": 1
+                }
+            },
+            "6904": {
+                "Grant Lewis": {
+                    "points": 40.88,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 24.72,
+                    "best_week": 1
+                }
+            },
+            "7567": {
+                "Grant Lewis": {
+                    "points": 10.3,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 3.4,
+                    "best_week": 1
+                }
+            },
+            "8138": {
+                "Grant Lewis": {
+                    "points": 28.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 20.4,
+                    "best_week": 2
+                }
+            },
+            "8144": {
+                "Grant Lewis": {
+                    "points": 41.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 23.2,
+                    "best_week": 1
+                }
+            },
+            "8205": {
+                "Grant Lewis": {
+                    "points": 0.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9226": {
+                "Grant Lewis": {
+                    "points": 19.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 10.8,
+                    "best_week": 2
+                }
+            },
+            "9508": {
+                "Grant Lewis": {
+                    "points": 3.4,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9756": {
+                "Grant Lewis": {
+                    "points": 3.1,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "JAX": {
+                "Grant Lewis": {
+                    "points": 16.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 14.0,
+                    "best_week": 1
+                }
+            },
+            "11625": {
+                "mitch Reuter": {
+                    "points": 16.8,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "11628": {
+                "mitch Reuter": {
+                    "points": 3.8,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 3.8,
+                    "best_week": 1
+                }
+            },
+            "11792": {
+                "mitch Reuter": {
+                    "points": 17.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 10.0,
+                    "best_week": 2
+                }
+            },
+            "12514": {
+                "mitch Reuter": {
+                    "points": 17.6,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 8.8,
+                    "best_week": 1
+                }
+            },
+            "13413": {
+                "mitch Reuter": {
+                    "points": 0.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "3214": {
+                "mitch Reuter": {
+                    "points": 9.6,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 5.5,
+                    "best_week": 2
+                }
+            },
+            "4892": {
+                "mitch Reuter": {
+                    "points": 23.82,
+                    "weeks": 2,
+                    "starts": 1,
+                    "best": 12.18,
+                    "best_week": 2
+                }
+            },
+            "5849": {
+                "mitch Reuter": {
+                    "points": -0.38,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "5967": {
+                "mitch Reuter": {
+                    "points": 10.9,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "6794": {
+                "mitch Reuter": {
+                    "points": 34.2,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 27.2,
+                    "best_week": 1
+                }
+            },
+            "7543": {
+                "mitch Reuter": {
+                    "points": 17.4,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 11.3,
+                    "best_week": 1
+                }
+            },
+            "8131": {
+                "mitch Reuter": {
+                    "points": 29.6,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 23.8,
+                    "best_week": 1
+                }
+            },
+            "8136": {
+                "mitch Reuter": {
+                    "points": 17.95,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "8148": {
+                "mitch Reuter": {
+                    "points": 10.8,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 6.5,
+                    "best_week": 1
+                }
+            },
+            "8150": {
+                "mitch Reuter": {
+                    "points": 28.7,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 14.7,
+                    "best_week": 2
+                }
+            },
+            "8154": {
+                "mitch Reuter": {
+                    "points": 14.0,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "8917": {
+                "mitch Reuter": {
+                    "points": 14.5,
+                    "weeks": 2,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "MIN": {
+                "mitch Reuter": {
+                    "points": 21.0,
+                    "weeks": 2,
+                    "starts": 2,
+                    "best": 16.0,
+                    "best_week": 2
+                }
+            },
+            "13301": {
+                "Eric Kenney": {
+                    "points": 3.9,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "13347": {
+                "Eric Kenney": {
+                    "points": 0.7,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "TB": {
+                "Eric Kenney": {
+                    "points": 4.0,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 4.0,
+                    "best_week": 2
+                }
+            },
+            "4993": {
+                "Chris Nguyen": {
+                    "points": 0.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "6130": {
+                "Sam Dennis": {
+                    "points": 0.9,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "9502": {
+                "Sam Dennis": {
+                    "points": 0.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "CIN": {
+                "Sam Dennis": {
+                    "points": 7.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12048": {
+                "Logan Duffy": {
+                    "points": 2.0,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "SF": {
+                "Hugh Ritter": {
+                    "points": 9.0,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 9.0,
+                    "best_week": 2
+                }
+            },
+            "11370": {
+                "Brook Price": {
+                    "points": 3.1,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "5001": {
+                "Brook Price": {
+                    "points": 20.0,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 20.0,
+                    "best_week": 2
+                }
+            },
+            "12472": {
+                "Niall oliver": {
+                    "points": 4.1,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "12711": {
+                "Niall oliver": {
+                    "points": 5.0,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 5.0,
+                    "best_week": 2
+                }
+            },
+            "9228": {
+                "Niall oliver": {
+                    "points": 24.08,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 24.08,
+                    "best_week": 2
+                }
+            },
+            "KC": {
+                "Niall oliver": {
+                    "points": 1.0,
+                    "weeks": 1,
+                    "starts": 1,
+                    "best": 1.0,
+                    "best_week": 2
+                }
+            },
+            "9486": {
+                "Grant Lewis": {
+                    "points": 9.9,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "3634": {
+                "mitch Reuter": {
+                    "points": 9.5,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            },
+            "4454": {
+                "mitch Reuter": {
+                    "points": 2.1,
+                    "weeks": 1,
+                    "starts": 0,
+                    "best": 0.0,
+                    "best_week": null
+                }
+            }
+        },
+        "weekly_lineups": {
+            "1": {
+                "Eric Kenney": {
+                    "starters": [
+                        "4881",
+                        "6813",
+                        "7021",
+                        "9488",
+                        "7525",
+                        "8130",
+                        "8676",
+                        "4037",
+                        "11539",
+                        "LV"
+                    ],
+                    "points": {
+                        "11539": 7.0,
+                        "11575": 2.85,
+                        "13311": 3.0,
+                        "13424": 8.7,
+                        "1466": 8.6,
+                        "4037": 6.3,
+                        "4046": 21.66,
+                        "4199": 10.0,
+                        "4881": 24.96,
+                        "5872": 18.7,
+                        "6813": 23.6,
+                        "7021": 3.1,
+                        "7525": 6.8,
+                        "8121": 0.0,
+                        "8130": 20.0,
+                        "8676": 5.8,
+                        "9488": 22.2,
+                        "LV": 14.0
+                    }
+                },
+                "Chris Nguyen": {
+                    "starters": [
+                        "11566",
+                        "4866",
+                        "12481",
+                        "7569",
+                        "8146",
+                        "7553",
+                        "2216",
+                        "8167",
+                        "3451",
+                        "PHI"
+                    ],
+                    "points": {
+                        "10235": 0.0,
+                        "11566": 17.66,
+                        "11576": 4.0,
+                        "12481": 14.1,
+                        "13281": 0.0,
+                        "13294": 1.0,
+                        "2216": 13.9,
+                        "3451": 9.0,
+                        "4866": 8.5,
+                        "4943": 0.52,
+                        "7049": 0.0,
+                        "7553": 0.0,
+                        "7569": 17.7,
+                        "8146": 10.9,
+                        "8167": 29.7,
+                        "8210": 2.6,
+                        "9500": 4.7,
+                        "9753": 0.0,
+                        "PHI": 5.0
+                    }
+                },
+                "Malin Craig": {
+                    "starters": [
+                        "421",
+                        "8155",
+                        "12512",
+                        "7564",
+                        "2133",
+                        "10859",
+                        "12527",
+                        "5045",
+                        "4227",
+                        "BAL"
+                    ],
+                    "points": {
+                        "10859": 7.3,
+                        "11586": 5.4,
+                        "11624": 3.3,
+                        "12512": 6.0,
+                        "12527": 29.7,
+                        "12530": 1.6,
+                        "13274": 0.0,
+                        "13305": 4.1,
+                        "13345": 1.35,
+                        "2133": 4.1,
+                        "421": 4.1,
+                        "4227": 7.0,
+                        "5045": 2.1,
+                        "7564": 2.2,
+                        "8155": 18.8,
+                        "8183": 21.1,
+                        "9480": 9.3,
+                        "BAL": 8.0
+                    }
+                },
+                "Sam Dennis": {
+                    "starters": [
+                        "4984",
+                        "8151",
+                        "12490",
+                        "8137",
+                        "4983",
+                        "12506",
+                        "13279",
+                        "6819",
+                        "6650",
+                        "LAC"
+                    ],
+                    "points": {
+                        "10213": 3.7,
+                        "10219": 2.3,
+                        "11563": 5.44,
+                        "11783": 3.2,
+                        "11834": 16.4,
+                        "12490": 9.3,
+                        "12506": 3.1,
+                        "13279": 5.8,
+                        "13288": 0.0,
+                        "13330": 9.9,
+                        "13417": 0.0,
+                        "4983": 18.5,
+                        "4984": 35.66,
+                        "6650": 11.0,
+                        "6819": 7.3,
+                        "8134": 7.0,
+                        "8137": 4.3,
+                        "8151": 32.6,
+                        "LAC": 0.0
+                    }
+                },
+                "Roldan Navarrete": {
+                    "starters": [
+                        "11560",
+                        "13286",
+                        "7588",
+                        "7547",
+                        "11646",
+                        "12517",
+                        "13287",
+                        "9754",
+                        "1945",
+                        "SEA"
+                    ],
+                    "points": {
+                        "11199": 0.7,
+                        "11560": 37.26,
+                        "11646": 29.8,
+                        "12492": 6.2,
+                        "12517": 0.0,
+                        "12533": 12.1,
+                        "13286": 6.8,
+                        "13287": 12.0,
+                        "1479": 6.2,
+                        "1945": 8.0,
+                        "5995": 3.3,
+                        "6797": 13.26,
+                        "7547": 23.7,
+                        "7588": 21.7,
+                        "8132": 8.0,
+                        "8800": 0.0,
+                        "9225": 2.8,
+                        "9754": 2.7,
+                        "SEA": 14.0
+                    }
+                },
+                "Logan Duffy": {
+                    "starters": [
+                        "7523",
+                        "4034",
+                        "9224",
+                        "6801",
+                        "9997",
+                        "5022",
+                        "9487",
+                        "10222",
+                        "13545",
+                        "NE"
+                    ],
+                    "points": {
+                        "10222": 3.5,
+                        "11584": 16.8,
+                        "11618": 0.0,
+                        "11620": 6.2,
+                        "12474": 8.4,
+                        "13285": 3.5,
+                        "13545": 13.0,
+                        "4034": 11.3,
+                        "5022": 21.7,
+                        "5850": 0.0,
+                        "6801": 7.4,
+                        "7523": 26.1,
+                        "8408": 11.9,
+                        "9224": 16.3,
+                        "9487": 16.3,
+                        "9504": 2.6,
+                        "9997": 23.5,
+                        "NE": 7.0
+                    }
+                },
+                "Hugh Ritter": {
+                    "starters": [
+                        "6770",
+                        "12507",
+                        "6790",
+                        "9493",
+                        "6786",
+                        "9484",
+                        "6806",
+                        "11631",
+                        "8259",
+                        "LAR"
+                    ],
+                    "points": {
+                        "10236": 15.5,
+                        "11631": 5.5,
+                        "11655": -0.6,
+                        "12015": 1.0,
+                        "12493": 4.2,
+                        "12507": 8.3,
+                        "13414": 7.5,
+                        "4035": 0.0,
+                        "4039": 4.5,
+                        "6770": 14.16,
+                        "6786": 12.9,
+                        "6790": 31.9,
+                        "6804": 19.48,
+                        "6806": 3.6,
+                        "8259": 2.0,
+                        "9484": 8.0,
+                        "9493": 9.9,
+                        "LAR": 1.0
+                    }
+                },
+                "Brook Price": {
+                    "starters": [
+                        "11564",
+                        "3198",
+                        "11583",
+                        "11635",
+                        "5859",
+                        "11603",
+                        "7526",
+                        "2449",
+                        "5189",
+                        "PIT"
+                    ],
+                    "points": {
+                        "11564": 9.82,
+                        "11583": 6.7,
+                        "11603": 2.3,
+                        "11604": 0.0,
+                        "11635": 16.7,
+                        "12504": 2.6,
+                        "12529": 0.0,
+                        "13337": 7.8,
+                        "2449": 13.5,
+                        "3198": 34.8,
+                        "5189": 10.0,
+                        "5859": 4.1,
+                        "5947": 11.2,
+                        "7526": 0.7,
+                        "8126": 6.3,
+                        "8161": 16.7,
+                        "9511": 3.25,
+                        "PIT": 19.0
+                    }
+                },
+                "Niall oliver": {
+                    "starters": [
+                        "3163",
+                        "9509",
+                        "7611",
+                        "10229",
+                        "11632",
+                        "7002",
+                        "12519",
+                        "13298",
+                        "2747",
+                        "TEN"
+                    ],
+                    "points": {
+                        "10229": 8.9,
+                        "11581": 3.7,
+                        "11632": 9.9,
+                        "12469": 3.2,
+                        "12519": 7.0,
+                        "12534": 19.4,
+                        "13293": 1.6,
+                        "13296": 11.9,
+                        "13298": 6.8,
+                        "13317": 5.1,
+                        "2747": 7.0,
+                        "3163": 16.44,
+                        "4137": 0.0,
+                        "7002": 12.9,
+                        "7611": 12.0,
+                        "8142": 8.1,
+                        "9509": 27.3,
+                        "HOU": -5.0,
+                        "TEN": -1.0
+                    }
+                },
+                "Chris Evans": {
+                    "starters": [
+                        "3294",
+                        "9221",
+                        "5892",
+                        "8112",
+                        "12526",
+                        "4217",
+                        "8228",
+                        "5927",
+                        "11786",
+                        "DEN"
+                    ],
+                    "points": {
+                        "10232": 8.1,
+                        "11647": 0.0,
+                        "11786": 12.0,
+                        "12508": 26.6,
+                        "12526": 8.0,
+                        "13346": 12.9,
+                        "3294": 14.4,
+                        "4147": 6.5,
+                        "4217": 2.2,
+                        "5892": 27.4,
+                        "5927": 2.4,
+                        "7594": 22.2,
+                        "8110": 1.6,
+                        "8112": 4.5,
+                        "8180": 4.2,
+                        "8228": 7.8,
+                        "9221": 31.1,
+                        "DEN": 2.0
+                    }
+                },
+                "Grant Lewis": {
+                    "starters": [
+                        "6904",
+                        "8138",
+                        "9226",
+                        "8144",
+                        "5846",
+                        "12518",
+                        "7567",
+                        "12489",
+                        "11533",
+                        "JAX"
+                    ],
+                    "points": {
+                        "11533": 2.0,
+                        "11610": 9.3,
+                        "11643": 5.2,
+                        "12489": 11.65,
+                        "12501": 12.5,
+                        "12518": 8.8,
+                        "12545": 23.2,
+                        "5012": 6.9,
+                        "5844": 11.6,
+                        "5846": 6.0,
+                        "6904": 24.72,
+                        "7567": 3.4,
+                        "8138": 8.4,
+                        "8144": 23.2,
+                        "8205": 0.0,
+                        "9226": 8.6,
+                        "9508": 3.4,
+                        "9756": 0.0,
+                        "JAX": 14.0
+                    }
+                },
+                "mitch Reuter": {
+                    "starters": [
+                        "5849",
+                        "7543",
+                        "8150",
+                        "6794",
+                        "8148",
+                        "8131",
+                        "11628",
+                        "12514",
+                        "11792",
+                        "MIN"
+                    ],
+                    "points": {
+                        "11625": 7.5,
+                        "11628": 3.8,
+                        "11792": 7.0,
+                        "12514": 8.8,
+                        "13413": 0.0,
+                        "3214": 4.1,
+                        "4892": 11.64,
+                        "5849": -0.38,
+                        "5967": 3.9,
+                        "6794": 27.2,
+                        "7543": 11.3,
+                        "8131": 23.8,
+                        "8136": 6.65,
+                        "8148": 6.5,
+                        "8150": 14.0,
+                        "8154": 6.3,
+                        "8917": 7.4,
+                        "MIN": 5.0
+                    }
+                }
+            },
+            "2": {
+                "Eric Kenney": {
+                    "starters": [
+                        "4881",
+                        "6813",
+                        "4199",
+                        "9488",
+                        "7525",
+                        "8130",
+                        "4037",
+                        "5872",
+                        "11539",
+                        "TB"
+                    ],
+                    "points": {
+                        "11539": 7.0,
+                        "11575": 1.55,
+                        "13301": 3.9,
+                        "13347": 0.7,
+                        "1466": 20.6,
+                        "4037": 7.3,
+                        "4046": 28.98,
+                        "4199": 10.5,
+                        "4881": 14.8,
+                        "5872": 6.45,
+                        "6813": 27.2,
+                        "7021": 5.4,
+                        "7525": 22.7,
+                        "8121": 11.1,
+                        "8130": 14.1,
+                        "8676": 10.65,
+                        "9488": 38.0,
+                        "TB": 4.0
+                    }
+                },
+                "Chris Nguyen": {
+                    "starters": [
+                        "11566",
+                        "4866",
+                        "12481",
+                        "8167",
+                        "8146",
+                        "7553",
+                        "2216",
+                        "9500",
+                        "3451",
+                        "PHI"
+                    ],
+                    "points": {
+                        "11566": 14.74,
+                        "11576": 8.0,
+                        "12481": 7.5,
+                        "13281": 0.0,
+                        "13294": 1.4,
+                        "2216": 6.9,
+                        "3451": 6.0,
+                        "4866": 2.5,
+                        "4943": 0.0,
+                        "4993": 0.0,
+                        "7049": 0.0,
+                        "7553": 2.0,
+                        "7569": 0.0,
+                        "8146": 14.2,
+                        "8167": 12.1,
+                        "8210": 0.0,
+                        "9500": 10.7,
+                        "9753": 0.0,
+                        "PHI": 5.0
+                    }
+                },
+                "Malin Craig": {
+                    "starters": [
+                        "8183",
+                        "12527",
+                        "12512",
+                        "7564",
+                        "2133",
+                        "10859",
+                        "8155",
+                        "11586",
+                        "4227",
+                        "BAL"
+                    ],
+                    "points": {
+                        "10859": 14.2,
+                        "11586": 9.7,
+                        "11624": 11.0,
+                        "12512": 7.3,
+                        "12527": 8.3,
+                        "12530": 0.0,
+                        "13274": 5.5,
+                        "13305": 0.7,
+                        "13345": 13.3,
+                        "2133": 35.5,
+                        "421": 26.98,
+                        "4227": 16.0,
+                        "5045": 4.0,
+                        "7564": 23.0,
+                        "8155": 11.7,
+                        "8183": 28.48,
+                        "9480": 2.7,
+                        "BAL": 5.0
+                    }
+                },
+                "Sam Dennis": {
+                    "starters": [
+                        "4984",
+                        "8151",
+                        "12490",
+                        "8137",
+                        "4983",
+                        "12506",
+                        "13279",
+                        "11834",
+                        "6650",
+                        "LAC"
+                    ],
+                    "points": {
+                        "10213": 20.4,
+                        "10219": 1.3,
+                        "11563": 14.12,
+                        "11834": 8.9,
+                        "12490": 13.2,
+                        "12506": 7.9,
+                        "13279": 4.2,
+                        "13330": 2.7,
+                        "4983": -0.1,
+                        "4984": 40.82,
+                        "6130": 0.9,
+                        "6650": 16.0,
+                        "6819": 0.0,
+                        "8134": 5.85,
+                        "8137": 7.0,
+                        "8151": 20.8,
+                        "9502": 0.0,
+                        "CIN": 7.0,
+                        "LAC": 4.0
+                    }
+                },
+                "Roldan Navarrete": {
+                    "starters": [
+                        "6797",
+                        "13286",
+                        "7588",
+                        "7547",
+                        "11646",
+                        "12517",
+                        "13287",
+                        "12533",
+                        "1945",
+                        "SEA"
+                    ],
+                    "points": {
+                        "11199": 0.8,
+                        "11560": 7.72,
+                        "11646": 15.5,
+                        "12492": 1.6,
+                        "12517": 0.8,
+                        "12533": 5.3,
+                        "13286": 4.5,
+                        "13287": 6.0,
+                        "1479": 1.0,
+                        "1945": 4.0,
+                        "5995": 2.8,
+                        "6797": 7.88,
+                        "7547": 30.7,
+                        "7588": 6.5,
+                        "8132": 2.9,
+                        "8800": 0.0,
+                        "9225": 10.8,
+                        "9754": 1.9,
+                        "SEA": 10.0
+                    }
+                },
+                "Logan Duffy": {
+                    "starters": [
+                        "7523",
+                        "4034",
+                        "9224",
+                        "6801",
+                        "9487",
+                        "5022",
+                        "10222",
+                        "11584",
+                        "13545",
+                        "NE"
+                    ],
+                    "points": {
+                        "10222": 0.9,
+                        "11584": 11.0,
+                        "11618": 0.0,
+                        "11620": 5.8,
+                        "12048": 2.0,
+                        "12474": 8.0,
+                        "13285": 4.0,
+                        "13545": 8.0,
+                        "4034": 20.6,
+                        "5022": 0.9,
+                        "5850": 0.0,
+                        "6801": 12.0,
+                        "7523": 6.16,
+                        "8408": 0.0,
+                        "9224": 9.7,
+                        "9487": 14.5,
+                        "9504": 5.2,
+                        "9997": 0.0,
+                        "NE": 20.0
+                    }
+                },
+                "Hugh Ritter": {
+                    "starters": [
+                        "6804",
+                        "12507",
+                        "6790",
+                        "9493",
+                        "6786",
+                        "9484",
+                        "6806",
+                        "10236",
+                        "8259",
+                        "SF"
+                    ],
+                    "points": {
+                        "10236": 19.0,
+                        "11631": 5.5,
+                        "11655": 2.6,
+                        "12493": 8.8,
+                        "12507": 16.5,
+                        "13414": 2.5,
+                        "4035": 4.7,
+                        "4039": 3.0,
+                        "6770": 16.18,
+                        "6786": 31.3,
+                        "6790": 10.4,
+                        "6804": 13.8,
+                        "6806": 3.6,
+                        "8259": 1.0,
+                        "9484": 2.5,
+                        "9493": 0.0,
+                        "LAR": 11.0,
+                        "SF": 9.0
+                    }
+                },
+                "Brook Price": {
+                    "starters": [
+                        "11564",
+                        "3198",
+                        "12529",
+                        "11635",
+                        "7526",
+                        "5001",
+                        "5947",
+                        "2449",
+                        "5189",
+                        "PIT"
+                    ],
+                    "points": {
+                        "11370": 3.1,
+                        "11564": 8.02,
+                        "11583": 1.6,
+                        "11604": 0.0,
+                        "11635": 5.0,
+                        "12504": 3.2,
+                        "12529": 13.6,
+                        "13337": 6.2,
+                        "2449": 19.2,
+                        "3198": 16.2,
+                        "5001": 20.0,
+                        "5189": 5.0,
+                        "5859": 0.0,
+                        "5947": 3.3,
+                        "7526": 17.8,
+                        "8126": 1.4,
+                        "8161": 12.48,
+                        "9511": 6.75,
+                        "PIT": 8.0
+                    }
+                },
+                "Niall oliver": {
+                    "starters": [
+                        "9228",
+                        "9509",
+                        "7611",
+                        "10229",
+                        "11632",
+                        "7002",
+                        "12519",
+                        "13296",
+                        "12711",
+                        "KC"
+                    ],
+                    "points": {
+                        "10229": 10.3,
+                        "11581": 7.6,
+                        "11632": 0.6,
+                        "12472": 4.1,
+                        "12519": 4.7,
+                        "12534": 6.8,
+                        "12711": 5.0,
+                        "13296": 2.9,
+                        "13298": 5.2,
+                        "13317": 3.7,
+                        "3163": 29.78,
+                        "4137": 0.0,
+                        "7002": 8.6,
+                        "7611": 3.1,
+                        "8142": 1.6,
+                        "9228": 24.08,
+                        "9509": 9.6,
+                        "HOU": 8.0,
+                        "KC": 1.0
+                    }
+                },
+                "Chris Evans": {
+                    "starters": [
+                        "3294",
+                        "9221",
+                        "5892",
+                        "8112",
+                        "12526",
+                        "4217",
+                        "7594",
+                        "5927",
+                        "11786",
+                        "DEN"
+                    ],
+                    "points": {
+                        "10232": 2.8,
+                        "11647": 1.3,
+                        "11786": 7.0,
+                        "12508": 0.8,
+                        "12526": 12.6,
+                        "13346": 18.0,
+                        "3294": 29.76,
+                        "4147": 2.7,
+                        "4217": 16.0,
+                        "5892": 3.4,
+                        "5927": 6.0,
+                        "7594": 13.4,
+                        "8110": 18.3,
+                        "8112": 6.9,
+                        "8180": 1.4,
+                        "8228": 8.7,
+                        "9221": 20.3,
+                        "DEN": 9.0
+                    }
+                },
+                "Grant Lewis": {
+                    "starters": [
+                        "6904",
+                        "8138",
+                        "9226",
+                        "8144",
+                        "5846",
+                        "12518",
+                        "12501",
+                        "5012",
+                        "11533",
+                        "JAX"
+                    ],
+                    "points": {
+                        "11533": 17.0,
+                        "11610": 10.85,
+                        "11643": 5.05,
+                        "12489": 0.0,
+                        "12501": 7.8,
+                        "12518": 11.4,
+                        "12545": 22.38,
+                        "5012": 7.9,
+                        "5844": 4.4,
+                        "5846": 4.7,
+                        "6904": 16.16,
+                        "7567": 6.9,
+                        "8138": 20.4,
+                        "8144": 18.6,
+                        "8205": 0.0,
+                        "9226": 10.8,
+                        "9486": 9.9,
+                        "9756": 3.1,
+                        "JAX": 2.0
+                    }
+                },
+                "mitch Reuter": {
+                    "starters": [
+                        "4892",
+                        "7543",
+                        "8150",
+                        "6794",
+                        "8148",
+                        "8131",
+                        "3214",
+                        "12514",
+                        "11792",
+                        "MIN"
+                    ],
+                    "points": {
+                        "11625": 9.3,
+                        "11628": 0.0,
+                        "11792": 10.0,
+                        "12514": 8.8,
+                        "3214": 5.5,
+                        "3634": 9.5,
+                        "4454": 2.1,
+                        "4892": 12.18,
+                        "5967": 7.0,
+                        "6794": 7.0,
+                        "7543": 6.1,
+                        "8131": 5.8,
+                        "8136": 11.3,
+                        "8148": 4.3,
+                        "8150": 14.7,
+                        "8154": 7.7,
+                        "8917": 7.1,
+                        "MIN": 16.0
+                    }
+                }
+            }
+        }
     }
 }

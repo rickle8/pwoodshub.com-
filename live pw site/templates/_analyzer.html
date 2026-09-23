@@ -110,6 +110,15 @@ function bestLineup(players) {
 
 function teamOf(side) { return $('azTeam' + side).value; }
 
+// Player names and positions come from Sleeper, not from our users, so this
+// isn't exploitable today — but they are still third-party strings being built
+// into markup, and every other template here escapes before interpolating.
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s === null || s === undefined ? '' : s;
+    return d.innerHTML;
+}
+
 function render(side) {
     const owner = teamOf(side);
     const q = $('azFilter' + side).value.trim().toLowerCase();
@@ -120,8 +129,8 @@ function render(side) {
         .forEach(p => {
             const row = document.createElement('div');
             row.className = 'az-pick-row' + (picked[side].has(p.id) ? ' picked' : '');
-            row.innerHTML = `<span class="badge pos-${p.position}">${p.position}</span>` +
-                            `<span class="az-pick-name">${p.name}</span>` +
+            row.innerHTML = `<span class="badge pos-${esc(p.position)}">${esc(p.position)}</span>` +
+                            `<span class="az-pick-name">${esc(p.name)}</span>` +
                             `<span class="az-pick-val">${p.points ? p.points.toFixed(0) : '—'} pts` +
                             `${p.value ? ' · ' + p.value.toLocaleString() : ''}</span>`;
             row.onclick = () => {
