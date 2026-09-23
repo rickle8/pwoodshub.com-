@@ -26,6 +26,7 @@ import trades
 import trade_machine
 import keepers
 import draft_review
+import push
 
 app = Flask(__name__)
 
@@ -178,7 +179,7 @@ def get_prefs():
     uid = request.cookies.get('pw-uid', '')
     with _file_lock:
         prefs = load_prefs()
-    defaults = {'theme': 'light', 'bg_color': '#add8e6', 'owner': ''}
+    defaults = {'theme': 'light', 'bg_color': '#add8e6'}
     return jsonify({**defaults, **prefs.get(uid, {})})
 
 
@@ -194,11 +195,6 @@ def set_prefs():
         for key in ('theme', 'bg_color'):
             if key in data:
                 entry[key] = data[key]
-        # Only a real league member can be claimed as an identity. Anything else
-        # would end up compared against owner names all over the templates, so a
-        # typo or a stale name would silently highlight nothing forever.
-        if 'owner' in data:
-            entry['owner'] = data['owner'] if data['owner'] in all_owners() else ''
         save_prefs(prefs)
     return jsonify({'ok': True})
 
@@ -1870,38 +1866,23 @@ def player_view(player_id):
                            market=market, scoring="Half-PPR", error=error)
 
 
-def all_owners():
-    """Every owner who has ever had a team, current and retired."""
-    return sorted({t["owner"] for y in league_data.values()
-                   for t in y.get("teams", []) if t.get("owner")})
-
-
 @app.context_processor
 def inject_nav_context():
-    """Nav season, plus whoever this visitor has told us they are.
-
-    Resolved server-side from the pw-uid cookie rather than fetched by the page,
-    so a highlighted row is highlighted in the first paint. Doing it in JS meant
-    every table flashing un-marked before the preference arrived.
-    """
-    ctx = {"current_season": "", "my_owner": "", "all_owners": []}
+    """The season the nav menu links to, and when the last note was posted."""
+    ctx = {"current_season": "", "latest_note_ts": _latest_note_ts()}
     try:
         ctx["current_season"] = max(league_data.keys(), key=int)
     except ValueError:
         pass
-
-    # The picker is on every page, so the owner list has to be here too.
-    ctx["all_owners"] = all_owners()
-
-    uid = request.cookies.get("pw-uid", "")
-    if uid:
-        with _file_lock:
-            saved = load_prefs().get(uid, {})
-        owner = saved.get("owner") or ""
-        # Guard the stored value as well as the incoming one: an owner can be
-        # renamed in league_history.json long after someone picked them.
-        ctx["my_owner"] = owner if owner in ctx["all_owners"] else ""
     return ctx
+
+
+def _latest_note_ts():
+    """Timestamp of the newest league note, for the nav's "new" dot. Each
+    device remembers the newest one it has seen, so nothing is stored here."""
+    notes = _load_json(NOTES_FILE, {})
+    stamps = [n.get("timestamp", "") for year in notes.values() for n in year]
+    return max(stamps, default="")
 
 
 @app.route('/recaps')
@@ -2247,11 +2228,7 @@ def trade_finder_view():
     season = _latest_season()
     result = _trade_finder_deals(season)
     owners = sorted(t["owner"] for t in league_data[season].get("teams", []))
-    # No choice made yet: start on the visitor's own team if they've told us
-    # who they are. "all" is the league-wide list.
-    owner = request.args.get("owner")
-    if owner is None:
-        owner = inject_nav_context().get("my_owner", "")
+    owner = request.args.get("owner", "")
     if owner not in owners:
         owner = ""
     deals = result["deals"]
@@ -2362,6 +2339,34 @@ def service_worker():
 @app.route('/offline')
 def offline_page():
     return render_template("offline.html")
+
+
+@app.route('/api/push/key')
+def push_key():
+    if not push.AVAILABLE:
+        return jsonify({"available": False})
+    return jsonify({"available": True, "key": push.public_key()})
+
+
+@app.route('/api/push/subscribe', methods=['POST'])
+def push_subscribe():
+    if not push.AVAILABLE:
+        return jsonify({"error": "Alerts aren't available right now."}), 503
+    sub = request.get_json(silent=True) or {}
+    if not push.subscribe(sub):
+        return jsonify({"error": "That subscription didn't look right."}), 400
+    push.notify_one(sub, "🔔 Alerts are on",
+                    "You'll get a notification whenever a new league note is posted.",
+                    "/notes")
+    return jsonify({"ok": True})
+
+
+@app.route('/api/push/unsubscribe', methods=['POST'])
+def push_unsubscribe():
+    endpoint = (request.get_json(silent=True) or {}).get("endpoint")
+    if isinstance(endpoint, str):
+        push.unsubscribe(endpoint)
+    return jsonify({"ok": True})
 
 
 @app.route('/trends')
@@ -2648,13 +2653,18 @@ def add_note():
         if not verify_pin(username, pin):
             return jsonify({"error": "Wrong PIN for that username."}), 403
         notes = _load_json(NOTES_FILE, {})
+        note_id = uuid.uuid4().hex
         notes.setdefault(year, []).insert(0, {
-            "id":        uuid.uuid4().hex,
+            "id":        note_id,
             "username":  username,
             "text":      text,
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         })
         _save_json_atomic(NOTES_FILE, notes)
+    preview = " ".join(text.split())
+    push.notify_all(f"📝 New league note from {username}",
+                    preview[:140] + ("…" if len(preview) > 140 else ""),
+                    f"/notes#note-{note_id}")
     return jsonify({"ok": True})
 
 

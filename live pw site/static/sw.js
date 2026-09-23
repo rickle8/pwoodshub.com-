@@ -7,7 +7,7 @@
  *
  * Bump VERSION whenever this file or the offline page changes.
  */
-const VERSION = 'pw-v1';
+const VERSION = 'pw-v2';
 const OFFLINE_URL = '/offline';
 const PRECACHE = [OFFLINE_URL, '/static/icons/icon-192.png'];
 const MAX_PAGES = 40;
@@ -69,4 +69,28 @@ self.addEventListener('fetch', event => {
         })());
     }
     // Everything else (API calls, live scores) goes straight to the network.
+});
+
+// ── Alerts ──────────────────────────────────────────────────────────────────
+self.addEventListener('push', event => {
+    let data = {};
+    try { data = event.data ? event.data.json() : {}; } catch (e) {}
+    event.waitUntil(self.registration.showNotification(data.title || 'PW League', {
+        body: data.body || '',
+        icon: '/static/icons/icon-192.png',
+        badge: '/static/icons/icon-192.png',
+        data: { url: data.url || '/' },
+    }));
+});
+
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    const url = (event.notification.data && event.notification.data.url) || '/';
+    event.waitUntil((async () => {
+        const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const w of wins) {
+            if ('focus' in w) { await w.navigate(url); return w.focus(); }
+        }
+        return self.clients.openWindow(url);
+    })());
 });

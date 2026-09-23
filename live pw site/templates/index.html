@@ -17,9 +17,6 @@
 .season-owner { font-weight: 600; }
 .season-team  { font-size: .85em; color: var(--bs-secondary-color);
                 margin-left: auto; text-align: right; }
-.season-mine  { box-shadow: inset 3px 0 0 0 #0d6efd;
-                background: rgba(13,110,253,.07); }
-[data-bs-theme="dark"] .season-mine { background: rgba(13,110,253,.18); }
 
 @media (max-width: 575.98px) {
     /* Team names are long; stack them under the owner rather than squeezing. */
@@ -66,7 +63,7 @@
         {% if year != live_year %}
         {% set champ = champions.get(year, {}) %}
         <a href="/year/{{ year }}"
-           class="season-row {% if my_owner and champ.get('owner') == my_owner %}season-mine{% endif %}">
+           class="season-row">
             <span class="season-year">{{ year }}</span>
             <span class="season-owner">{{ champ.get('owner', '—') }}</span>
             <span class="season-team">{{ champ.get('team', '—') }}</span>

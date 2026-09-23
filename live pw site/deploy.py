@@ -34,11 +34,13 @@ SRC = os.path.dirname(os.path.abspath(__file__))
 FILES = [
     "consensus.py", "projections.py", "player_stats.py", "recaps.py",
     "lineups.py", "trades.py", "trade_machine.py", "keepers.py", "draft_review.py",
+    "push.py", "requirements.txt",
     "pwoods_site.py", "sleeper_common.py", "scraper.py", "update_sleeper.py",
     "weekly_recap.py", "live_loop.py",
 ] + sorted(f"templates/{f}" for f in os.listdir(os.path.join(SRC, "templates"))
            if f.endswith(".html")) + ["static/sw.js"] + sorted(
     f"static/icons/{f}" for f in os.listdir(os.path.join(SRC, "static", "icons")))
+# vapid_private.pem and push_subscriptions.json (push.py) are server-only too.
 # league_history.json is deliberately absent too: the always-on task rewrites
 # it on the server every few minutes, so any local copy is already stale and
 # uploading it would roll the live standings back.
@@ -134,6 +136,7 @@ def main():
               ("/draft_review", "Draft Grades", True),
               ("/manifest.webmanifest", "PW League", True),
               ("/sw.js", "pw-v", True),
+              ("/api/push/key", '"available":true', True),
               ("/", 'href="/history"', False)]
     time.sleep(5)
     bad = 0
