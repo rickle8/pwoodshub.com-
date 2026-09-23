@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Trades{% endblock %}
+
+{% block extra_css %}
+.trade-card { border: 1px solid var(--bs-border-color-translucent, rgba(0,0,0,.1));
+              border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.trade-side { padding: 8px 10px; border-radius: 8px; background: var(--bs-secondary-bg); }
+.trade-side.won { background: #19875422; }
+.trade-side.lost { background: #dc354518; }
+.trade-got { font-size: .9em; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.verdict { font-weight: 700; }
+{% endblock %}
+
+{% block content %}
+<h1 class="mt-2 mb-1">Trade History</h1>
+<p class="text-muted small mb-3">
+    Looking to make one? Try the <a href="/analyzer">Trade Analyzer</a>.
+</p>
+
+<!-- ── Graded history ───────────────────────────────────────────────────── -->
+<h2 class="h5 mt-4 mb-1">📜 How Past Trades Worked Out</h2>
+{% if not graded %}
+<p class="text-muted small">
+    No graded trades yet. This needs Sleeper's week-by-week rosters, so it covers
+    2025 onward — and only trades made during a season that has been played.
+</p>
+{% else %}
+<p class="text-muted small mb-2">
+    Every trade scored on what the players actually did <em>afterwards</em>.
+    <strong>Started</strong> is points they put in the new owner's starting lineup —
+    banked value. <strong>Rostered</strong> counts bench weeks too, which judges the
+    player rather than the lineup calls. Margins under 10 points are called even.
+</p>
+
+{% if years | length > 1 %}
+<div class="mb-3">
+    {% for y in years %}
+    <a href="{{ url_for('trades_view', year=y) }}"
+       class="btn btn-sm {{ 'btn-primary' if y == year else 'btn-outline-secondary' }}">{{ y }}</a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% for t in graded %}
+<div class="trade-card">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-muted small">Week {{ t.week }}</span>
+        <span class="verdict">
+            {% if t.even %}<span class="text-muted">Basically even</span>
+            {% elif t.winner %}
+                <a href="{{ url_for('owner_profile', owner_name=t.winner) }}">{{ t.winner }}</a>
+                won it by {{ t.margin }}
+            {% else %}<span class="text-muted">Multi-team</span>{% endif %}
+        </span>
+    </div>
+    <div class="row g-2">
+        {% for s in t.sides %}
+        <div class="col-md-6">
+            <div class="trade-side {% if not t.even and t.winner == s.owner %}won{% elif not t.even and t.winner %}lost{% endif %}">
+                <div class="fw-semibold mb-1">
+                    <a href="{{ url_for('owner_profile', owner_name=s.owner) }}">{{ s.owner }}</a>
+                    received
+                </div>
+                {% for g in s.got %}
+                <div class="trade-got d-flex justify-content-between">
+                    <span>
+                        {% if g.player_id %}
+                        <a href="{{ url_for('player_view', player_id=g.player_id) }}">{{ g.name }}</a>
+                        {% else %}{{ g.name }}{% endif %}
+                    </span>
+                    <span class="num">
+                        {% if g.started is not none %}
+                        <strong>{{ g.started }}</strong>
+                        <span class="text-muted small">/ {{ g.rostered }}</span>
+                        {% else %}<span class="text-muted small">no data</span>{% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+                <div class="d-flex justify-content-between border-top mt-1 pt-1 small fw-bold">
+                    <span>Total</span>
+                    <span class="num">{{ s.started }} <span class="text-muted fw-normal">/ {{ s.rostered }}</span></span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+{% if records %}
+<h2 class="h5 mt-4 mb-2">Trade Records — {{ year }}</h2>
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle">
+    <thead><tr><th>Owner</th><th class="num">Trades</th><th class="num">W–L</th>
+               <th class="num">Net Points</th></tr></thead>
+    <tbody>
+    {% for o, r in records %}
+        <tr>
+            <td><a href="{{ url_for('owner_profile', owner_name=o) }}">{{ o }}</a></td>
+            <td class="num">{{ r.trades }}</td>
+            <td class="num">{{ r.won }}–{{ r.lost }}</td>
+            <td class="num {{ 'lucky' if r.net > 0 else 'unlucky' if r.net < 0 }}">
+                {{ '+' if r.net > 0 }}{{ r.net }}
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+{% endif %}
+{% endif %}
+
+<a href="/" class="btn btn-secondary mt-3">Back to Home</a>
+
+
+{% endblock %}

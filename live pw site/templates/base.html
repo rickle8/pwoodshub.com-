@@ -11,6 +11,10 @@
         [data-bs-theme="dark"]          { --site-bg: #0d1b2a; --stat-card: rgba(20,35,55,0.95); }
 
         body { background-color: var(--site-bg) !important; transition: background-color .2s; }
+        /* Wide content scrolls inside its own .table-responsive; the page itself
+           never should. A sideways-scrolling document also slides the body out
+           from under the viewport, showing bare canvas beside the background. */
+        html, body { max-width: 100%; overflow-x: hidden; }
 
         /* PW circle brand in navbar */
         .pw-brand {
@@ -59,15 +63,95 @@
         .player-row:last-child { border-bottom: none; }
         .player-row .badge { min-width: 42px; font-size: .72em; }
 
+        /* ── Your own row, wherever you appear ───────────────────────────
+           Set by picking yourself in the settings menu. A left border rather
+           than a fill, so it survives table-striped and both themes without
+           fighting the .table-warning / .table-danger record highlights. */
+        .me-row > td:first-child,
+        .me-row > th:first-child { box-shadow: inset 3px 0 0 0 #0d6efd; }
+        .me-row > td { background-color: rgba(13,110,253,.07); }
+        [data-bs-theme="dark"] .me-row > td { background-color: rgba(13,110,253,.18); }
+        .me-tag { font-size: .7em; font-weight: 700; text-transform: uppercase;
+                  letter-spacing: .04em; color: #0d6efd; margin-left: 4px; }
+
+        /* ── Tables ──────────────────────────────────────────────────────
+           Owner names were wrapping to two lines on a phone, doubling every
+           row's height and turning a 15-row table into a scroll marathon. */
+        .table td, .table th { vertical-align: middle; }
+        .table a { text-decoration: none; }
+        .table a:hover { text-decoration: underline; }
+        .nowrap, td.nowrap, th.nowrap,
+        .table-nowrap td, .table-nowrap th { white-space: nowrap; }
+
+        /* A horizontally scrollable table gives no hint that it scrolls, so
+           columns past the right edge simply look missing on a phone. */
+        .table-responsive { position: relative; }
+        .scroll-hint { display: none; font-size: .75em; color: var(--bs-secondary-color);
+                       margin: -6px 0 6px; }
+        @media (max-width: 767.98px) {
+            .scroll-hint { display: block; }
+            .table-sm td, .table-sm th { padding: .3rem .4rem; }
+            .table td, .table th { font-size: .92em; }
+        }
+
+        /* ── Navbar ──────────────────────────────────────────────────────
+           "Head-to-Head" was wrapping mid-word and shoving the bar to two
+           rows at tablet widths. */
+        .site-nav .navbar-nav .nav-link { white-space: nowrap; }
+        .settings-menu { min-width: 250px; padding: 12px; }
+        .settings-menu label { font-size: .8em; font-weight: 600;
+                               color: var(--bs-secondary-color); margin-bottom: 2px; }
+
         {% block extra_css %}{% endblock %}
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg site-nav mb-3">
+    <!-- expand-xl, not -lg: nine links plus the brand and the settings controls
+         need more than the ~992px -lg unlocks, and overflowing the bar made the
+         whole page scroll sideways. Below 1200px it collapses to the hamburger. -->
+    <nav class="navbar navbar-expand-xl site-nav mb-3">
         <div class="container-fluid">
             <a href="/" class="pw-brand me-2">PW</a>
             <span class="navbar-brand fw-bold ms-1 d-none d-sm-inline">Peyton Woods League</span>
-            <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#siteNav">
+            <!-- Theme and settings live OUTSIDE the collapse so they stay reachable
+                 at every width. Inside it they vanished behind the hamburger on
+                 phones and on any window under 1200px — a settings menu nobody
+                 can find is the same as no settings menu. -->
+            <div class="d-flex align-items-center gap-2 ms-auto me-2">
+                <button class="btn btn-sm btn-outline-light" id="darkToggle"
+                        title="Toggle dark/light mode">🌙</button>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                            aria-expanded="false" title="Settings">⚙️</button>
+                    <div class="dropdown-menu dropdown-menu-end settings-menu">
+                        <label for="ownerPicker" class="d-block">I'm…</label>
+                        <select class="form-select form-select-sm mb-1" id="ownerPicker">
+                            <option value="">Just looking</option>
+                            {% for o in all_owners %}
+                            <option value="{{ o }}" {{ 'selected' if o == my_owner }}>{{ o }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text mb-3" style="font-size:.75em">
+                            Highlights your row in every table and adds a shortcut to your
+                            team. Stays on this device — nobody else sees it.
+                        </div>
+
+                        <label for="bgColorPicker" class="d-block">Background</label>
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <input type="color" id="bgColorPicker" title="Background color"
+                                   style="width:34px;height:30px;padding:2px;border-radius:4px;
+                                          border:1px solid var(--bs-border-color);cursor:pointer;background:none;">
+                            <div class="d-flex gap-1" id="bgSwatches"></div>
+                        </div>
+
+                        <button class="btn btn-sm btn-outline-secondary w-100" id="resetPrefs">
+                            ↺ Reset to defaults
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="siteNav">
@@ -95,13 +179,14 @@
                     <li class="nav-item"><a class="nav-link" href="/draft">Draft</a></li>
                     <li class="nav-item"><a class="nav-link" href="/notes">Notes</a></li>
                     <li class="nav-item"><a class="nav-link" href="/chat">Chat</a></li>
+                    {% if my_owner %}
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="{{ url_for('owner_profile', owner_name=my_owner) }}">
+                            ⭐ My Team
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
-                <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
-                    <button class="btn btn-sm btn-outline-light" id="darkToggle" title="Toggle dark/light mode">🌙</button>
-                    <input type="color" id="bgColorPicker" title="Background color"
-                           style="width:32px;height:32px;padding:2px;border-radius:4px;border:1px solid rgba(255,255,255,0.4);cursor:pointer;background:none;">
-                    <button class="btn btn-sm btn-outline-light" id="resetPrefs" title="Reset to default">↺</button>
-                </div>
             </div>
         </div>
     </nav>
@@ -148,9 +233,18 @@
             .then(applyPrefs)
             .catch(() => {});
 
+        // Each theme has a default ground. Carrying the light default into dark
+        // mode left dark cards floating on pale blue with near-invisible
+        // headings, which is what the toggle used to do.
+        const DEFAULT_BG = { light: '#add8e6', dark: '#0d1b2a' };
+
         btn.addEventListener('click', () => {
-            const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-            const bg   = colorPicker.value;
+            const prev = html.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
+            const next = prev === 'dark' ? 'light' : 'dark';
+            // Only move the background if it's still the outgoing theme's
+            // default — a colour someone actually chose is theirs to keep.
+            const bg = colorPicker.value.toLowerCase() === DEFAULT_BG[prev]
+                       ? DEFAULT_BG[next] : colorPicker.value;
             applyPrefs({ theme: next, bg_color: bg });
             savePrefs({ theme: next, bg_color: bg });
         });
@@ -168,6 +262,37 @@
             const defaults = { theme: 'light', bg_color: '#add8e6' };
             applyPrefs(defaults);
             savePrefs(defaults);
+        });
+
+        // A colour picker alone makes people hunt for something readable, so
+        // offer the handful that actually work behind the cards in both themes.
+        const SWATCHES = ['#add8e6', '#e8e2d5', '#dfe7d5', '#f0dede', '#0d1b2a', '#1b1b1f'];
+        const swatchBox = document.getElementById('bgSwatches');
+        SWATCHES.forEach(c => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.title = c;
+            b.style.cssText = 'width:20px;height:20px;border-radius:4px;cursor:pointer;' +
+                              'border:1px solid var(--bs-border-color);background:' + c;
+            b.addEventListener('click', () => {
+                // Dark swatches are unreadable under the light palette and vice
+                // versa, so pick the theme that matches rather than stranding
+                // someone on black text over a midnight background.
+                const dark = ['#0d1b2a', '#1b1b1f'].includes(c);
+                const next = { theme: dark ? 'dark' : 'light', bg_color: c };
+                applyPrefs(next);
+                savePrefs(next);
+            });
+            swatchBox.appendChild(b);
+        });
+
+        // Identity. Saved server-side against the pw-uid cookie, so the next
+        // page render can mark the rows before the browser paints them —
+        // hence the reload rather than a client-side re-highlight.
+        const ownerPicker = document.getElementById('ownerPicker');
+        ownerPicker.addEventListener('change', async () => {
+            await savePrefs({ owner: ownerPicker.value });
+            window.location.reload();
         });
     </script>
     {% block extra_js %}{% endblock %}

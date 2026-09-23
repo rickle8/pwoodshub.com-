@@ -29,6 +29,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             All-time win % across all regular seasons. 👑 = championship. &nbsp;
             <strong>Net Luck</strong>: lucky wins (bottom-half scorer who won) minus unlucky losses (top-half scorer who lost).
         </p>
+        <p class="scroll-hint">← swipe the table sideways for the rest of the columns</p>
         <div class="table-responsive">
         <table class="table table-striped">
             <thead>
@@ -46,9 +47,9 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             <tbody>
                 {% for owner in active_rankings %}
                 {% set lk = luck_index.get(owner.owner, {'lucky_wins': 0, 'unlucky_losses': 0, 'net_luck': 0}) %}
-                <tr>
+                <tr {% if owner.owner == my_owner %}class="me-row"{% endif %}>
                     <td>{{ owner.rank }}</td>
-                    <td>
+                    <td class="nowrap">
                         <a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a>
                         {% if owner.championships > 0 %}
                             <span class="crown-icon" title="{{ owner.championships }} Championships">{{ "👑" * owner.championships }}</span>
@@ -78,6 +79,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             <strong>Byes</strong> = seasons earned a first-round bye. 5th/6th place consolation games excluded.
         </p>
         {% if playoff_stats %}
+        <p class="scroll-hint">← swipe the table sideways for the rest of the columns</p>
         <div class="table-responsive">
         <table class="table table-striped" id="playoff-table">
             <thead>
@@ -93,8 +95,8 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             </thead>
             <tbody>
                 {% for p in playoff_stats %}
-                <tr>
-                    <td>
+                <tr {% if p.owner == my_owner %}class="me-row"{% endif %}>
+                    <td class="nowrap">
                         <a href="{{ url_for('owner_profile', owner_name=p.owner) }}">{{ p.owner }}</a>
                         {% if p.championships > 0 %}
                             <span class="crown-icon" title="{{ p.championships }} Championships">{{ "👑" * p.championships }}</span>
@@ -118,7 +120,15 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
 
     <!-- POINTS SCORED -->
     <div class="tab-pane fade" id="tab-points">
-        <p class="text-muted small">Sorted by total points. Click any column to re-sort. <em>Pts/Season</em> levels the field for owners who joined later.</p>
+        <p class="text-muted small">
+            Sorted by total points. Click any column to re-sort.
+            <em>Pts/Season</em> levels the field for owners who joined later, so it counts
+            <strong>completed seasons only</strong> — a season still being played is left out
+            until it finishes rather than counted as a whole one.
+            <em>Total Points</em> is the career figure and does include the current season,
+            so the two columns won't divide evenly while a season is live.
+        </p>
+        <p class="scroll-hint">← swipe the table sideways for the rest of the columns</p>
         <div class="table-responsive">
         <table class="table table-striped" id="points-table">
             <thead>
@@ -132,12 +142,12 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             </thead>
             <tbody>
                 {% for owner in points_scored %}
-                <tr>
+                <tr {% if owner.owner == my_owner %}class="me-row"{% endif %}>
                     <td>{{ owner.rank }}</td>
-                    <td><a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a></td>
+                    <td class="nowrap"><a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a></td>
                     <td>{{ owner.seasons }}</td>
                     <td>{{ owner.points_for }}</td>
-                    <td><strong>{{ owner.pts_per_season }}</strong></td>
+                    <td><strong>{{ owner.pts_per_season if owner.pts_per_season is not none else '—' }}</strong></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -147,6 +157,7 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
 
     <!-- RETIRED OWNERS -->
     <div class="tab-pane fade" id="tab-retired">
+        <p class="scroll-hint">← swipe the table sideways for the rest of the columns</p>
         <div class="table-responsive">
         <table class="table table-striped">
             <thead>
@@ -154,9 +165,9 @@ th.sortable:not(.asc):not(.desc) .sort-icon::after { content: ' ⇅'; }
             </thead>
             <tbody>
                 {% for owner in retired_rankings %}
-                <tr>
+                <tr {% if owner.owner == my_owner %}class="me-row"{% endif %}>
                     <td>{{ owner.rank }}</td>
-                    <td>
+                    <td class="nowrap">
                         <a href="{{ url_for('owner_profile', owner_name=owner.owner) }}">{{ owner.owner }}</a>
                         {% if owner.championships > 0 %}
                             <span class="crown-icon" title="{{ owner.championships }} Championships">{{ "👑" * owner.championships }}</span>

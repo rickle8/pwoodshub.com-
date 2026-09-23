@@ -34,6 +34,7 @@ import re
 import urllib.request
 
 import time
+from threading import Lock
 
 from sleeper_common import safe_get
 
@@ -61,19 +62,37 @@ _ALL_POSITIONS = ("QB", "RB", "WR", "TE", "K", "DEF")
 _cache = {}
 _TTL = 6 * 3600
 
+_locks: dict = {}
+_locks_guard = Lock()
+
+
+def _lock_for(key):
+    with _locks_guard:
+        return _locks.setdefault(key, Lock())
+
 
 def _cached(key, fetch_fn, ttl=_TTL):
     hit = _cache.get(key)
     if hit and time.time() - hit["ts"] < ttl:
         return hit["data"]
-    try:
-        data = fetch_fn()
-    except Exception:
-        if hit:
+    # One fetch per key. A miss here means a 1.8MB scrape of the KTC rankings
+    # page plus two API calls; letting every concurrent page view start its own
+    # copy is how a slow third party turns into a slow site.
+    #
+    # Per key, never global: build_board's fetch calls _cached() again for the
+    # projections, FantasyCalc and KTC feeds while holding its own key.
+    with _lock_for(key):
+        hit = _cache.get(key)
+        if hit and time.time() - hit["ts"] < ttl:
             return hit["data"]
-        raise
-    _cache[key] = {"ts": time.time(), "data": data}
-    return data
+        try:
+            data = fetch_fn()
+        except Exception:
+            if hit:
+                return hit["data"]
+            raise
+        _cache[key] = {"ts": time.time(), "data": data}
+        return data
 
 
 # ── Sources ────────────────────────────────────────────────────────────────────

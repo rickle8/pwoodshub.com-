@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, abort, redirect, url_for
 import hashlib
+import hmac
 import json
 import os
 import random
@@ -56,13 +57,25 @@ def _load_json(path, default):
         return default
 
 
+def _save_json_atomic(path, data, indent=2):
+    """Write via a temp file + rename, the way update_sleeper.py already does.
+
+    A plain open(path, "w") truncates first, so a crash or a restart mid-write
+    leaves a half-written file that _load_json can only recover from by
+    discarding — i.e. the chat log or everyone's notes, gone.
+    """
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=indent, ensure_ascii=False)
+    os.replace(tmp, path)
+
+
 def load_prefs():
     return _load_json(PREFS_FILE, {})
 
 
 def save_prefs(prefs):
-    with open(PREFS_FILE, "w", encoding="utf-8") as f:
-        json.dump(prefs, f, indent=2, ensure_ascii=False)
+    _save_json_atomic(PREFS_FILE, prefs)
 
 
 def get_regular_season_weeks(year):
@@ -104,6 +117,7 @@ def load_league_data() -> dict:
             team["owner"] = name_aliases.get(team.get("owner"), team.get("owner"))
         h2h = year_data.get("head_to_head", {})
         for old, canonical in name_aliases.items():
+            # Outer key: fold the aliased owner's own row into the canonical one.
             if old in h2h:
                 h2h.setdefault(canonical, {})
                 for opp, record in h2h[old].items():
@@ -111,6 +125,17 @@ def load_league_data() -> dict:
                     for k in ("wins", "losses", "ties"):
                         h2h[canonical][opp][k] += record.get(k, 0)
                 del h2h[old]
+            # Inner keys: every *opponent's* row still refers to the old name.
+            # Leaving these behind makes the table asymmetric — the aliased
+            # owner's own record merges, but everyone else's games against him
+            # fail the membership guard in calculate_historical_head_to_head()
+            # and vanish.
+            for opps in h2h.values():
+                if old in opps:
+                    record = opps.pop(old)
+                    merged = opps.setdefault(canonical, {"wins": 0, "losses": 0, "ties": 0})
+                    for k in ("wins", "losses", "ties"):
+                        merged[k] += record.get(k, 0)
 
     # Strip any non-year keys (e.g. _latest_sleeper_id, retired_members)
     data = {k: v for k, v in raw.items() if k.isdigit()}
@@ -138,7 +163,10 @@ def ensure_uid_cookie(response):
     This acts as a stable per-device/browser identifier for storing preferences."""
     if not request.cookies.get('pw-uid'):
         uid = str(uuid.uuid4())
-        response.set_cookie('pw-uid', uid, max_age=60 * 60 * 24 * 365 * 10, samesite='Lax')
+        # secure only when the request itself was HTTPS, so this still works
+        # over plain http on the LAN dev server.
+        response.set_cookie('pw-uid', uid, max_age=60 * 60 * 24 * 365 * 10,
+                            samesite='Lax', secure=request.is_secure, httponly=True)
     return response
 
 
@@ -147,7 +175,7 @@ def get_prefs():
     uid = request.cookies.get('pw-uid', '')
     with _file_lock:
         prefs = load_prefs()
-    defaults = {'theme': 'light', 'bg_color': '#add8e6'}
+    defaults = {'theme': 'light', 'bg_color': '#add8e6', 'owner': ''}
     return jsonify({**defaults, **prefs.get(uid, {})})
 
 
@@ -163,6 +191,11 @@ def set_prefs():
         for key in ('theme', 'bg_color'):
             if key in data:
                 entry[key] = data[key]
+        # Only a real league member can be claimed as an identity. Anything else
+        # would end up compared against owner names all over the templates, so a
+        # typo or a stale name would silently highlight nothing forever.
+        if 'owner' in data:
+            entry['owner'] = data['owner'] if data['owner'] in all_owners() else ''
         save_prefs(prefs)
     return jsonify({'ok': True})
 
@@ -268,19 +301,34 @@ def get_power_rankings(owner_stats=None):
             for i, (owner, stats) in enumerate(ranked)
         ]
 
+    # Per-season scoring is only meaningful over *finished* seasons. Counting a
+    # season that is two weeks old as a whole one divides a career total by one
+    # season too many, which quietly penalises every owner still playing while
+    # leaving retired owners' averages correct — the exact opposite of what this
+    # column is for. So the divisor, and the points it divides, are both taken
+    # from completed seasons only.
     season_counts = {}
-    for year_data in league_data.values():
+    completed_points = {}
+    for year, year_data in league_data.items():
+        if not season_is_complete(year_data):
+            continue
         for team in year_data.get("teams", []):
             owner = team.get("owner", "Unknown")
             season_counts[owner] = season_counts.get(owner, 0) + 1
+            completed_points[owner] = (completed_points.get(owner, 0.0)
+                                       + team.get("points_for", 0))
+
+    def per_season(owner):
+        n = season_counts.get(owner, 0)
+        return round(completed_points.get(owner, 0.0) / n, 1) if n else None
 
     points_scored_data = [
         {
             "rank": i + 1,
             "owner": owner,
             "points_for": round(stats["points_for"], 1),
-            "seasons": season_counts.get(owner, 1),
-            "pts_per_season": round(stats["points_for"] / season_counts.get(owner, 1), 1),
+            "seasons": season_counts.get(owner, 0),
+            "pts_per_season": per_season(owner),
         }
         for i, (owner, stats) in enumerate(
             sorted(owner_stats.items(), key=lambda x: x[1]["points_for"], reverse=True)
@@ -382,6 +430,12 @@ def calculate_playoff_stats():
         is_4team_era  = int(year) <= 2017
 
         def record_game(o1, o2, s1, s2):
+            # Seed on demand. The appearance loop above only seeds owners from
+            # *completed* seasons, but bracket data exists as soon as a playoff
+            # game is scored — so during a live postseason these owners have no
+            # entry yet and every += below would raise KeyError.
+            for o in (o1, o2):
+                stats.setdefault(o, {"wins": 0, "losses": 0, "points_for": 0.0})
             if s1 > s2:
                 stats[o1]["wins"]   += 1
                 stats[o2]["losses"] += 1
@@ -466,11 +520,19 @@ def calculate_playoff_stats():
 
 
 def calculate_season_scoring_extremes():
-    """Returns the highest and lowest scoring teams of all time (full season points)."""
+    """Highest and lowest full-season point totals of all time.
+
+    Completed seasons only. A season in progress has a partial total by
+    definition, so including it would let week 1 of the current year take the
+    all-time *lowest season* record away from a team that really did score
+    that little over a full year.
+    """
     highest = {"team": None, "score": 0, "year": None}
     lowest = {"team": None, "score": float('inf'), "year": None}
 
     for year, year_data in league_data.items():
+        if not season_is_complete(year_data):
+            continue
         for team in year_data.get("teams", []):
             pts = team.get("points_for", 0)
             if pts > highest["score"]:
@@ -484,9 +546,17 @@ def calculate_season_scoring_extremes():
 
 
 def calculate_top_bottom_seasons(n=10):
-    """Top N and bottom N full-season point totals across all years."""
+    """Top N and bottom N full-season point totals across all completed years.
+
+    In-progress seasons are excluded for the same reason as in
+    calculate_season_scoring_extremes: a partial total isn't a season total,
+    and every team in the current year would otherwise flood the bottom list
+    until about midseason.
+    """
     seasons = []
     for year, year_data in league_data.items():
+        if not season_is_complete(year_data):
+            continue
         for team in year_data.get("teams", []):
             pts = team.get("points_for", 0)
             if not pts:
@@ -506,6 +576,46 @@ def calculate_top_bottom_seasons(n=10):
     return {"top": seasons[:n], "bottom": list(reversed(seasons[-n:]))}
 
 
+def week_luck_verdicts(matchups):
+    """Yield (team_name, verdict) for every team that actually played this week.
+
+    verdict is "lucky" (won from the bottom half of the week's scores),
+    "unlucky" (lost from the top half) or None.
+
+    The all-time luck index and the per-season owner page both need this, and
+    they used to carry separate copies of it. The copies drifted: one skipped
+    scheduled-but-unplayed 0-0 games and the other scored them as a lucky win
+    for the away team. One definition now, so they can't disagree again.
+    """
+    all_scores = []
+    for m in matchups:
+        hs = float(m.get("home_score") or 0)
+        as_ = float(m.get("away_score") or 0)
+        if hs or as_:
+            all_scores.append((m["home_team"], hs))
+            all_scores.append((m["away_team"], as_))
+
+    n = len(all_scores)
+    if n < 2:
+        return
+
+    sorted_desc = sorted(all_scores, key=lambda x: x[1], reverse=True)
+    top_half_teams = {t for t, _ in sorted_desc[: n // 2]}
+
+    for m in matchups:
+        hs = float(m.get("home_score") or 0)
+        as_ = float(m.get("away_score") or 0)
+        if not hs and not as_:
+            continue          # scheduled but unplayed — nobody got lucky
+        # A tie counts as an away win, which is what both copies always did.
+        home_won = hs > as_
+        for team, won in ((m["home_team"], home_won), (m["away_team"], not home_won)):
+            if team in top_half_teams:
+                yield team, (None if won else "unlucky")
+            else:
+                yield team, ("lucky" if won else None)
+
+
 def calculate_luck_index():
     """
     Lucky win: scored in bottom half of league that week, but won.
@@ -522,47 +632,13 @@ def calculate_luck_index():
             if int(week_str) > reg_weeks or not matchups:
                 continue
 
-            all_scores = []
-            for m in matchups:
-                hs = float(m.get("home_score") or 0)
-                as_ = float(m.get("away_score") or 0)
-                if hs or as_:
-                    all_scores.append((m["home_team"], hs))
-                    all_scores.append((m["away_team"], as_))
-
-            n = len(all_scores)
-            if n < 2:
-                continue
-
-            sorted_desc = sorted(all_scores, key=lambda x: x[1], reverse=True)
-            top_half_teams = {t for t, _ in sorted_desc[: n // 2]}
-
-            for m in matchups:
-                hs = float(m.get("home_score") or 0)
-                as_ = float(m.get("away_score") or 0)
-                if not hs and not as_:
-                    continue
-                home, away = m["home_team"], m["away_team"]
-                ho = team_to_owner.get(home, home)
-                ao = team_to_owner.get(away, away)
-                for o in (ho, ao):
-                    luck.setdefault(o, {"lucky_wins": 0, "unlucky_losses": 0})
-
-                home_won = hs > as_
-
-                if home in top_half_teams:
-                    if not home_won:
-                        luck[ho]["unlucky_losses"] += 1
-                else:
-                    if home_won:
-                        luck[ho]["lucky_wins"] += 1
-
-                if away in top_half_teams:
-                    if home_won:
-                        luck[ao]["unlucky_losses"] += 1
-                else:
-                    if not home_won:
-                        luck[ao]["lucky_wins"] += 1
+            for team, verdict in week_luck_verdicts(matchups):
+                owner = team_to_owner.get(team, team)
+                rec = luck.setdefault(owner, {"lucky_wins": 0, "unlucky_losses": 0})
+                if verdict == "lucky":
+                    rec["lucky_wins"] += 1
+                elif verdict == "unlucky":
+                    rec["unlucky_losses"] += 1
 
     for o in luck:
         luck[o]["net_luck"] = luck[o]["lucky_wins"] - luck[o]["unlucky_losses"]
@@ -731,6 +807,18 @@ def _regular_season_games():
                     "margin": round(abs(hs - as_), 2),
                     "combined": round(hs + as_, 2),
                 }
+
+
+def latest_played_year():
+    """The most recent season with a regular-season game actually played.
+
+    Not the same as max(league_data): Sleeper publishes next season's teams and
+    schedule weeks before week 1, so for a stretch every summer the newest year
+    exists with an empty record. Headers that describe the range of games on a
+    page have to use this, or they name a season nobody has played yet.
+    """
+    played = {g["year"] for g in _regular_season_games()}
+    return max(played, key=int) if played else max(league_data, key=int)
 
 
 def calculate_biggest_blowouts(n=25):
@@ -993,20 +1081,39 @@ def get_owner_profile(owner_name):
 # serving the last good copy rather than breaking the page.
 
 _live_cache = {}
+_cache_locks: dict = {}
+_cache_locks_guard = Lock()
+
+
+def _lock_for(key):
+    with _cache_locks_guard:
+        return _cache_locks.setdefault(key, Lock())
 
 
 def _cached(key, ttl, fetch_fn):
     entry = _live_cache.get(key)
     if entry and time.time() - entry["ts"] < ttl:
         return entry["data"]
-    try:
-        data = fetch_fn()
-    except Exception as e:
-        if entry:
+
+    # One fetch per key at a time. Without this every request arriving during a
+    # slow miss starts its own copy of the work, and compute_playoff_odds() is a
+    # 3,000-simulation run that takes seconds.
+    #
+    # The lock is per key and never global on purpose: that odds simulation
+    # calls _cached() again for the identity map, league settings and schedule
+    # while it holds its own key, so one shared lock would deadlock.
+    with _lock_for(key):
+        entry = _live_cache.get(key)      # may have been filled while we waited
+        if entry and time.time() - entry["ts"] < ttl:
             return entry["data"]
-        raise
-    _live_cache[key] = {"ts": time.time(), "data": data}
-    return data
+        try:
+            data = fetch_fn()
+        except Exception:
+            if entry:
+                return entry["data"]      # stale beats broken
+            raise
+        _live_cache[key] = {"ts": time.time(), "data": data}
+        return data
 
 
 def _league_identity():
@@ -1429,9 +1536,25 @@ def home():
     scoring_records = calculate_scoring_records()
     highest_scoring_team_all_time, lowest_scoring_team_all_time = calculate_season_scoring_extremes()
 
+    # The newest season has no champion until it's over, and rendering it as a
+    # row of em-dashes made the top of the home page look broken. Mark it so the
+    # template can show where the season actually stands instead.
+    live_year = next((y for y in league_data
+                      if not season_is_complete(league_data[y])), None)
+    live_status = None
+    if live_year:
+        reg = get_regular_season_weeks(live_year)
+        played = played_regular_weeks(live_year, reg)
+        leader = max(league_data[live_year].get("teams", []),
+                     key=lambda t: (t.get("wins", 0), t.get("points_for", 0)),
+                     default=None)
+        live_status = {"year": live_year, "played": played, "reg_weeks": reg,
+                       "leader": leader}
+
     return render_template("index.html",
                            years=sorted(league_data.keys(), reverse=True),
                            champions=champions,
+                           live_year=live_year, live_status=live_status,
                            scoring_records=scoring_records,
                            highest_scoring_team_all_time=highest_scoring_team_all_time,
                            lowest_scoring_team_all_time=lowest_scoring_team_all_time)
@@ -1744,13 +1867,38 @@ def player_view(player_id):
                            market=market, scoring="Half-PPR", error=error)
 
 
+def all_owners():
+    """Every owner who has ever had a team, current and retired."""
+    return sorted({t["owner"] for y in league_data.values()
+                   for t in y.get("teams", []) if t.get("owner")})
+
+
 @app.context_processor
 def inject_nav_context():
-    """Current season year for the nav's season dropdown."""
+    """Nav season, plus whoever this visitor has told us they are.
+
+    Resolved server-side from the pw-uid cookie rather than fetched by the page,
+    so a highlighted row is highlighted in the first paint. Doing it in JS meant
+    every table flashing un-marked before the preference arrived.
+    """
+    ctx = {"current_season": "", "my_owner": "", "all_owners": []}
     try:
-        return {"current_season": max(league_data.keys(), key=int)}
+        ctx["current_season"] = max(league_data.keys(), key=int)
     except ValueError:
-        return {"current_season": ""}
+        pass
+
+    # The picker is on every page, so the owner list has to be here too.
+    ctx["all_owners"] = all_owners()
+
+    uid = request.cookies.get("pw-uid", "")
+    if uid:
+        with _file_lock:
+            saved = load_prefs().get(uid, {})
+        owner = saved.get("owner") or ""
+        # Guard the stored value as well as the incoming one: an owner can be
+        # renamed in league_history.json long after someone picked them.
+        ctx["my_owner"] = owner if owner in ctx["all_owners"] else ""
+    return ctx
 
 
 @app.route('/recaps')
@@ -2080,13 +2228,18 @@ def power_rankings():
     rankings = get_power_rankings(owner_stats)
     overall_records = calculate_overall_records(owner_stats)
 
+    # Completed seasons only. Mid-season `rank` is just the current standings —
+    # after one week it is barely more than a points tiebreak, and averaging it
+    # in moves a career figure by a third of a place on the strength of a single
+    # Sunday. Owners with no finished season are left out, and the template
+    # already renders "N/A" for anyone missing here.
     average_finish = {}
-    for year_data in league_data.values():
+    for year, year_data in league_data.items():
+        if not season_is_complete(year_data):
+            continue
         for team in year_data.get("teams", []):
             owner = team.get("owner", "Unknown")
-            if owner not in average_finish:
-                average_finish[owner] = []
-            average_finish[owner].append(team.get("rank", float('inf')))
+            average_finish.setdefault(owner, []).append(team.get("rank", float('inf')))
 
     for owner in average_finish:
         average_finish[owner] = sum(average_finish[owner]) / len(average_finish[owner])
@@ -2103,6 +2256,27 @@ def power_rankings():
                            playoff_stats=calculate_playoff_stats())
 
 
+# PINs are short and one SHA-256 is fast, so unlimited guesses is a real
+# weakness even for a 12-person league. Track recent failures per username and
+# make the attacker wait. In-memory on purpose: a restart clearing it is fine,
+# and it keeps the hot path off the disk.
+_pin_failures: dict = {}
+PIN_MAX_FAILURES = 5
+PIN_LOCKOUT_SECONDS = 60
+
+
+def _pin_lockout_remaining(username):
+    """Seconds the caller must wait, or 0 if they may try now."""
+    rec = _pin_failures.get(username)
+    if not rec or rec["count"] < PIN_MAX_FAILURES:
+        return 0
+    elapsed = time.time() - rec["last"]
+    if elapsed >= PIN_LOCKOUT_SECONDS:
+        _pin_failures.pop(username, None)
+        return 0
+    return int(PIN_LOCKOUT_SECONDS - elapsed) + 1
+
+
 def verify_pin(username, pin):
     """Return True if pin is valid for username; register if first time seen.
     PINs are stored as salted hashes in chat_users.json and survive restarts.
@@ -2112,14 +2286,31 @@ def verify_pin(username, pin):
     pin_hash = hashlib.sha256(f"{username}:{pin}".encode()).hexdigest()
     users = _load_json(CHAT_USERS_FILE, {})
     if username in users:
-        return users[username] == pin_hash
+        # hmac.compare_digest: constant-time, so a wrong PIN can't be narrowed
+        # down by timing how long the comparison took.
+        ok = hmac.compare_digest(users[username], pin_hash)
+        if ok:
+            _pin_failures.pop(username, None)
+        else:
+            rec = _pin_failures.setdefault(username, {"count": 0, "last": 0.0})
+            rec["count"] += 1
+            rec["last"] = time.time()
+        return ok
     users[username] = pin_hash
-    with open(CHAT_USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, indent=2)
+    _save_json_atomic(CHAT_USERS_FILE, users)
     return True
 
 
 # ── Chat routes ───────────────────────────────────────────────────────────────
+
+# The whole log is read, appended to and rewritten under a lock on every post,
+# so it can't be allowed to grow without bound: keep the most recent
+# CHAT_KEEP_MESSAGES and let older ones fall off. CHAT_WINDOW is how many the
+# client is sent per poll.
+CHAT_MAX_MESSAGE_CHARS = 4000
+CHAT_KEEP_MESSAGES     = 1000
+CHAT_WINDOW            = 200
+
 
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
@@ -2131,17 +2322,23 @@ def chat():
 
         if not message:
             return jsonify({"error": "Message cannot be empty."}), 400
+        if len(message) > CHAT_MAX_MESSAGE_CHARS:
+            return jsonify({"error": f"Message is too long "
+                                     f"({CHAT_MAX_MESSAGE_CHARS} character max)."}), 400
 
         timestamp  = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         chat_entry = {"username": username, "message": message, "timestamp": timestamp}
 
         with _file_lock:
+            wait = _pin_lockout_remaining(username)
+            if wait:
+                return jsonify({"error": f"Too many wrong PINs. Try again in {wait}s."}), 429
             if not verify_pin(username, pin):
                 return jsonify({"error": "Wrong PIN for that username."}), 403
             chat_log = _load_json(CHAT_LOG_FILE, [])
             chat_log.append(chat_entry)
-            with open(CHAT_LOG_FILE, "w", encoding="utf-8") as f:
-                json.dump(chat_log, f, indent=4)
+            del chat_log[:-CHAT_KEEP_MESSAGES]
+            _save_json_atomic(CHAT_LOG_FILE, chat_log)
 
         return jsonify({"success": True})
 
@@ -2150,9 +2347,18 @@ def chat():
 
 @app.route('/get_messages')
 def get_messages():
+    """The most recent CHAT_WINDOW messages, plus where that window starts.
+
+    `first_index` is what makes the client's cursor work. Sending a bare list
+    means the client can only count what it received, and once the log passes
+    CHAT_WINDOW that count stops changing — the array is always the same length,
+    so new messages never render and the chat appears frozen.
+    """
     with _file_lock:
         messages = _load_json(CHAT_LOG_FILE, [])
-    return jsonify(messages[-200:])
+    window = messages[-CHAT_WINDOW:] if CHAT_WINDOW else messages
+    return jsonify({"messages": window,
+                    "first_index": len(messages) - len(window)})
 
 
 @app.route('/api/gifs')
@@ -2207,7 +2413,8 @@ def records():
                            season_scoring=calculate_top_bottom_seasons(),
                            roll=calculate_season_roll(),
                            ledger=calculate_owner_ledger(),
-                           min_year=min(league_data), max_year=max(league_data))
+                           min_year=min(league_data),
+                           max_year=latest_played_year())
 
 
 @app.route('/draft')
@@ -2255,6 +2462,9 @@ def add_note():
         return jsonify({"error": "Invalid year."}), 400
 
     with _file_lock:
+        wait = _pin_lockout_remaining(username)
+        if wait:
+            return jsonify({"error": f"Too many wrong PINs. Try again in {wait}s."}), 429
         if not verify_pin(username, pin):
             return jsonify({"error": "Wrong PIN for that username."}), 403
         notes = _load_json(NOTES_FILE, {})
@@ -2264,8 +2474,7 @@ def add_note():
             "text":      text,
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         })
-        with open(NOTES_FILE, "w", encoding="utf-8") as f:
-            json.dump(notes, f, indent=2)
+        _save_json_atomic(NOTES_FILE, notes)
     return jsonify({"ok": True})
 
 
@@ -2277,21 +2486,27 @@ def delete_note():
     note_id  = (data.get('id')       or '').strip()
 
     with _file_lock:
+        wait = _pin_lockout_remaining(username)
+        if wait:
+            return jsonify({"error": f"Too many wrong PINs. Try again in {wait}s."}), 429
         if not verify_pin(username, pin):
             return jsonify({"error": "Wrong PIN for that username."}), 403
         notes = _load_json(NOTES_FILE, {})
-        for year, year_notes in notes.items():
-            for n in year_notes:
-                if n["id"] == note_id:
-                    if n["username"] != username:
-                        return jsonify({"error": "You can only delete your own notes."}), 403
-                    year_notes.remove(n)
-                    if not year_notes:
-                        del notes[year]
-                    with open(NOTES_FILE, "w", encoding="utf-8") as f:
-                        json.dump(notes, f, indent=2)
-                    return jsonify({"ok": True})
-    return jsonify({"error": "Note not found."}), 404
+
+        # Locate first, mutate after. Deleting a key while iterating the same
+        # dict only worked before because the very next statement returned.
+        found = next(((year, n) for year, year_notes in notes.items()
+                      for n in year_notes if n["id"] == note_id), None)
+        if not found:
+            return jsonify({"error": "Note not found."}), 404
+        year, note = found
+        if note["username"] != username:
+            return jsonify({"error": "You can only delete your own notes."}), 403
+        notes[year].remove(note)
+        if not notes[year]:
+            del notes[year]
+        _save_json_atomic(NOTES_FILE, notes)
+        return jsonify({"ok": True})
 
 
 POSITION_ORDER = {"QB": 0, "RB": 1, "WR": 2, "TE": 3, "K": 4, "DEF": 5, "D/ST": 5}
@@ -2391,33 +2606,18 @@ def get_owner_season_detail(owner_name, year):
     ) if league_week_avg else 0
 
     # ── Luck this season ──────────────────────────────────────────────────────
+    # Same definition the all-time luck index uses — see week_luck_verdicts().
     lucky_wins = unlucky_losses = 0
     for wk_str, matchups in weekly_scores.items():
         if int(wk_str) > reg_weeks:
             continue
-        all_sc = []
-        for m in matchups:
-            hs = float(m.get("home_score") or 0)
-            as_ = float(m.get("away_score") or 0)
-            if hs or as_:
-                all_sc += [(m["home_team"], hs), (m["away_team"], as_)]
-        n = len(all_sc)
-        if n < 2:
-            continue
-        top_half = {t for t, _ in sorted(all_sc, key=lambda x: x[1], reverse=True)[:n // 2]}
-        for m in matchups:
-            hs = float(m.get("home_score") or 0)
-            as_ = float(m.get("away_score") or 0)
-            if m["home_team"] == team_name:
-                in_top = team_name in top_half
-                home_won = hs > as_
-                if in_top and not home_won:   unlucky_losses += 1
-                elif not in_top and home_won: lucky_wins     += 1
-            elif m["away_team"] == team_name:
-                in_top = team_name in top_half
-                home_won = hs > as_
-                if in_top and home_won:        unlucky_losses += 1
-                elif not in_top and not home_won: lucky_wins  += 1
+        for scored_team, verdict in week_luck_verdicts(matchups):
+            if scored_team != team_name:
+                continue
+            if verdict == "lucky":
+                lucky_wins += 1
+            elif verdict == "unlucky":
+                unlucky_losses += 1
 
     # ── H2H this season ───────────────────────────────────────────────────────
     h2h_year = {}
@@ -2539,4 +2739,11 @@ def owner_profile(owner_name):
 if __name__ == "__main__":
     # host="0.0.0.0" makes the site reachable from other devices on your
     # home network (e.g. your phone) at http://<this-PC's-IP>:5000
+    #
+    # Jinja caches every template it has rendered, and with debug off it never
+    # checks the file again — so editing a template and refreshing showed the
+    # old markup until the process was restarted. Only affects this local
+    # runner; PythonAnywhere imports `app` directly and never reaches here.
+    app.jinja_env.auto_reload = True
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
     app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Draft Review{% endblock %}
+
+{% block extra_css %}
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.over-pos { color: #198754; font-weight: 700; }
+.over-neg { color: #dc3545; font-weight: 700; }
+.slot { font-variant-numeric: tabular-nums; color: var(--bs-secondary-color);
+        font-size: .85em; }
+{% endblock %}
+
+{% block content %}
+<h1 class="mt-2 mb-1">Draft Review{% if review %} — {{ review.year }}{% endif %}</h1>
+
+{% if not review %}
+<p class="text-muted">
+    No per-player scoring available yet. This needs Sleeper's data, so it covers
+    2025 onward.
+</p>
+{% else %}
+
+<p class="text-muted small mb-3">
+    Every pick scored by what the player actually produced <strong>for the owner who
+    drafted him</strong>, bench weeks included — a pick's value isn't the owner's
+    lineup calls. Each pick is judged against players <em>at the same position taken
+    in the same range of the draft</em>: a 14th-rounder isn't punished for not being
+    a first, and quarterbacks aren't all "steals" just because they out-score
+    everyone in raw points.
+</p>
+
+{% if years | length > 1 %}
+<div class="mb-3">
+    {% for y in years %}
+    <a href="{{ url_for('draft_review_view', year=y) }}"
+       class="btn btn-sm {{ 'btn-primary' if y == review.year else 'btn-outline-secondary' }}">{{ y }}</a>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="stat-card">
+            <h2 class="h5 mb-1">💎 Biggest Steals</h2>
+            <p class="text-muted small mb-3">Most points above what their round returned.</p>
+            <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Pick</th><th>Player</th><th>Owner</th>
+                           <th class="num">Pts</th><th class="num">vs Par</th></tr></thead>
+                <tbody>
+                {% for r in review.steals %}
+                <tr>
+                    <td class="slot">{{ r.round }}.{{ '%02d'|format(r.pick or 0) }}</td>
+                    <td>
+                        <span class="badge pos-{{ r.position }}">{{ r.position }}</span>
+                        {% if r.player_id %}
+                        <a href="{{ url_for('player_view', player_id=r.player_id) }}">{{ r.player }}</a>
+                        {% else %}{{ r.player }}{% endif %}
+                        {% if r.keeper %}<span class="keeper-badge">K</span>{% endif %}
+                    </td>
+                    <td class="small"><a href="{{ url_for('owner_profile', owner_name=r.owner) }}">{{ r.owner }}</a></td>
+                    <td class="num">{{ r.points }}</td>
+                    <td class="num over-pos">+{{ r.over }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="stat-card">
+            <h2 class="h5 mb-1">💀 Biggest Busts</h2>
+            <p class="text-muted small mb-3">
+                Rounds 1–8 only — a late flier that misses costs nobody anything.
+            </p>
+            <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Pick</th><th>Player</th><th>Owner</th>
+                           <th class="num">Pts</th><th class="num">vs Par</th></tr></thead>
+                <tbody>
+                {% for r in review.busts %}
+                <tr>
+                    <td class="slot">{{ r.round }}.{{ '%02d'|format(r.pick or 0) }}</td>
+                    <td>
+                        <span class="badge pos-{{ r.position }}">{{ r.position }}</span>
+                        {% if r.player_id %}
+                        <a href="{{ url_for('player_view', player_id=r.player_id) }}">{{ r.player }}</a>
+                        {% else %}{{ r.player }}{% endif %}
+                        {% if r.keeper %}<span class="keeper-badge">K</span>{% endif %}
+                    </td>
+                    <td class="small"><a href="{{ url_for('owner_profile', owner_name=r.owner) }}">{{ r.owner }}</a></td>
+                    <td class="num">{{ r.points }}</td>
+                    <td class="num over-neg">{{ r.over }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stat-card mt-4">
+    <h2 class="h5 mb-1">Best Pick of Each Round</h2>
+    <p class="text-muted small mb-3">
+        Average return per round is in brackets — this is what the draft is
+        actually worth as you go down it.
+    </p>
+    <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+        <thead><tr><th class="num">Round</th><th class="num">Round Avg</th>
+                   <th>Best Pick</th><th>Owner</th><th class="num">Pts</th></tr></thead>
+        <tbody>
+        {% for rnd, r in review.best_by_round | dictsort %}
+        <tr>
+            <td class="num">{{ rnd }}</td>
+            <td class="num text-muted">{{ review.par[rnd] }}</td>
+            <td>
+                <span class="badge pos-{{ r.position }}">{{ r.position }}</span>
+                {% if r.player_id %}
+                <a href="{{ url_for('player_view', player_id=r.player_id) }}">{{ r.player }}</a>
+                {% else %}{{ r.player }}{% endif %}
+            </td>
+            <td class="small"><a href="{{ url_for('owner_profile', owner_name=r.owner) }}">{{ r.owner }}</a></td>
+            <td class="num fw-bold">{{ r.points }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+
+<a href="/draft" class="btn btn-secondary mt-4">Full Draft Boards</a>
+{% endblock %}

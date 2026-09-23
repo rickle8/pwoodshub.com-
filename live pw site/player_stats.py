@@ -10,6 +10,7 @@ are the headline numbers.
 """
 
 import time
+from threading import Lock
 
 from sleeper_common import safe_get
 
@@ -20,19 +21,48 @@ RANK_KEY = f"pos_rank_{SCORING}"
 _cache = {}
 _TTL = 300                     # 5 minutes — live enough during games
 
+# Keys are per player *and* per season, so browsing a few careers can mint
+# thousands of entries that nothing ever removes. Bound it and drop the oldest
+# when it fills — this is a cache, not a store.
+_MAX_ENTRIES = 600
+
+_locks: dict = {}
+_locks_guard = Lock()
+
+
+def _lock_for(key):
+    with _locks_guard:
+        return _locks.setdefault(key, Lock())
+
+
+def _evict_if_full():
+    if len(_cache) <= _MAX_ENTRIES:
+        return
+    for key in sorted(_cache, key=lambda k: _cache[k]["ts"])[:len(_cache) - _MAX_ENTRIES]:
+        _cache.pop(key, None)
+        with _locks_guard:
+            _locks.pop(key, None)
+
 
 def _cached(key, fetch_fn, ttl=_TTL):
     hit = _cache.get(key)
     if hit and time.time() - hit["ts"] < ttl:
         return hit["data"]
-    try:
-        data = fetch_fn()
-    except Exception:
-        if hit:
-            return hit["data"]      # serve stale rather than break the page
-        raise
-    _cache[key] = {"ts": time.time(), "data": data}
-    return data
+    # One fetch per key: a player page fans out one request per past season
+    # across a thread pool, and several viewers can land on the same player.
+    with _lock_for(key):
+        hit = _cache.get(key)
+        if hit and time.time() - hit["ts"] < ttl:
+            return hit["data"]
+        try:
+            data = fetch_fn()
+        except Exception:
+            if hit:
+                return hit["data"]      # serve stale rather than break the page
+            raise
+        _cache[key] = {"ts": time.time(), "data": data}
+        _evict_if_full()
+        return data
 
 
 # Box-score columns per position: (stat key, column label)
