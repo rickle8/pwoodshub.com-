@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, abort, redirect, url_for
+from flask import (Flask, render_template, request, jsonify, abort, redirect, url_for,
+                   send_from_directory)
 import hashlib
 import hmac
 import json
@@ -2315,6 +2316,52 @@ def draft_review_view(year=None):
         review["year"] = year_str
         review["complete"] = season_is_complete(league_data[year_str])
     return render_template("draft_review.html", review=review, years=years)
+
+
+# ── Home-screen app ──────────────────────────────────────────────────────────
+# The manifest and service worker make "Add to Home Screen" install the site as
+# an app: its own icon, full screen, and an offline page when there's no signal.
+
+@app.route('/manifest.webmanifest')
+def web_manifest():
+    manifest = {
+        "name": "Peyton Woods League",
+        "short_name": "PW League",
+        "description": "Scores, trades, keepers and league history.",
+        "start_url": "/?source=app",
+        "scope": "/",
+        "display": "standalone",
+        "background_color": "#add8e6",
+        "theme_color": "#1565c0",
+        "icons": [
+            {"src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+            {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+            {"src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png",
+             "purpose": "maskable"},
+        ],
+        "shortcuts": [
+            {"name": "This Week", "url": "/scoreboard"},
+            {"name": "Trade Finder", "url": "/trade_finder"},
+            {"name": "Chat", "url": "/chat"},
+        ],
+    }
+    resp = jsonify(manifest)
+    resp.mimetype = "application/manifest+json"
+    return resp
+
+
+@app.route('/sw.js')
+def service_worker():
+    # Served from the root, not /static/, so it can look after every page.
+    resp = send_from_directory(os.path.join(app.root_path, "static"), "sw.js",
+                               mimetype="application/javascript")
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
+@app.route('/offline')
+def offline_page():
+    return render_template("offline.html")
 
 
 @app.route('/trends')
