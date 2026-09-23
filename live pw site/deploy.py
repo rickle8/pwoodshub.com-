@@ -34,7 +34,7 @@ SRC = os.path.dirname(os.path.abspath(__file__))
 FILES = [
     "consensus.py", "projections.py", "player_stats.py", "recaps.py",
     "lineups.py", "trades.py", "trade_machine.py", "keepers.py", "draft_review.py",
-    "push.py", "requirements.txt",
+    "push.py", "live_week.py", "requirements.txt",
     "pwoods_site.py", "sleeper_common.py", "scraper.py", "update_sleeper.py",
     "weekly_recap.py", "live_loop.py",
 ] + sorted(f"templates/{f}" for f in os.listdir(os.path.join(SRC, "templates"))
