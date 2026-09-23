@@ -1,0 +1,6 @@
+{# Layout for a page loaded into a tab on the season page (?fragment=1):
+   just the page's own styles, content and scripts, without the nav, footer or
+   a second copy of Bootstrap. #}
+<style>{% block extra_css %}{% endblock %}</style>
+<div class="season-fragment">{% block content %}{% endblock %}</div>
+{% block extra_js %}{% endblock %}

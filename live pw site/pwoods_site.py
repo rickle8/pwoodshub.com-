@@ -1868,8 +1868,12 @@ def player_view(player_id):
 
 @app.context_processor
 def inject_nav_context():
-    """The season the nav menu links to, and when the last note was posted."""
-    ctx = {"current_season": "", "latest_note_ts": _latest_note_ts()}
+    """The season the nav menu links to, when the last note was posted, and
+    which layout tab-able pages should use."""
+    # Pages that can open inside a season-page tab extend `layout`, which
+    # drops the nav and footer when the tab asks for ?fragment=1.
+    ctx = {"current_season": "", "latest_note_ts": _latest_note_ts(),
+           "layout": "fragment.html" if request.args.get("fragment") else "base.html"}
     try:
         ctx["current_season"] = max(league_data.keys(), key=int)
     except ValueError:

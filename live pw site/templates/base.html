@@ -196,15 +196,15 @@
                             {{ current_season }} Season
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="seasonMenu">
-                            <li><a class="dropdown-item" href="/scoreboard">📊 This Week</a></li>
-                            <li><a class="dropdown-item" href="/recaps">📰 Weekly Recaps</a></li>
-                            <li><a class="dropdown-item" href="/rosters">👥 Current Rosters</a></li>
-                            <li><a class="dropdown-item" href="/odds">🎲 Playoff Odds</a></li>
-                            <li><a class="dropdown-item" href="/trends">🔥 Trending Players</a></li>
-                            <li><a class="dropdown-item" href="/analyzer">⚖️ Trade Analyzer</a></li>
-                            <li><a class="dropdown-item" href="/trade_finder">🤝 Trade Finder</a></li>
-                            <li><a class="dropdown-item" href="/trades">📜 Trade History</a></li>
-                            <li><a class="dropdown-item" href="/keepers">🔒 Keeper Planner</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-week">📊 This Week</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-recaps">📰 Weekly Recaps</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-rosters">👥 Current Rosters</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-odds">🎲 Playoff Odds</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-trending">🔥 Trending Players</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-analyzer">⚖️ Trade Analyzer</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-finder">🤝 Trade Finder</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-trade-history">📜 Trade History</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-keepers">🔒 Keeper Planner</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/year/{{ current_season }}">Full {{ current_season }} Season</a></li>
                         </ul>
@@ -218,7 +218,7 @@
                         <ul class="dropdown-menu" aria-labelledby="draftMenu">
                             <li><a class="dropdown-item" href="/draft">📋 Draft Boards</a></li>
                             <li><a class="dropdown-item" href="/draft_review">📝 Draft Review</a></li>
-                            <li><a class="dropdown-item" href="/keepers">🔒 Keeper Planner</a></li>
+                            <li><a class="dropdown-item" href="/year/{{ current_season }}#tab-keepers">🔒 Keeper Planner</a></li>
                         </ul>
                     </li>
                     <li class="nav-item"><a class="nav-link position-relative" href="/notes">Notes
