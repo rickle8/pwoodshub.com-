@@ -64,6 +64,7 @@
    Tabs with data-src load that page the first time they're opened, so the
    page itself stays quick. #}
 {% set lazy = [
+    ("tab-rankings", "Power Rankings", "/rankings"),
     ("tab-week", "This Week", "/scoreboard"),
     ("tab-recaps", "Recaps", "/recaps"),
     ("tab-odds", "Playoff Odds", "/odds"),
@@ -74,19 +75,19 @@
 ] if live else [] %}
 <ul class="nav nav-tabs mb-3" id="yearTabs" role="tablist">
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-standings">Standings</button></li>
-    {% for id, label, _ in lazy[:4] %}
+    {% for id, label, _ in lazy[:5] %}
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#{{ id }}">{{ label }}</button></li>
     {% endfor %}
     {% if playoffs %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-playoffs">Playoffs</button></li>{% endif %}
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-teams">Teams</button></li>
-    {% for id, label, _ in lazy[4:6] %}
+    {% for id, label, _ in lazy[5:7] %}
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#{{ id }}">{{ label }}</button></li>
     {% endfor %}
     {% if analyzer %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-analyzer">Trade Analyzer</button></li>{% endif %}
     {% if trade_history %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-trade-history">Trade History</button></li>{% endif %}
     {% if transactions %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-transactions">Transactions</button></li>{% endif %}
     {% if draft %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-draft">Draft</button></li>{% endif %}
-    {% for id, label, _ in lazy[6:] %}
+    {% for id, label, _ in lazy[7:] %}
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#{{ id }}">{{ label }}</button></li>
     {% endfor %}
     {% if efficiency %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-efficiency">Lineup Efficiency</button></li>{% endif %}

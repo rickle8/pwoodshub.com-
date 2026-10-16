@@ -65,6 +65,10 @@ smoke test.
   in `pwoods_site.get_live_scoreboard`.
 - The current season's `/year/<season>` page is the hub: its lazy tabs load
   feature pages via `?fragment=1` (templates that `{% extends layout %}`).
+- `power_rankings.json`: the commissioner's weekly power rankings, by season.
+  When the owner pastes new rankings, add a post (`week`, `title`, `author`,
+  `date`, `entries` of `owner` + nickname `name` + `blurb`, keeping their wording)
+  and deploy. Record/PF/PA and the movement arrows are computed at `/rankings`.
 - `push.py`: web push alerts for new league notes. `static/sw.js` is the
   service worker for the home-screen app. Bump its `VERSION` when you change it.
 - Sleeper seasons store the overall pick number and ESPN seasons store the pick

@@ -1,0 +1,82 @@
+{% extends layout %}
+{% block title %}{{ post.title if post else 'Power Rankings' }}{% endblock %}
+
+{% block extra_css %}
+.pr-head { margin-bottom: 14px; }
+.pr-byline { font-size: .85em; color: var(--bs-secondary-color); }
+.pr-weeks { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+.pr-card { background: var(--stat-card); border: 1px solid var(--bs-border-color);
+           border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; }
+.pr-top { display: flex; align-items: center; gap: 12px; }
+.pr-rank { font-size: 2rem; font-weight: 900; line-height: 1; min-width: 2.2rem;
+           text-align: center; color: #1565c0; }
+[data-bs-theme="dark"] .pr-rank { color: #6ea8fe; }
+.pr-who { flex: 1; min-width: 0; }
+.pr-name { font-size: 1.2rem; font-weight: 800; line-height: 1.15; }
+.pr-team { font-size: .82em; color: var(--bs-secondary-color); }
+.pr-move { flex-shrink: 0; font-weight: 800; font-size: .9rem; padding: 4px 9px;
+           border-radius: 999px; white-space: nowrap; }
+.pr-move.up   { background: #19875422; color: #198754; }
+.pr-move.down { background: #dc354520; color: #dc3545; }
+.pr-move.same { background: var(--bs-secondary-bg); color: var(--bs-secondary-color); }
+.pr-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 12px 0 10px; }
+.pr-stat { background: var(--bs-secondary-bg); border-radius: 8px; padding: 6px 8px; text-align: center; }
+.pr-stat b { display: block; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.pr-stat span { white-space: nowrap; font-size: .68em; text-transform: uppercase; letter-spacing: .04em;
+                color: var(--bs-secondary-color); font-weight: 700; }
+.pr-blurb p { margin: 0 0 .7em; line-height: 1.55; }
+.pr-blurb p:last-child { margin-bottom: 0; }
+{% endblock %}
+
+{% block content %}
+{% if not post %}
+<h1 class="mt-2">Power Rankings</h1>
+<p class="text-muted">No power rankings posted yet this season.</p>
+{% else %}
+<div class="pr-head">
+    <h1 class="mt-2 mb-1">{{ post.title }}</h1>
+    <div class="pr-byline">
+        {{ post.year }} season{% if post.author %} · by {{ post.author }}{% endif %}{% if post.date %} · {{ post.date }}{% endif %}
+        {% if post.prev_title %}<br>Arrows show movement since the {{ post.prev_title }}.{% endif %}
+    </div>
+</div>
+
+{% if post.others | length > 1 %}
+<div class="pr-weeks">
+    {% for w in post.others %}
+    <a href="{{ url_for('rankings_view', year=post.year|int, week=w) }}"
+       class="btn btn-sm {{ 'btn-primary' if w == post.week else 'btn-outline-secondary' }}">Week {{ w }}</a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% for r in post.rows %}
+<div class="pr-card">
+    <div class="pr-top">
+        <div class="pr-rank">{{ r.rank }}</div>
+        <div class="pr-who">
+            <div class="pr-name">{{ r.name }}</div>
+            <div class="pr-team"><a href="{{ url_for('owner_profile', owner_name=r.owner) }}">{{ r.owner }}</a>{% if r.team %} · {{ r.team }}{% endif %}</div>
+        </div>
+        {% if r.move is none %}
+        <span class="pr-move same">NEW</span>
+        {% elif r.move > 0 %}
+        <span class="pr-move up">▲ {{ r.move }}</span>
+        {% elif r.move < 0 %}
+        <span class="pr-move down">▼ {{ -r.move }}</span>
+        {% else %}
+        <span class="pr-move same">—</span>
+        {% endif %}
+    </div>
+    <div class="pr-stats">
+        <div class="pr-stat"><b>{{ r.record }}</b><span>Record</span></div>
+        <div class="pr-stat"><b>{{ '%.2f' % r.pf }}</b><span>Pts For</span></div>
+        <div class="pr-stat"><b>{{ '%.2f' % r.pa }}</b><span>Pts Against</span></div>
+    </div>
+    <div class="pr-blurb">
+        {% for p in r.paragraphs %}<p>{{ p }}</p>{% endfor %}
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

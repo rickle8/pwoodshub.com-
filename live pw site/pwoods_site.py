@@ -2434,6 +2434,80 @@ def push_unsubscribe():
     return jsonify({"ok": True})
 
 
+# ── Weekly power rankings ────────────────────────────────────────────────────
+# The commissioner's write-ups, stored in power_rankings.json by season. Each
+# post has an order (or entries with blurbs); record and points come from the
+# league data as of that week, and movement is measured against the post before.
+
+POWER_RANKINGS_FILE = os.path.join(os.path.dirname(__file__), "power_rankings.json")
+
+
+def _ranking_order(post):
+    return post.get("order") or [e["owner"] for e in post.get("entries", [])]
+
+
+def standings_through(year_data, week):
+    """{owner: {wins, losses, ties, pf, pa}} from weeks 1..week that were played."""
+    owner_of = {t["name"]: t["owner"] for t in year_data.get("teams", [])}
+    out = {}
+    for wk, games in (year_data.get("weekly_scores") or {}).items():
+        if not wk.isdigit() or int(wk) > week:
+            continue
+        for g in games:
+            if not (g.get("home_score") or g.get("away_score")):
+                continue                      # not played yet
+            for me, them in (("home", "away"), ("away", "home")):
+                o = owner_of.get(g[f"{me}_team"], g[f"{me}_team"])
+                r = out.setdefault(o, {"wins": 0, "losses": 0, "ties": 0, "pf": 0.0, "pa": 0.0})
+                mine, theirs = g[f"{me}_score"] or 0, g[f"{them}_score"] or 0
+                r["pf"] += mine
+                r["pa"] += theirs
+                r["wins" if mine > theirs else "losses" if mine < theirs else "ties"] += 1
+    return out
+
+
+def ranking_post(year, week=None):
+    """One post, ready to render, or None. Without `week`, the newest post."""
+    posts = sorted(_load_json(POWER_RANKINGS_FILE, {}).get(str(year), []),
+                   key=lambda p: p["week"])
+    if not posts:
+        return None
+    post = (next((p for p in posts if p["week"] == week), None) if week is not None
+            else posts[-1])
+    if not post or not post.get("entries"):
+        return None
+    earlier = [p for p in posts if p["week"] < post["week"]]
+    prev = {o: i for i, o in enumerate(_ranking_order(earlier[-1]), 1)} if earlier else {}
+    year_data = league_data.get(str(year), {})
+    stats = standings_through(year_data, post["week"])
+    team_of = {t["owner"]: t["name"] for t in year_data.get("teams", [])}
+    rows = []
+    for i, e in enumerate(post["entries"], 1):
+        st = stats.get(e["owner"], {"wins": 0, "losses": 0, "ties": 0, "pf": 0, "pa": 0})
+        rows.append({
+            "rank": i, "owner": e["owner"], "name": e.get("name") or e["owner"],
+            "team": team_of.get(e["owner"], ""),
+            "record": f"{st['wins']}-{st['losses']}" + (f"-{st['ties']}" if st["ties"] else ""),
+            "pf": round(st["pf"], 2), "pa": round(st["pa"], 2),
+            "move": (prev[e["owner"]] - i) if e["owner"] in prev else None,
+            "paragraphs": [p.strip() for p in e.get("blurb", "").split("\n\n") if p.strip()],
+        })
+    return {"year": str(year), "week": post["week"], "title": post.get("title"),
+            "author": post.get("author"), "date": post.get("date"), "rows": rows,
+            "prev_title": earlier[-1].get("title") if earlier else None,
+            "others": [p["week"] for p in posts if p.get("entries")]}
+
+
+@app.route('/rankings')
+@app.route('/rankings/<int:year>/<int:week>')
+def rankings_view(year=None, week=None):
+    year = year or int(_latest_season())
+    post = ranking_post(year, week)
+    if week is not None and not post:
+        abort(404)
+    return render_template("rankings_post.html", post=post)
+
+
 @app.route('/trends')
 def trends_view():
     try:
