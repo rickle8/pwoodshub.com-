@@ -119,5 +119,23 @@ class TestDivisions(unittest.TestCase):
         self.assertEqual([t["owner"] for t in tables[0][1]], ["B", "C", "A"])
 
 
+
+class TestPowerRankings(unittest.TestCase):
+
+    def test_records_only_count_weeks_played_up_to_the_post(self):
+        import pwoods_site as P
+        year = {"teams": [{"name": "A", "owner": "Ann"}, {"name": "B", "owner": "Bob"}],
+                "weekly_scores": {"1": [{"home_team": "A", "away_team": "B",
+                                         "home_score": 100, "away_score": 90}],
+                                  "2": [{"home_team": "B", "away_team": "A",
+                                         "home_score": 110, "away_score": 80}],
+                                  "3": [{"home_team": "A", "away_team": "B",
+                                         "home_score": 0, "away_score": 0}]}}
+        st = P.standings_through(year, 3)
+        self.assertEqual((st["Ann"]["wins"], st["Ann"]["losses"]), (1, 1))
+        self.assertEqual(st["Ann"]["pf"], 180)
+        self.assertEqual(P.standings_through(year, 1)["Bob"]["losses"], 1)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -225,7 +225,7 @@ class TestRoutesSmoke(WebTestCase):
     OFFLINE_ROUTES = ["/", "/records", "/head_to_head", "/power_rankings",
                       "/draft", "/rosters", "/notes", "/chat", "/api/prefs",
                       "/trades", "/draft_review", "/manifest.webmanifest", "/sw.js",
-                      "/offline", "/static/icons/icon-192.png"]
+                      "/offline", "/static/icons/icon-192.png", "/rankings"]
 
     def test_offline_pages_render(self):
         for route in self.OFFLINE_ROUTES:

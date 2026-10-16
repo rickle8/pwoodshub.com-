@@ -35,6 +35,8 @@ FILES = [
     "consensus.py", "projections.py", "player_stats.py", "recaps.py",
     "lineups.py", "trades.py", "trade_machine.py", "keepers.py", "draft_review.py",
     "push.py", "live_week.py", "requirements.txt",
+    # The commissioner's posts. Written here, not on the server, so it ships.
+    "power_rankings.json",
     "pwoods_site.py", "sleeper_common.py", "scraper.py", "update_sleeper.py",
     "weekly_recap.py", "live_loop.py",
 ] + sorted(f"templates/{f}" for f in os.listdir(os.path.join(SRC, "templates"))
@@ -140,6 +142,7 @@ def main():
               ("/trades", "Trade History", True),
               ("/keepers", "Keeper Planner", True),
               ("/draft_review", "Draft Grades", True),
+              ("/rankings", "Power Rankings", True),
               ("/manifest.webmanifest", "PW League", True),
               ("/sw.js", "pw-v", True),
               ("/api/push/key", '"available":true', True),
