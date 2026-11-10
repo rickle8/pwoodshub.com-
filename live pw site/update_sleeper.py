@@ -45,8 +45,12 @@ BACKUP_KEEP = 14        # ~2MB each, so about 30MB of history
 # every owner resolve to a fallback name.
 
 def played_week_count(season_data):
-    return sum(1 for games in (season_data.get("weekly_scores") or {}).values()
-               if any((g.get("home_score") or g.get("away_score")) for g in games))
+    # The week in progress counts too. It used to be stored inside
+    # weekly_scores and now lives in live_week; counting both keeps a rebuild
+    # from looking like it lost a week when the format changed.
+    live = 1 if (season_data.get("live_week") or {}).get("games") else 0
+    return live + sum(1 for games in (season_data.get("weekly_scores") or {}).values()
+                      if any((g.get("home_score") or g.get("away_score")) for g in games))
 
 
 def validate_season(new_data, old_data, season):

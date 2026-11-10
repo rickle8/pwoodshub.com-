@@ -72,6 +72,7 @@
     ("tab-trending", "Trending", "/trends"),
     ("tab-finder", "Trade Finder", "/trade_finder"),
     ("tab-keepers", "Keepers", "/keepers"),
+    ("tab-analyzer", "Trade Analyzer", "/analyzer"),
 ] if live else [] %}
 <ul class="nav nav-tabs mb-3" id="yearTabs" role="tablist">
     <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-standings">Standings</button></li>
@@ -83,11 +84,11 @@
     {% for id, label, _ in lazy[5:7] %}
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#{{ id }}">{{ label }}</button></li>
     {% endfor %}
-    {% if analyzer %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-analyzer">Trade Analyzer</button></li>{% endif %}
+    {% if live %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-analyzer">Trade Analyzer</button></li>{% endif %}
     {% if trade_history %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-trade-history">Trade History</button></li>{% endif %}
     {% if transactions %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-transactions">Transactions</button></li>{% endif %}
     {% if draft %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-draft">Draft</button></li>{% endif %}
-    {% for id, label, _ in lazy[7:] %}
+    {% for id, label, _ in lazy[7:8] %}
     <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#{{ id }}">{{ label }}</button></li>
     {% endfor %}
     {% if efficiency %}<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-efficiency">Lineup Efficiency</button></li>{% endif %}
@@ -329,11 +330,6 @@
     </div>
     {% endif %}
 
-    {% if analyzer %}
-    <div class="tab-pane fade" id="tab-analyzer">
-        {% include "_analyzer.html" %}
-    </div>
-    {% endif %}
 
     {% for id, label, src in lazy %}
     <div class="tab-pane fade" id="{{ id }}" data-src="{{ src }}">
@@ -395,7 +391,7 @@ document.querySelectorAll('#yearTabs button').forEach(btn => {
 });
 // Pages that have a tab here. A link to one of them (from the nav menu, or
 // from inside another tab) switches tabs instead of leaving the page.
-const TAB_FOR_PATH = {'/analyzer': 'tab-analyzer', '/trades': 'tab-trade-history'};
+const TAB_FOR_PATH = {'/trades': 'tab-trade-history'};
 document.querySelectorAll('.tab-pane[data-src]').forEach(p => { TAB_FOR_PATH[p.dataset.src] = p.id; });
 
 function switchTo(id) {

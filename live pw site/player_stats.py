@@ -10,6 +10,7 @@ are the headline numbers.
 """
 
 import time
+from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 
 from sleeper_common import safe_get
@@ -20,6 +21,7 @@ RANK_KEY = f"pos_rank_{SCORING}"
 
 _cache = {}
 _TTL = 300                     # 5 minutes — live enough during games
+_PAST_TTL = 24 * 3600          # a finished season's numbers never change
 
 # Keys are per player *and* per season, so browsing a few careers can mint
 # thousands of entries that nothing ever removes. Bound it and drop the oldest
@@ -138,8 +140,11 @@ def _fetch_grouped(kind, player_id, season):
 def get_player_game_log(player_id, season, position):
     """Weekly rows blending actual stats with projections, plus season totals."""
     def fetch():
-        stats = _fetch_grouped("stats", player_id, season)
-        projs = _fetch_grouped("projections", player_id, season)
+        # Two independent requests, so make them side by side.
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            f_stats = pool.submit(_fetch_grouped, "stats", player_id, season)
+            f_projs = pool.submit(_fetch_grouped, "projections", player_id, season)
+            stats, projs = f_stats.result(), f_projs.result()
         cols = stat_columns_for(position)
 
         # Every week of the season gets a row, not just the ones with a stat
@@ -169,7 +174,9 @@ def get_player_game_log(player_id, season, position):
                 "opponent":  opponent,
                 "is_away":   s.get("is_away_team"),
                 # Didn't play means zero points for whoever started him.
-                "points":    s_stats.get(PTS_KEY) if played else 0,
+                # A player can appear in a game (special teams, a few snaps)
+                # without a fantasy stat line; that's a zero, not a blank.
+                "points":    (s_stats.get(PTS_KEY) or 0) if played else 0,
                 "projected": p_stats.get(PTS_KEY),
                 "pos_rank":  _clean_rank(s_stats.get(RANK_KEY)),
                 "snaps":     s_stats.get("off_snp"),
@@ -194,7 +201,16 @@ def get_player_game_log(player_id, season, position):
         }
         return {"rows": rows, "totals": totals, "columns": [c[1] for c in cols]}
 
-    return _cached(f"log:{player_id}:{season}", fetch)
+    return _cached(f"log:{player_id}:{season}", fetch, ttl=_ttl_for(season))
+
+
+def _ttl_for(season, live=_TTL):
+    """Short for the season being played, a day for ones that are over."""
+    try:
+        current = str(_nfl_state().get("season") or "")
+    except Exception:
+        return live
+    return live if str(season) >= current else _PAST_TTL
 
 
 def get_season_totals(player_id, season):
@@ -203,7 +219,7 @@ def get_season_totals(player_id, season):
         url = (f"https://api.sleeper.com/stats/nfl/player/{player_id}"
                f"?season_type=regular&season={season}")
         return (safe_get(url, timeout=20) or {}).get("stats") or {}
-    return _cached(f"season:{player_id}:{season}", fetch, ttl=900)
+    return _cached(f"season:{player_id}:{season}", fetch, ttl=_ttl_for(season, 900))
 
 
 def season_summary(season_totals, position):

@@ -23,6 +23,16 @@
               background: var(--bs-body-bg); }
 .filter-bar .btn { --bs-btn-padding-y: .15rem; --bs-btn-padding-x: .5rem; font-size: .82rem; }
 .empty-note { display: none; }
+/* On a phone the name, the roster tag and the count don't fit on one line and
+   the name lost: "Tan…". Let the row wrap so the tag drops under the name. */
+@media (max-width: 575.98px) {
+    .trend-row { flex-wrap: wrap; row-gap: 2px; }
+    .trend-name { flex: 1 1 0; }
+    .trend-row .tag-owned, .trend-row .tag-fa { order: 5; margin-left: 2.6em; }
+    .trend-row .trend-rank ~ .tag-owned, .trend-row .trend-rank ~ .tag-fa { margin-left: 5em; }
+    .trend-count, .delta, .cut-pct { order: 2; }
+    .trend-row::after { content: ""; flex-basis: 100%; order: 3; height: 0; }
+}
 .trend-list.is-empty .empty-note { display: block; }
 {% endblock %}
 

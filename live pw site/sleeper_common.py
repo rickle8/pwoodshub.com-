@@ -80,25 +80,43 @@ KEEPER_EXCLUSIONS = {
 }
 
 
+_SUFFIXES = {"jr", "sr", "ii", "iii", "iv", "v"}
+
+
+def norm_name(name):
+    """A player's name with punctuation and Jr./Sr./III dropped, lowercased.
+
+    Sleeper renames players now and then ("James Cook" became "James Cook
+    III"), and anything matched on the exact spelling silently stops matching.
+    """
+    words = "".join(c for c in (name or "").lower()
+                    if c.isalnum() or c.isspace()).split()
+    while len(words) > 1 and words[-1] in _SUFFIXES:
+        words.pop()
+    return " ".join(words)
+
+
 def detect_keepers(draft_picks, prev_season_data, season):
     """Flag keeper picks by applying the league's keeper-pricing rule against
     the previous season's draft and end-of-season rosters. Mutates draft_picks
     in place (sets pick["keeper"] = True). Safe no-op without prior data."""
     if not prev_season_data:
         return
-    exclusions = KEEPER_EXCLUSIONS.get(season, set())
-    prev_draft = {(p["player"], p["owner"]): (p["round"], bool(p.get("keeper")))
+    # Compared on normalised names: the previous season was saved with the
+    # spelling Sleeper used then, which may not be the one it uses now.
+    exclusions = {(norm_name(n), o) for n, o in KEEPER_EXCLUSIONS.get(season, set())}
+    prev_draft = {(norm_name(p["player"]), p["owner"]): (p["round"], bool(p.get("keeper")))
                   for p in prev_season_data.get("draft", [])}
-    prev_roster = {t["owner"]: {pl["name"] for pl in t.get("roster", [])}
+    prev_roster = {t["owner"]: {norm_name(pl["name"]) for pl in t.get("roster", [])}
                    for t in prev_season_data.get("teams", [])}
 
     for p in draft_picks:
         if p.get("keeper"):
             continue
-        key = (p["player"], p["owner"])
+        key = (norm_name(p["player"]), p["owner"])
         if key in exclusions or key not in prev_draft:
             continue
-        if p["player"] not in prev_roster.get(p["owner"], set()):
+        if key[0] not in prev_roster.get(p["owner"], set()):
             continue
         prev_round, was_kept = prev_draft[key]
         if was_kept:
@@ -134,8 +152,15 @@ def reg_season_weeks(year):
     return 14 if int(year) >= 2021 else 13
 
 
+# One shared session, so repeat calls to the same host reuse the connection
+# instead of paying for a new TLS handshake every time.
+_session = requests.Session()
+_session.mount("https://", requests.adapters.HTTPAdapter(pool_connections=8,
+                                                         pool_maxsize=16))
+
+
 def safe_get(url, timeout=15):
-    resp = requests.get(url, timeout=timeout)
+    resp = _session.get(url, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
 
@@ -280,6 +305,14 @@ def build_season(league_id, player_names, prev_season_data=None):
     weekly_scores = {}
     head_to_head  = {roster_owner[r["roster_id"]]: {} for r in rosters}
 
+    # Sleeper only moves last_scored_leg once a week is final. A week past it
+    # with points on the board is still being played: its half-finished scores
+    # must not count as results, or Thursday's lone starter becomes an all-time
+    # low score and a Sunday-afternoon lead goes into the head-to-head books.
+    # It is kept apart as `live_week` instead.
+    final_through = regular_weeks if status == "complete" else min(last_scored, regular_weeks)
+    live_week = None
+
     for week in range(1, regular_weeks + 1):
         groups = {}
         for entry in raw_matchups.get(week, []):
@@ -287,6 +320,7 @@ def build_season(league_id, player_names, prev_season_data=None):
             if mid is not None:
                 groups.setdefault(mid, []).append(entry)
 
+        is_final = week <= final_through
         week_results = []
         for pair in groups.values():
             if len(pair) != 2:
@@ -308,6 +342,8 @@ def build_season(league_id, player_names, prev_season_data=None):
                 "home_score": a_pts,
                 "away_score": b_pts,
             })
+            if not is_final:
+                continue
 
             ao = roster_owner[a_rid]
             bo = roster_owner[b_rid]
@@ -323,7 +359,12 @@ def build_season(league_id, player_names, prev_season_data=None):
                 head_to_head[ao][bo]["ties"] += 1
                 head_to_head[bo][ao]["ties"] += 1
 
-        weekly_scores[str(week)] = week_results
+        if is_final:
+            weekly_scores[str(week)] = week_results
+        else:
+            weekly_scores[str(week)] = []
+            if week_results and live_week is None:
+                live_week = {"week": week, "games": week_results}
 
     # ── Per-player scoring for this league ───────────────────────────────────
     # Sleeper's matchup payloads carry each rostered player's weekly points, so
@@ -501,14 +542,15 @@ def build_season(league_id, player_names, prev_season_data=None):
             draft_id = drafts[0].get("draft_id")
             if draft_id:
                 picks = safe_get(f"https://api.sleeper.app/v1/draft/{draft_id}/picks") or []
-                season_keepers = KNOWN_KEEPERS.get(season, set())
+                season_keepers = {(norm_name(n), o)
+                                  for n, o in KNOWN_KEEPERS.get(season, set())}
                 for pick in sorted(picks, key=lambda p: (p.get("round") or 0, p.get("pick_no") or 0)):
                     pid  = str(pick.get("player_id") or "")
                     info = player_names.get(pid, {"name": "Unknown", "position": "?"})
                     rid  = pick.get("roster_id")
                     owner = roster_owner.get(rid, "Unknown")
                     keeper = (bool(pick.get("is_keeper"))
-                              or (info["name"], owner) in season_keepers)
+                              or (norm_name(info["name"]), owner) in season_keepers)
                     draft_picks.append({
                         "round":     pick.get("round", 0),
                         "pick":      pick.get("pick_no", 0),
@@ -561,6 +603,7 @@ def build_season(league_id, player_names, prev_season_data=None):
         "status":         status,   # "in_season" seasons don't count as titles yet
         "teams":          teams,
         "weekly_scores":  weekly_scores,
+        "live_week":      live_week,   # the week in progress, never in the totals
         "head_to_head":   head_to_head,
         "playoffs":       bracket,
         "draft":          draft_picks,

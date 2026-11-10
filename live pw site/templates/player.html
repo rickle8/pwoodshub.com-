@@ -147,7 +147,7 @@ tfoot.totals-row td { border-top: 2px solid var(--bs-border-color); font-weight:
             {% if market.espn_rank %}
             <tr><td>ESPN projection</td><td class="small text-muted">ESPN's own week-by-week model</td>
                 <td class="text-end"><strong>{{ market.position }}{{ market.espn_rank }}</strong>
-                    <span class="text-muted small">({{ market.espn_pts | stat }} PPR pts)</span></td></tr>
+                    <span class="text-muted small">({{ market.espn_pts | stat }} pts)</span></td></tr>
             {% endif %}
             {% if market.fp_rank %}
             <tr><td>FantasyPros experts</td><td class="small text-muted">Average rank across dozens of analysts</td>
@@ -380,7 +380,7 @@ tfoot.totals-row td { border-top: 2px solid var(--bs-border-color); font-weight:
             </td>
             <td class="num">
                 {% if r.played %}
-                    <strong class="{% if r.projected and r.points >= r.projected %}beat-proj{% elif r.projected %}miss-proj{% endif %}">{{ r.points }}</strong>
+                    <strong class="{% if r.projected and (r.points or 0) >= r.projected %}beat-proj{% elif r.projected %}miss-proj{% endif %}">{{ r.points }}</strong>
                 {% else %}<span class="text-muted">0</span>{% endif %}
             </td>
             <td class="num text-muted">{{ r.projected if r.projected is not none else '—' }}</td>
