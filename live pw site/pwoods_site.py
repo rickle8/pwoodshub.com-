@@ -30,6 +30,8 @@ import push
 import live_week
 
 app = Flask(__name__)
+# Icons and the service worker's files rarely change; let browsers keep them.
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 24 * 3600
 
 LEAGUE_HISTORY_FILE = os.path.join(os.path.dirname(__file__), "league_history.json")
 CHAT_LOG_FILE       = os.path.join(os.path.dirname(__file__), "chat_log.json")
@@ -1255,8 +1257,12 @@ def _remaining_schedule(year_str, reg_weeks):
     def fetch():
         ident = _cached("identity", 3600, _league_identity)
         schedule = {}
-        for wk in range(1, reg_weeks + 1):
-            raw = safe_get(f"https://api.sleeper.app/v1/league/{SLEEPER_LEAGUE_ID}/matchups/{wk}") or []
+        weeks = list(range(1, reg_weeks + 1))
+        with ThreadPoolExecutor(max_workers=7) as pool:
+            fetched = list(pool.map(
+                lambda w: safe_get(f"https://api.sleeper.app/v1/league/{SLEEPER_LEAGUE_ID}/matchups/{w}") or [],
+                weeks))
+        for wk, raw in zip(weeks, fetched):
             groups = {}
             for e in raw:
                 mid = e.get("matchup_id")
@@ -1567,7 +1573,8 @@ def home():
                      key=lambda t: (t.get("wins", 0), t.get("points_for", 0)),
                      default=None)
         live_status = {"year": live_year, "played": played, "reg_weeks": reg,
-                       "leader": leader}
+                       "leader": leader,
+                       "live_week": (league_data[live_year].get("live_week") or {}).get("week")}
 
     return render_template("index.html", **owners_context(),
                            years=sorted(league_data.keys(), reverse=True),
@@ -1682,14 +1689,31 @@ def year_view(year):
                            transactions=year_data.get("transactions", []),
                            team_txn_counts=team_txn_counts,
                            season_complete=season_is_complete(year_data),
-                           analyzer=_analyzer_context(year),
+                           # The analyzer needs live player values from five
+                           # outside sites, so it loads when its tab is opened
+                           # rather than holding up the whole season page.
                            trade_history=_trade_history(year),
                            efficiency=get_efficiency(year))
 
+_players_memo = {"mtime": None, "data": None}
+
+
 def _all_players():
     """Sleeper player metadata. Tolerates a stale cache — a page view should
-    never trigger the 15MB download; the background updater keeps it fresh."""
-    return get_player_names(max_age_hours=24 * 365)
+    never trigger the 15MB download; the background updater keeps it fresh.
+
+    Kept in memory and re-read only when the file changes: parsing 2.5MB of
+    JSON several times per page view was a real share of every response.
+    """
+    import sleeper_common
+    try:
+        mtime = os.path.getmtime(sleeper_common._PLAYERS_CACHE)
+    except OSError:
+        mtime = None
+    if _players_memo["data"] is None or mtime != _players_memo["mtime"]:
+        _players_memo.update({"mtime": mtime,
+                              "data": get_player_names(max_age_hours=24 * 365)})
+    return _players_memo["data"]
 
 
 def _consensus_board(season):
@@ -1858,9 +1882,14 @@ def player_view(player_id):
     season = max(league_data.keys(), key=int)
     position = info.get("position", "?")
 
+    # Everything this page needs from Sleeper is independent, so it all goes
+    # out at once: the current log and totals here, past seasons below.
+    pool = ThreadPoolExecutor(max_workers=10)
+    f_log = pool.submit(player_stats.get_player_game_log, player_id, season, position)
+    f_totals = pool.submit(player_stats.get_season_totals, player_id, season)
     try:
-        log = player_stats.get_player_game_log(player_id, season, position)
-        season_totals = player_stats.get_season_totals(player_id, season)
+        log = f_log.result()
+        season_totals = f_totals.result()
         summary = player_stats.season_summary(season_totals, position)
         error = None
     except Exception as e:
@@ -1894,10 +1923,8 @@ def player_view(player_id):
 
     # One request per season, so fetch them side by side — a 15-year veteran
     # would otherwise stall the page for several seconds.
-    past = []
-    if years:
-        with ThreadPoolExecutor(max_workers=min(8, len(years))) as pool:
-            past = [r for r in pool.map(_summary_for, years) if r]
+    past = [r for r in pool.map(_summary_for, years) if r]
+    pool.shutdown(wait=False)
 
     # Where the outside world has this player right now: expert projection,
     # draft market and trade market, plus how far apart they are.
@@ -2399,6 +2426,21 @@ def service_worker():
                                mimetype="application/javascript")
     resp.headers["Cache-Control"] = "no-cache"
     return resp
+
+
+@app.route('/robots.txt')
+def robots_txt():
+    """Crawlers were over half the traffic, mostly walking every /player/ page
+    (each one several Sleeper calls) on a site for twelve people. The home
+    page stays open; everything else is off limits."""
+    body = "User-agent: *\nAllow: /$\nDisallow: /\n"
+    return app.response_class(body, mimetype="text/plain")
+
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, "static", "icons"),
+                               "icon-192.png", mimetype="image/png")
 
 
 @app.route('/offline')

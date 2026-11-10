@@ -48,7 +48,7 @@
     {{ t.wins }}-{{ t.losses }}-{{ t.ties }}
     &nbsp;·&nbsp; {{ t.points_for | round(2) }} pts for
     &nbsp;·&nbsp; {{ t.points_against | round(2) }} pts against
-    &nbsp;·&nbsp; Finished <strong>{{ t.rank }}/{{ detail.standings | length }}</strong>
+    &nbsp;·&nbsp; {{ 'Finished' if detail.season_complete else 'Currently' }} <strong>{{ t.rank }}/{{ detail.standings | length }}</strong>
 </p>
 
 <!-- Key stat cards -->
@@ -113,12 +113,12 @@
     <tbody>
         {% for p in detail.roster %}
         <tr>
-            <td><span class="pos-{{ p.position }}">{{ p.position }}</span></td>
+            <td><span class="badge pos-{{ p.position }}">{{ p.position }}</span></td>
             <td>
                 {% set pid = p.player_id or player_id_for(p) %}
                 {% if pid %}<a href="{{ url_for('player_view', player_id=pid) }}">{{ p.name }}</a>
                 {% else %}{{ p.name }}{% endif %}
-                {% if p.keeper %}<span class="keeper-badge">KEEPER</span>{% endif %}
+                {% if p.keeper %}<span class="badge keeper-badge">Keeper</span>{% endif %}
             </td>
             {% if detail.roster_has_scoring %}
             <td class="text-end">{{ p.points if p.points is not none else '—' }}</td>

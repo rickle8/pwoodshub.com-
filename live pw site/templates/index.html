@@ -44,6 +44,7 @@
         <div class="season-live-sub">
             {% if live_status.played %}
                 Week {{ live_status.played }} of {{ live_status.reg_weeks }} complete
+                {% if live_status.live_week %}· week {{ live_status.live_week }} in progress{% endif %}
                 {% if live_status.leader %}
                     · {{ live_status.leader.owner }} leads at
                     {{ live_status.leader.wins }}-{{ live_status.leader.losses }}

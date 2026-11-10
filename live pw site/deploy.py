@@ -143,6 +143,8 @@ def main():
               ("/keepers", "Keeper Planner", True),
               ("/draft_review", "Draft Grades", True),
               ("/rankings", "Power Rankings", True),
+              ("/robots.txt", "Disallow", True),
+              ("/player/8172", "Consensus Value", True),
               ("/manifest.webmanifest", "PW League", True),
               ("/sw.js", "pw-v", True),
               ("/api/push/key", '"available":true', True),

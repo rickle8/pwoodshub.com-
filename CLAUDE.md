@@ -71,5 +71,10 @@ smoke test.
   and deploy. Record/PF/PA and the movement arrows are computed at `/rankings`.
 - `push.py`: web push alerts for new league notes. `static/sw.js` is the
   service worker for the home-screen app. Bump its `VERSION` when you change it.
+- A week still being played is stored as `live_week`, never in `weekly_scores`
+  or `head_to_head` (`sleeper_common.build_season`, keyed off Sleeper's
+  `last_scored_leg`), so records, recaps and odds only see finished weeks.
+- Sleeper renames players ("James Cook III"). Match names with
+  `sleeper_common.norm_name`, or by `player_id`, never by exact spelling.
 - Sleeper seasons store the overall pick number and ESPN seasons store the pick
   within the round. Normalize with `(pick - 1) % teams + 1`.
