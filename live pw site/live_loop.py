@@ -14,7 +14,21 @@ import time
 import traceback
 from datetime import datetime, timezone
 
+import requests
+
 import update_sleeper
+
+WARM_URL = "https://www.pwoodshub.com/api/warm"
+
+
+def warm_site():
+    """Ask the site to refresh its slow pages (playoff odds, trade finder,
+    player values) now, so no visitor has to wait for them."""
+    try:
+        r = requests.get(WARM_URL, timeout=240)
+        print(f"  warm: {r.status_code} {r.text.strip()[:120]}", flush=True)
+    except Exception as e:
+        print(f"  warm failed: {type(e).__name__}", flush=True)
 
 
 def in_game_window():
@@ -41,6 +55,7 @@ def main():
             update_sleeper.update()
         except Exception:
             traceback.print_exc()
+        warm_site()
         delay = 300 if in_game_window() else 1800
         print(f"[{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M')} UTC] "
               f"sleeping {delay // 60} min...", flush=True)

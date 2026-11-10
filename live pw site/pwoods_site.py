@@ -4,12 +4,13 @@ import hashlib
 import hmac
 import json
 import os
+import pickle
 import random
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
-from threading import Lock
+from threading import Lock, local
 
 import requests
 
@@ -1092,10 +1093,62 @@ def _lock_for(key):
         return _cache_locks.setdefault(key, Lock())
 
 
-def _cached(key, ttl, fetch_fn):
+# ── Shared, pre-warmed results ────────────────────────────────────────────────
+# The slow things (player values from five sites, 3,000 playoff simulations,
+# the trade search) used to be worked out by whichever visitor arrived after
+# the in-memory copy expired — and each of the three web workers kept its own
+# copy, so on a quiet site that was nearly every visitor, for 5+ seconds.
+#
+# Entries marked persist=True are also written to CACHE_DIR, which every
+# worker reads. The background updater pings /api/warm after each run, and
+# that is what recomputes them; ordinary page views just read the latest copy
+# and keep using it for GRACE seconds past its ttl, so they only ever compute
+# when the updater has been down for hours.
+CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
+GRACE = 3 * 3600
+_warming = local()
+
+
+def _disk_path(key):
+    return os.path.join(CACHE_DIR, hashlib.md5(key.encode()).hexdigest() + ".pkl")
+
+
+def _disk_read(key):
+    try:
+        with open(_disk_path(key), "rb") as f:
+            entry = pickle.load(f)
+        return entry if entry.get("key") == key else None
+    except Exception:
+        return None
+
+
+def _disk_write(key, entry):
+    try:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        tmp = f"{_disk_path(key)}.{os.getpid()}.tmp"
+        with open(tmp, "wb") as f:
+            pickle.dump({"key": key, **entry}, f, protocol=4)
+        os.replace(tmp, _disk_path(key))
+    except Exception as e:
+        print(f"cache write failed for {key}: {e}")
+
+
+def _cached(key, ttl, fetch_fn, persist=False):
+    now = time.time()
     entry = _live_cache.get(key)
-    if entry and time.time() - entry["ts"] < ttl:
+    if entry and now - entry["ts"] < ttl:
         return entry["data"]
+
+    warming = getattr(_warming, "on", False)
+    if persist:
+        disk = _disk_read(key)
+        if disk and (not entry or disk["ts"] > entry["ts"]):
+            entry = _live_cache[key] = {"ts": disk["ts"], "data": disk["data"]}
+        # The warmer refreshes anything past its ttl; a page view is happy
+        # with a copy that is a little older than that.
+        limit = ttl if warming else ttl + GRACE
+        if entry and now - entry["ts"] < limit:
+            return entry["data"]
 
     # One fetch per key at a time. Without this every request arriving during a
     # slow miss starts its own copy of the work, and compute_playoff_odds() is a
@@ -1114,7 +1167,9 @@ def _cached(key, ttl, fetch_fn):
             if entry:
                 return entry["data"]      # stale beats broken
             raise
-        _live_cache[key] = {"ts": time.time(), "data": data}
+        entry = _live_cache[key] = {"ts": time.time(), "data": data}
+        if persist:
+            _disk_write(key, entry)
         return data
 
 
@@ -1273,7 +1328,7 @@ def _remaining_schedule(year_str, reg_weeks):
                 for p in groups.values() if len(p) == 2
             ]
         return schedule
-    schedule = _cached("full_schedule", 21600, fetch)
+    schedule = _cached("full_schedule", 21600, fetch, persist=True)
 
     year_data = league_data[year_str]
     team_to_owner = {t["name"]: t["owner"] for t in year_data.get("teams", [])}
@@ -1538,7 +1593,7 @@ def compute_playoff_odds(n_sims=3000):
                 "playoffs_started": bool(decided_w or decided_l),
                 "n_sims": n_sims, "has_ratings": bool(ratings),
                 "sources": sources}
-    return _cached("playoff_odds", 1800, sim)
+    return _cached("playoff_odds", 1800, sim, persist=True)
 
 
 def get_current_keepers(year_data):
@@ -1724,7 +1779,13 @@ def _consensus_board(season):
         # scores know that more precisely than the NFL week number, which flips
         # a few days before week 1 actually kicks off.
         preseason = season_phase(str(season)) == "preseason"
-        return consensus.build_board(season, _all_players(), use_adp=preseason)
+
+        def build():
+            board = consensus.build_board(season, _all_players(), use_adp=preseason)
+            if not board:
+                raise RuntimeError("empty board")     # never store a failure
+            return board
+        return _cached(f"board:{season}:{int(preseason)}", 2 * 3600, build, persist=True)
     except Exception as e:
         print(f"Consensus board unavailable: {e}")
         return {}
@@ -2011,7 +2072,18 @@ def scoreboard_view():
 @app.route('/api/scoreboard')
 def api_scoreboard():
     try:
-        return jsonify(get_live_scoreboard())
+        board = get_live_scoreboard()
+        if request.args.get("lite"):
+            # Just the scores, for the strip on the home page.
+            side = lambda t: {k: t[k] for k in ("team", "owner", "points", "live",
+                                                "yet_to_play", "playing")}
+            return jsonify({"week": board.get("week"),
+                            "season_type": board.get("season_type"),
+                            "live_games": board.get("live_games", 0),
+                            "matchups": [{"a": side(m["a"]), "b": side(m["b"]),
+                                          "win_a": m["win_a"], "win_b": m["win_b"]}
+                                         for m in board.get("matchups", [])]})
+        return jsonify(board)
     except Exception as e:
         return jsonify({"error": str(e)}), 502
 
@@ -2312,7 +2384,7 @@ def _trade_finder_deals(season):
         teams = league_data.get(season, {}).get("teams", [])
         return {"deals": trade_machine.find_trades(teams, board),
                 "has_board": True, "ts": time.time()}
-    return _cached(f"trade_finder:{season}", 3600, build)
+    return _cached(f"trade_finder:{season}", 3600, build, persist=True)
 
 
 @app.route('/trade_finder')
@@ -2426,6 +2498,32 @@ def service_worker():
                                mimetype="application/javascript")
     resp.headers["Cache-Control"] = "no-cache"
     return resp
+
+
+@app.route('/api/warm')
+def api_warm():
+    """Recompute the slow shared results that are past their ttl.
+
+    The background updater calls this after every run, so the work happens
+    here, out of sight, and visitors only ever read the finished copy. Safe to
+    call any time: anything still fresh is skipped.
+    """
+    season = _latest_season()
+    done = {}
+    _warming.on = True
+    try:
+        for name, fn in (("board", lambda: _consensus_board(season)),
+                         ("odds", compute_playoff_odds),
+                         ("trade_finder", lambda: _trade_finder_deals(season))):
+            t = time.time()
+            try:
+                fn()
+                done[name] = round(time.time() - t, 2)
+            except Exception as e:
+                done[name] = f"failed: {type(e).__name__}"
+    finally:
+        _warming.on = False
+    return jsonify(done)
 
 
 @app.route('/robots.txt')
@@ -2587,6 +2685,65 @@ def head_to_head_view():
     owners = sorted(head_to_head.keys())
     return render_template("head_to_head.html", head_to_head=head_to_head, owners=owners,
                            min_year=min(league_data), max_year=max(league_data))
+
+def rivalry(a, b):
+    """Every regular-season meeting between two owners, from a's side."""
+    games = []
+    for g in _regular_season_games():
+        if {g["home_owner"], g["away_owner"]} != {a, b}:
+            continue
+        mine, theirs = ((g["home_score"], g["away_score"]) if g["home_owner"] == a
+                        else (g["away_score"], g["home_score"]))
+        games.append({"year": g["year"], "week": int(g["week"]), "mine": mine,
+                      "theirs": theirs, "margin": round(mine - theirs, 2),
+                      "result": "W" if mine > theirs else "L" if mine < theirs else "T"})
+    games.sort(key=lambda g: (int(g["year"]), g["week"]))
+    if not games:
+        return None
+    wins = sum(g["result"] == "W" for g in games)
+    losses = sum(g["result"] == "L" for g in games)
+
+    def longest(letter):
+        best = cur = 0
+        for g in games:
+            cur = cur + 1 if g["result"] == letter else 0
+            best = max(best, cur)
+        return best
+    streak = 0
+    for g in reversed(games):
+        if g["result"] != games[-1]["result"]:
+            break
+        streak += 1
+    a_wins = [g for g in games if g["result"] == "W"]
+    b_wins = [g for g in games if g["result"] == "L"]
+    by_year = {}
+    for g in games:
+        y = by_year.setdefault(g["year"], {"W": 0, "L": 0, "T": 0})
+        y[g["result"]] += 1
+    return {
+        "a": a, "b": b, "games": list(reversed(games)),
+        "wins": wins, "losses": losses, "ties": len(games) - wins - losses,
+        "avg_a": round(sum(g["mine"] for g in games) / len(games), 1),
+        "avg_b": round(sum(g["theirs"] for g in games) / len(games), 1),
+        "streak": streak, "streak_owner": (a if games[-1]["result"] == "W" else
+                                           b if games[-1]["result"] == "L" else None),
+        "best_run_a": longest("W"), "best_run_b": longest("L"),
+        "blowout_a": max(a_wins, key=lambda g: g["margin"], default=None),
+        "blowout_b": min(b_wins, key=lambda g: g["margin"], default=None),
+        "closest": min(games, key=lambda g: abs(g["margin"])),
+        "high_a": max(games, key=lambda g: g["mine"]),
+        "high_b": max(games, key=lambda g: g["theirs"]),
+        "by_year": sorted(by_year.items(), reverse=True),
+    }
+
+
+@app.route('/rivalry/<string:a>/<string:b>')
+def rivalry_view(a, b):
+    r = rivalry(a, b)
+    if not r:
+        abort(404)
+    return render_template("rivalry.html", r=r)
+
 
 @app.route("/power_rankings")
 def power_rankings():
