@@ -71,6 +71,12 @@ smoke test.
   and deploy. Record/PF/PA and the movement arrows are computed at `/rankings`.
 - `push.py`: web push alerts for new league notes. `static/sw.js` is the
   service worker for the home-screen app. Bump its `VERSION` when you change it.
+- Slow shared results (player values board, playoff odds, trade finder,
+  schedule) use `_cached(..., persist=True)`: pickled into `cache/` (server
+  only, git-ignored) so all three web workers share them. `live_loop.py` pings
+  `/api/warm` after every update, which recomputes anything past its ttl; page
+  views just read the latest copy.
+- `/rivalry/<a>/<b>`: every meeting between two owners; linked from Head-to-Head.
 - A week still being played is stored as `live_week`, never in `weekly_scores`
   or `head_to_head` (`sleeper_common.build_season`, keyed off Sleeper's
   `last_scored_leg`), so records, recaps and odds only see finished weeks.

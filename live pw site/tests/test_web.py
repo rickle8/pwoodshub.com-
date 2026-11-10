@@ -39,6 +39,8 @@ class WebTestCase(unittest.TestCase):
         # The current season's page asks Sleeper and the value markets for
         # divisions and player values; keep tests offline and quick.
         self._net = {"_divisions": P._divisions, "_consensus_board": P._consensus_board}
+        self._cache_dir = P.CACHE_DIR
+        P.CACHE_DIR = os.path.join(self.tmp, "cache")
         P._divisions = lambda: {}
         P._consensus_board = lambda season: {}
         P.app.config["TESTING"] = True
@@ -47,6 +49,7 @@ class WebTestCase(unittest.TestCase):
     def tearDown(self):
         for name, value in self._saved.items():
             setattr(P, name, value)
+        P.CACHE_DIR = self._cache_dir
         for name, fn in self._net.items():
             setattr(P, name, fn)
         P._pin_failures.clear()
@@ -226,7 +229,7 @@ class TestRoutesSmoke(WebTestCase):
                       "/draft", "/rosters", "/notes", "/chat", "/api/prefs",
                       "/trades", "/draft_review", "/manifest.webmanifest", "/sw.js",
                       "/offline", "/static/icons/icon-192.png", "/rankings",
-                      "/robots.txt", "/favicon.ico"]
+                      "/robots.txt", "/favicon.ico", "/head_to_head", "/keepers"]
 
     def test_offline_pages_render(self):
         for route in self.OFFLINE_ROUTES:
@@ -249,6 +252,35 @@ class TestRoutesSmoke(WebTestCase):
         oldest = min(P.league_data, key=int)
         self.assertIn('data-src="/odds"', self.client.get(f"/year/{latest}").get_data(as_text=True))
         self.assertNotIn('data-src=', self.client.get(f"/year/{oldest}").get_data(as_text=True))
+
+    def test_rivalry_pages(self):
+        latest = P.league_data[max(P.league_data, key=int)]
+        a, b = [t["owner"] for t in latest["teams"][:2]]
+        r = P.rivalry(a, b)
+        self.assertEqual(r["wins"] + r["losses"] + r["ties"], len(r["games"]))
+        flipped = P.rivalry(b, a)
+        self.assertEqual((r["wins"], r["losses"]), (flipped["losses"], flipped["wins"]))
+        self.assertEqual(self.client.get(f"/rivalry/{a}/{b}").status_code, 200)
+        self.assertEqual(self.client.get("/rivalry/Nobody/Nope").status_code, 404)
+
+    def test_shared_cache_survives_a_fresh_worker(self):
+        """A persisted result is read back from disk by a worker that has
+        nothing in memory, and page views tolerate a copy just past its ttl
+        while the warmer recomputes it."""
+        calls = []
+        fn = lambda: calls.append(1) or len(calls)
+        self.assertEqual(P._cached("t:key", 60, fn, persist=True), 1)
+        P._live_cache.pop("t:key")
+        self.assertEqual(P._cached("t:key", 60, fn, persist=True), 1)
+        entry = P._disk_read("t:key"); entry["ts"] -= 120
+        P._disk_write("t:key", entry); P._live_cache.pop("t:key")
+        self.assertEqual(P._cached("t:key", 60, fn, persist=True), 1)   # stale but served
+        P._warming.on = True
+        try:
+            self.assertEqual(P._cached("t:key", 60, fn, persist=True), 2)
+        finally:
+            P._warming.on = False
+            P._live_cache.pop("t:key", None)
 
     def test_every_season_page_renders(self):
         for year in sorted(P.league_data):

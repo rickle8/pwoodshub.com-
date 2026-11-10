@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ r.a }} vs {{ r.b }}{% endblock %}
+
+{% block extra_css %}
+.rv-head { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; text-align: center; }
+.rv-name { font-weight: 800; font-size: 1.1rem; line-height: 1.15; }
+.rv-rec { font-size: 2.2rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.rv-rec.lead { color: #198754; }
+.rv-vs { color: var(--bs-secondary-color); font-weight: 700; }
+.rv-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.rv-tile { background: var(--stat-card); border: 1px solid var(--bs-border-color); border-radius: 10px;
+           padding: 10px 12px; }
+.rv-tile b { display: block; font-size: 1.15rem; }
+.rv-tile span { font-size: .72em; text-transform: uppercase; letter-spacing: .04em;
+                color: var(--bs-secondary-color); font-weight: 700; }
+.rv-tile small { color: var(--bs-secondary-color); }
+.rv-w { color: #198754; font-weight: 700; } .rv-l { color: #dc3545; font-weight: 700; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+{% endblock %}
+
+{% macro game(g, who) %}{{ g.year }} wk {{ g.week }}{% endmacro %}
+
+{% block content %}
+<p class="small mb-2"><a href="/head_to_head">← Head-to-Head</a></p>
+<div class="stat-card mb-3" style="height:auto">
+    <div class="rv-head">
+        <div>
+            <div class="rv-rec {{ 'lead' if r.wins > r.losses }}">{{ r.wins }}</div>
+            <div class="rv-name"><a href="{{ url_for('owner_profile', owner_name=r.a) }}">{{ r.a }}</a></div>
+        </div>
+        <div class="rv-vs">vs{% if r.ties %}<div class="small">{{ r.ties }} tie{{ 's' if r.ties != 1 }}</div>{% endif %}</div>
+        <div>
+            <div class="rv-rec {{ 'lead' if r.losses > r.wins }}">{{ r.losses }}</div>
+            <div class="rv-name"><a href="{{ url_for('owner_profile', owner_name=r.b) }}">{{ r.b }}</a></div>
+        </div>
+    </div>
+    <p class="text-center text-muted small mb-0 mt-2">
+        {{ r.games | length }} regular-season meetings.
+        {% if r.streak_owner %}{{ r.streak_owner }} has won the last {{ r.streak if r.streak > 1 else 'one' }}.{% endif %}
+    </p>
+</div>
+
+<div class="rv-grid mb-3">
+    <div class="rv-tile"><span>Avg score</span><b>{{ r.avg_a }} – {{ r.avg_b }}</b></div>
+    <div class="rv-tile"><span>Longest win streaks</span><b>{{ r.best_run_a }} – {{ r.best_run_b }}</b></div>
+    {% if r.blowout_a %}
+    <div class="rv-tile"><span>{{ r.a.split()[0] }}'s biggest win</span><b>+{{ r.blowout_a.margin }}</b>
+        <small>{{ r.blowout_a.mine }}–{{ r.blowout_a.theirs }} · {{ game(r.blowout_a) }}</small></div>
+    {% endif %}
+    {% if r.blowout_b %}
+    <div class="rv-tile"><span>{{ r.b.split()[0] }}'s biggest win</span><b>+{{ -r.blowout_b.margin }}</b>
+        <small>{{ r.blowout_b.theirs }}–{{ r.blowout_b.mine }} · {{ game(r.blowout_b) }}</small></div>
+    {% endif %}
+    <div class="rv-tile"><span>Closest game</span><b>{{ r.closest.margin | abs }}</b>
+        <small>{{ r.closest.mine }}–{{ r.closest.theirs }} · {{ game(r.closest) }}</small></div>
+    <div class="rv-tile"><span>Highest scores</span><b>{{ r.high_a.mine }} – {{ r.high_b.theirs }}</b>
+        <small>{{ game(r.high_a) }} · {{ game(r.high_b) }}</small></div>
+</div>
+
+<h2 class="h5">Every meeting</h2>
+<div class="table-responsive">
+<table class="table table-sm table-striped align-middle">
+    <thead><tr><th>Season</th><th>Wk</th><th class="num">{{ r.a.split()[0] }}</th>
+               <th class="num">{{ r.b.split()[0] }}</th><th>Winner</th></tr></thead>
+    <tbody>
+    {% for g in r.games %}
+    <tr>
+        <td><a href="/year/{{ g.year }}">{{ g.year }}</a></td>
+        <td>{{ g.week }}</td>
+        <td class="num {{ 'rv-w' if g.result == 'W' }}">{{ g.mine }}</td>
+        <td class="num {{ 'rv-w' if g.result == 'L' }}">{{ g.theirs }}</td>
+        <td>{{ r.a if g.result == 'W' else r.b if g.result == 'L' else 'Tie' }}
+            <span class="text-muted small">by {{ g.margin | abs }}</span></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<h2 class="h5 mt-3">By season</h2>
+<p class="small">
+    {% for y, rec in r.by_year %}
+    <span class="badge text-bg-light border me-1 mb-1">{{ y }}: {{ rec.W }}-{{ rec.L }}{% if rec.T %}-{{ rec.T }}{% endif %}</span>
+    {% endfor %}
+</p>
+{% endblock %}

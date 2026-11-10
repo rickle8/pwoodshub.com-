@@ -144,6 +144,8 @@ def main():
               ("/draft_review", "Draft Grades", True),
               ("/rankings", "Power Rankings", True),
               ("/robots.txt", "Disallow", True),
+              ("/head_to_head", "h2h-row", True),
+              ("/api/warm", "odds", True),
               ("/player/8172", "Consensus Value", True),
               ("/manifest.webmanifest", "PW League", True),
               ("/sw.js", "pw-v", True),
